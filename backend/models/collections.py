@@ -144,6 +144,12 @@ class Shipment(_Model):
     delay_state: str | None = None
     carrier_id: str | None = None
     updated_at: str | None = None
+    # Set by triage (domain/triage.py), never guessed by an LLM. Defaults
+    # "safe"; flips to "risk" only when a matched signal touches this
+    # shipment's destination (or lane, once lanes carry waypoints — see
+    # docs/productiongrade.md §2.6).
+    risk_zone: Literal["safe", "risk"] = "safe"
+    risk_reason: str | None = None
     version: int = 1
 
 
@@ -174,6 +180,10 @@ class Signal(_Model):
     published_at: str | None = None
     status: str = "new"
     ttl_at: str | None = None
+    # Adapter-specific extras (weather metrics, article domain/country, ...).
+    # A dict here keeps Signal generic across sources instead of growing a
+    # new optional field per adapter.
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class EventWhat(_Model):
@@ -228,6 +238,10 @@ class Exposure(_Model):
     revenue_at_risk_minor: int = 0
     penalty_at_risk_minor: int = 0
     severity: str | None = None
+    # Business-impact flag: "safe" unless this pair has a real shortage
+    # caused by a matched signal. A shipment can be risk_zone="risk" while
+    # its exposure stays "safe" (enough buffer stock that nobody notices).
+    risk_zone: Literal["safe", "risk"] = "safe"
     triage_decision: str = "actionable"
     computed_at: str | None = None
 

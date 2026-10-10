@@ -82,6 +82,9 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     if deadline is None:
         return {"sku": sku, "location_id": location_id, "status": "no_open_orders"}
 
+    # "disrupted" only if a real shipment is actually flagged delayed/at-risk —
+    # never assumed by default. See exposure.is_disrupted().
+    scenario = "disrupted" if exposure_mod.is_disrupted(shipments, sku, location_id) else "baseline"
     exposure = exposure_mod.assess_exposure(
         sku=sku,
         location_id=location_id,
@@ -89,7 +92,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         on_hand_qty=on_hand,
         shipments=shipments,
         order_lines=order_lines,
-        scenario="disrupted",
+        scenario=scenario,
     )
     # The "nothing went wrong" picture, so the UI can show before vs after.
     baseline_exposure = exposure_mod.assess_exposure(

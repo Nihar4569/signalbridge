@@ -37,7 +37,8 @@ def news_scan_tool(location_id: str) -> dict:
 
 def exposure_tool(sku: str, location_id: str) -> dict:
     """Return how many units of a SKU will be short at a location by its earliest
-    order deadline, under the disruption scenario."""
+    order deadline. Uses the disrupted (delayed-arrival) scenario only when a
+    real shipment for this sku/location is flagged delayed or at-risk."""
     store = get_store()
     order_lines = store.list("order_lines")
     deadline = planner_mod._earliest_deadline(order_lines, sku, location_id)
@@ -49,14 +50,16 @@ def exposure_tool(sku: str, location_id: str) -> dict:
         if b["sku"] == sku and b["location_id"] == location_id:
             on_hand = int(b["on_hand_qty"])
             break
+    shipments = store.list("shipments")
+    scenario = "disrupted" if exposure_mod.is_disrupted(shipments, sku, location_id) else "baseline"
     return exposure_mod.assess_exposure(
         sku=sku,
         location_id=location_id,
         deadline=deadline,
         on_hand_qty=on_hand,
-        shipments=store.list("shipments"),
+        shipments=shipments,
         order_lines=order_lines,
-        scenario="disrupted",
+        scenario=scenario,
     )
 
 

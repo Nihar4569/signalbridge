@@ -22,6 +22,28 @@ def parse_ts(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
+_DELAYED_STATES = ("assumed_delayed", "confirmed_delayed")
+
+
+def is_disrupted(shipments: list[dict], sku: str, location_id: str) -> bool:
+    """Is any incoming shipment of this sku/location actually flagged delayed?
+
+    Reads real per-shipment fields only — `delay_state` (set by the carrier
+    feed / route monitor) or `risk_zone` (set by domain/triage.py from live
+    weather/news signals). Never assume "disrupted"; derive it.
+    """
+    for shipment in shipments:
+        if shipment.get("destination_location_id") != location_id:
+            continue
+        if not any(item.get("sku") == sku for item in shipment.get("items", [])):
+            continue
+        if shipment.get("delay_state") in _DELAYED_STATES:
+            return True
+        if shipment.get("risk_zone") == "risk":
+            return True
+    return False
+
+
 def demand_by(deadline: datetime, sku: str, location_id: str, order_lines: list[dict]) -> int:
     """Total open order units for this SKU/location due on or before the deadline."""
     total = 0
@@ -73,7 +95,7 @@ def assess_exposure(
     on_hand_qty: int,
     shipments: list[dict],
     order_lines: list[dict],
-    scenario: str = "disrupted",
+    scenario: str = "baseline",
 ) -> dict:
     """Return the shortage picture for one SKU at one location.
 

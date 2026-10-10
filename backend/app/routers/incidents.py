@@ -12,7 +12,8 @@ router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 @router.get("")
 def list_incidents(store=Depends(store_dep)) -> dict:
-    """List every SKU/location pair that is short under the disruption scenario."""
+    """List every SKU/location pair that is short because a real shipment is
+    flagged delayed/at-risk (see exposure.is_disrupted) — not an assumption."""
     order_lines = store.list("order_lines")
     shipments = store.list("shipments")
     balances = store.list("stock_balances")
@@ -31,6 +32,7 @@ def list_incidents(store=Depends(store_dep)) -> dict:
              if b["sku"] == sku and b["location_id"] == location_id),
             0,
         )
+        scenario = "disrupted" if exposure_mod.is_disrupted(shipments, sku, location_id) else "baseline"
         exposure = exposure_mod.assess_exposure(
             sku=sku,
             location_id=location_id,
@@ -38,7 +40,7 @@ def list_incidents(store=Depends(store_dep)) -> dict:
             on_hand_qty=on_hand,
             shipments=shipments,
             order_lines=order_lines,
-            scenario="disrupted",
+            scenario=scenario,
         )
         if exposure["is_actionable"]:
             incidents.append(exposure)

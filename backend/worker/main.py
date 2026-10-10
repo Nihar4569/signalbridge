@@ -14,18 +14,23 @@ from ..adapters import weather as weather_adapter
 from ..core import config
 from ..core.logging import get_logger
 from ..core.store import get_store
+from ..domain import ingestion as ingestion_mod
 from ..domain import planner as planner_mod
+from ..domain import triage as triage_mod
 from .route_monitor import signal_scan_location_ids
 
 log = get_logger("worker")
 
 
-def scan_route_signals() -> list[dict]:
+def scan_route_signals(store=None) -> list[dict]:
     """Check live weather + news for every location on an active route.
 
-    This is the "watch the world" half of monitoring. See docs/scheduler.md.
+    Saves each result to the `signals` collection (backend/domain/ingestion.py)
+    so there is a durable record, not just a log line. This is the "watch
+    the world" half of monitoring. See docs/scheduler.md.
     """
-    locations = {loc["location_id"]: loc for loc in get_store().list("locations")}
+    store = store or get_store()
+    locations = {loc["location_id"]: loc for loc in store.list("locations")}
     results: list[dict] = []
     # GDELT allows about one search every 5 seconds. Space news calls out.
     for index, location_id in enumerate(signal_scan_location_ids()):
@@ -40,6 +45,8 @@ def scan_route_signals() -> list[dict]:
             else {"ok": False, "risk": "unknown", "error": "no coordinates"}
         )
         news = news_adapter.search_disruptions(location.get("name", location_id))
+        ingestion_mod.ingest_weather_signal(location, weather, store=store)
+        ingestion_mod.ingest_news_signals(location, news, store=store)
         articles = news.get("articles") or []
         results.append(
             {
@@ -60,6 +67,15 @@ def scan_route_signals() -> list[dict]:
             location_id,
             weather.get("risk"),
             news.get("count", news.get("error")),
+        )
+    for row in triage_mod.run_triage(store):
+        log.info(
+            "Triage %s @ %s: risk_zone=%s shortage=%s decision=%s",
+            row["sku"],
+            row["location_id"],
+            row["risk_zone"],
+            row["shortage_qty"],
+            row["triage_decision"],
         )
     return results
 
