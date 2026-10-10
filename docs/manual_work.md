@@ -63,8 +63,15 @@ That's enough to run `adk run backend/agent`.
 > Want to test Firestore without touching the cloud? Install the **Firestore
 > emulator** (`gcloud components install cloud-firestore-emulator`), run it, and
 > set `FIRESTORE_EMULATOR_HOST=localhost:8080` in `.env`.
-> Note: the `FirestoreStore` read/write class in `backend/core/store.py` is still
-> a TODO — it needs to be implemented before `DATA_BACKEND=firestore` works.
+>
+> `FirestoreStore` lives in `backend/core/store.py`. After seeding:
+> ```
+> DATA_BACKEND=firestore
+> GOOGLE_CLOUD_PROJECT=your-project-id
+> TENANT_ID=buildx-demo
+> ```
+> Validate fixtures without writing: `python -m scripts.seed_firestore --dry-run`
+> Deploy rules/indexes: `firebase deploy --only firestore`
 
 ---
 
@@ -130,6 +137,6 @@ Do this only once the app works locally.
 | Unit tests | ✅ yes | — |
 | API read endpoints (local data) | ✅ yes | — |
 | AI agent (`adk run`) | ⚠️ needs key | Step 1 |
-| Firestore storage | ❌ not yet | Steps 2–3 + implement `FirestoreStore` |
+| Firestore storage | ✅ code ready | Steps 2–3 (create DB + seed + `DATA_BACKEND=firestore`) |
 | Login / roles | ❌ not yet | Step 4 + auth check in `deps.py` |
 | Live deployment | ❌ not yet | Step 5 |

@@ -35,8 +35,8 @@ Pick any; they don't need cloud access.
 - [ ] **Severity sorting** — rank incidents by revenue-at-risk on the dashboard.
 - [ ] **Rejected-options clarity** — show *why* each supplier was rejected (already
       in the data; just surface it nicer in the UI).
-- [ ] **`FirestoreStore` class** — write the Firestore version of `core/store.py`
-      so the swap is ready (still needs you to create the DB — see manual_work).
+- [x] **`FirestoreStore` class** — `backend/core/store.py` + models + seed script
+      ready. Still needs you to create the DB / auth — see manual_work.
 - [ ] **Full ADK agent run endpoint** — expose the 3-agent pipeline
       (`backend/agent/`) over an endpoint instead of the single REST call.
 - [ ] **Tests for the API** — add endpoint tests with FastAPI's TestClient.
