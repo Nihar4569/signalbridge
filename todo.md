@@ -15,8 +15,10 @@ Last updated: 2026-10-10 · Status: **prototype runs end-to-end on dummy data**.
 - [x] FastAPI backend with 4 endpoints (`/incidents`, `/plans`, `/explain`, `/approve`).
 - [x] Gemini wired via REST for the "Explain with AI" button (key in `.env`). **Tested, working.**
 - [x] Frontend dashboard (`frontend/`) — scan → plan → explain → approve. No build step.
+- [x] **Live external APIs (free, no key): Open-Meteo weather + GDELT news**, with location
+      filtering. Exposed via `GET /signals/{location}`, the `signal_agent` (ADK), and the worker.
 - [x] Dummy data in `fixtures/`. 7 unit tests pass.
-- [x] Docs: start, simple, calculation, architecture, agents, schema, manual_work.
+- [x] Docs: start, simple, calculation, architecture, agents, schema, external_api, scheduler, manual_work.
 
 ---
 

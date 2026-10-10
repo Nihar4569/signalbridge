@@ -66,6 +66,8 @@ and the writes; a human approves anything that costs money.**
 | [docs/architecture.md](docs/architecture.md) | The big picture + diagrams |
 | [docs/agents.md](docs/agents.md) | What each AI agent does, in plain words |
 | [docs/schema.md](docs/schema.md) | The database model |
+| [docs/external_api.md](docs/external_api.md) | The real free APIs (weather + news) |
+| [docs/scheduler.md](docs/scheduler.md) | How to run the monitor on a timer |
 | [docs/manual_work.md](docs/manual_work.md) | Human-only steps (Firebase, keys, deploy) |
 | [docs/blueprint.md](docs/blueprint.md) | The full original design |
 | [AGENTS.md](AGENTS.md) | Rules for editing this repo (read before coding) |

@@ -30,6 +30,30 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 FIRESTORE_EMULATOR_HOST = os.getenv("FIRESTORE_EMULATOR_HOST", "")
 
+# --- external APIs (free, no key needed) ---
+HTTP_TIMEOUT = 15  # seconds, for any outbound API call
+HTTP_USER_AGENT = "SignalBridge/0.1 (prototype)"
+
+# Open-Meteo weather forecast. Filtered by latitude/longitude + chosen variables.
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+
+# GDELT DOC 2.0 news search. Filtered by location phrase + disruption keywords.
+GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+NEWS_TIMESPAN = os.getenv("NEWS_TIMESPAN", "3d")   # how far back to search
+NEWS_MAX_RECORDS = int(os.getenv("NEWS_MAX_RECORDS", "10"))
+DISRUPTION_KEYWORDS = [
+    "strike", "closure", "closed", "suspended", "congestion",
+    "blocked", "shutdown", "cyclone", "storm", "flood",
+]
+
+# Weather risk thresholds (worst value in the forecast window).
+WEATHER_WIND_GUST_HIGH_KMH = 60
+WEATHER_WIND_GUST_MED_KMH = 40
+WEATHER_PRECIP_HIGH_MM = 20
+WEATHER_PRECIP_MED_MM = 10
+WEATHER_STORM_CODES = {95, 96, 97, 99}  # WMO thunderstorm codes
+
+
 # Governance approval tiers, in integer minor units (paise).
 # A plan's recovery cost is compared against these, cheapest tier first.
 GOVERNANCE_TIERS = [

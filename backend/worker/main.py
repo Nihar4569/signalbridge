@@ -5,11 +5,47 @@ In production this is woken by Cloud Scheduler. Here you can just run it once:
 """
 from __future__ import annotations
 
+from ..adapters import news as news_adapter
+from ..adapters import weather as weather_adapter
 from ..core.logging import get_logger
 from ..core.store import get_store
 from ..domain import planner as planner_mod
+from .route_monitor import active_shipment_locations
 
 log = get_logger("worker")
+
+
+def scan_route_signals() -> list[dict]:
+    """Check live weather + news for every location on an active route.
+
+    This is the "watch the world" half of monitoring. See docs/scheduler.md.
+    """
+    locations = {loc["location_id"]: loc for loc in get_store().list("locations")}
+    results: list[dict] = []
+    for location_id in active_shipment_locations():
+        location = locations.get(location_id)
+        if not location:
+            continue
+        weather = (
+            weather_adapter.get_weather_risk(location["lat"], location["lon"])
+            if location.get("lat") is not None
+            else {"risk": "unknown"}
+        )
+        news = news_adapter.search_disruptions(location.get("name", location_id))
+        results.append(
+            {
+                "location_id": location_id,
+                "weather_risk": weather.get("risk"),
+                "news_count": news.get("count", 0),
+            }
+        )
+        log.info(
+            "Signal scan %s: weather=%s, news=%s",
+            location_id,
+            weather.get("risk"),
+            news.get("count", news.get("error")),
+        )
+    return results
 
 
 def run_monitoring_once() -> list[dict]:
@@ -36,4 +72,5 @@ def run_monitoring_once() -> list[dict]:
 
 
 if __name__ == "__main__":
+    scan_route_signals()
     run_monitoring_once()

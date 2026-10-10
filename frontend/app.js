@@ -4,6 +4,9 @@
 // Where the backend lives. Change this if your API runs on another port.
 const API_BASE = "http://localhost:8000";
 
+// The route's port, used by the "Check live signals" button in the demo.
+const DEMO_PORT = "IN-JNPA";
+
 // ---- tiny helpers -----------------------------------------------------------
 
 // Format integer paise (minor units) as rupees, e.g. 11300000 -> "₹1,13,000".
@@ -187,6 +190,14 @@ function renderPlan(plan) {
       </div>
       <div id="receipt"></div>
     </div>
+
+    <!-- live external signals (real free APIs) -->
+    <div class="block">
+      <h3>Live external signals (real APIs)</h3>
+      <p class="meta">Pulls live weather (Open-Meteo) + news (GDELT) for the route's port.</p>
+      <button class="btn secondary" id="signals-btn">Check weather + news at port</button>
+      <div id="signals-out"></div>
+    </div>
   `;
 }
 
@@ -233,6 +244,35 @@ function wirePlanButtons(plan) {
       document.getElementById("receipt").innerHTML = `<p class="no">Approve failed: ${err.message}</p>`;
       approveBtn.disabled = false;
       approveBtn.textContent = "Approve & reserve";
+    }
+  };
+
+  // "Check live signals" — calls the real weather + news APIs for the port.
+  const signalsBtn = document.getElementById("signals-btn");
+  signalsBtn.onclick = async () => {
+    signalsBtn.disabled = true;
+    signalsBtn.textContent = "Checking live APIs…";
+    const out = document.getElementById("signals-out");
+    try {
+      const s = await api(`/signals/${DEMO_PORT}`);
+      const w = s.weather || {};
+      const n = s.news || {};
+      let html = `<div class="kv">
+        <span class="k">Port</span><span>${s.name || DEMO_PORT}</span>
+        <span class="k">Weather risk</span><span><strong>${w.risk}</strong> · gust ${w.max_wind_gust_kmh ?? "—"} km/h · rain ${w.max_precip_mm ?? "—"} mm</span>
+        <span class="k">News</span><span>${n.ok ? n.count + " article(s)" : (n.error || "none")}</span>
+      </div>`;
+      if (n.articles && n.articles.length) {
+        html += "<ul>" + n.articles.slice(0, 3).map(
+          (a) => `<li><a href="${a.url}" target="_blank" rel="noopener">${a.title || a.url}</a> <span class="meta">· ${a.domain || ""}</span></li>`
+        ).join("") + "</ul>";
+      }
+      out.innerHTML = html;
+    } catch (err) {
+      out.innerHTML = `<p class="no">Signals failed: ${err.message}</p>`;
+    } finally {
+      signalsBtn.disabled = false;
+      signalsBtn.textContent = "Check weather + news at port";
     }
   };
 }

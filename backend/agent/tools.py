@@ -7,12 +7,32 @@ tools never do their own math.
 """
 from __future__ import annotations
 
+from ..adapters import news as news_adapter
+from ..adapters import weather as weather_adapter
 from ..core.store import get_store
 from ..domain import exposure as exposure_mod
 from ..domain import margin as margin_mod
 from ..domain import network_balance as nb_mod
 from ..domain import planner as planner_mod
 from ..domain import surplus as surplus_mod
+
+
+def weather_risk_tool(location_id: str) -> dict:
+    """Check the LIVE weather risk (storm / heavy rain / strong wind) at a
+    location, using the free Open-Meteo forecast API."""
+    location = get_store().get("locations", "location_id", location_id)
+    if not location or location.get("lat") is None:
+        return {"ok": False, "error": "unknown location or no coordinates"}
+    return weather_adapter.get_weather_risk(location["lat"], location["lon"])
+
+
+def news_scan_tool(location_id: str) -> dict:
+    """Search LIVE news for disruptions (strike, closure, storm, flood) near a
+    location, using the free GDELT news API."""
+    location = get_store().get("locations", "location_id", location_id)
+    if not location:
+        return {"ok": False, "error": "unknown location"}
+    return news_adapter.search_disruptions(location.get("name", location_id))
 
 
 def exposure_tool(sku: str, location_id: str) -> dict:
