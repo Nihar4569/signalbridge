@@ -1,16 +1,21 @@
 """Scan active shipments and build recovery plans for anything at risk.
 
-In production this is woken by Cloud Scheduler. Here you can just run it once:
+The API process runs the weather and news scan on a timer while it is up.
+You can also run one pass by hand:
     python -m backend.worker.main
 """
 from __future__ import annotations
 
+import asyncio
+import time
+
 from ..adapters import news as news_adapter
 from ..adapters import weather as weather_adapter
+from ..core import config
 from ..core.logging import get_logger
 from ..core.store import get_store
 from ..domain import planner as planner_mod
-from .route_monitor import active_shipment_locations
+from .route_monitor import signal_scan_location_ids
 
 log = get_logger("worker")
 
@@ -22,21 +27,32 @@ def scan_route_signals() -> list[dict]:
     """
     locations = {loc["location_id"]: loc for loc in get_store().list("locations")}
     results: list[dict] = []
-    for location_id in active_shipment_locations():
+    # GDELT allows about one search every 5 seconds. Space news calls out.
+    for index, location_id in enumerate(signal_scan_location_ids()):
         location = locations.get(location_id)
         if not location:
             continue
+        if index > 0:
+            time.sleep(5)
         weather = (
             weather_adapter.get_weather_risk(location["lat"], location["lon"])
             if location.get("lat") is not None
-            else {"risk": "unknown"}
+            else {"ok": False, "risk": "unknown", "error": "no coordinates"}
         )
         news = news_adapter.search_disruptions(location.get("name", location_id))
+        articles = news.get("articles") or []
         results.append(
             {
                 "location_id": location_id,
+                "name": location.get("name"),
                 "weather_risk": weather.get("risk"),
+                "weather_ok": weather.get("ok", False),
+                "max_wind_gust_kmh": weather.get("max_wind_gust_kmh"),
+                "max_precip_mm": weather.get("max_precip_mm"),
+                "news_ok": news.get("ok", False),
                 "news_count": news.get("count", 0),
+                "news_error": news.get("error"),
+                "headlines": [a.get("title") for a in articles[:3]],
             }
         )
         log.info(
@@ -46,6 +62,31 @@ def scan_route_signals() -> list[dict]:
             news.get("count", news.get("error")),
         )
     return results
+
+
+async def signal_scan_loop(stop: asyncio.Event) -> None:
+    """Call the weather and news scan on a timer until `stop` is set.
+
+    Started with the API process and cancelled when that process exits.
+    The scan itself runs in a thread so Open-Meteo and GDELT do not block
+    other HTTP requests.
+    """
+    while not stop.is_set():
+        started = time.monotonic()
+        try:
+            await asyncio.to_thread(scan_route_signals)
+        except Exception:
+            log.exception("Signal scan failed")
+        if stop.is_set():
+            return
+        remaining = config.SIGNAL_SCAN_INTERVAL_SECONDS - (time.monotonic() - started)
+        if remaining <= 0:
+            await asyncio.sleep(0)
+            continue
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=remaining)
+        except asyncio.TimeoutError:
+            continue
 
 
 def run_monitoring_once() -> list[dict]:

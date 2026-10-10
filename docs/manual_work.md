@@ -112,8 +112,9 @@ Do this only once the app works locally.
      --set-secrets GOOGLE_API_KEY=gemini-api-key:latest \
      --set-env-vars DATA_BACKEND=firestore,GOOGLE_CLOUD_PROJECT=your-project-id
    ```
-4. Set up **Cloud Scheduler** → **Cloud Tasks** to trigger the worker on a timer.
-   (Design is in [schema.md](schema.md) and [blueprint.md](blueprint.md).)
+4. The API scans weather and news itself while the process is running
+   (every 2 minutes). No Cloud Scheduler job is required.
+   See [scheduler.md](scheduler.md).
 
 ---
 
