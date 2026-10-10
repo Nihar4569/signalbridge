@@ -57,6 +57,12 @@ def test_disruption_creates_80_unit_shortage():
     assert result["is_actionable"] is True
 
 
+def test_seeded_delay_state_alone_is_not_a_disruption():
+    assert exposure_mod.is_disrupted(SHIPMENTS, "JACKET-BLUE-M", "WH-MUM") is False
+    marked = [dict(SHIPMENTS[0], risk_zone="risk")]
+    assert exposure_mod.is_disrupted(marked, "JACKET-BLUE-M", "WH-MUM") is True
+
+
 def test_closed_orders_are_ignored():
     lines = [dict(ORDER_LINES[0], status="closed")]
     result = exposure_mod.assess_exposure(

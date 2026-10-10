@@ -1,15 +1,15 @@
-"""The 60-second demo. Runs the whole recovery loop on the bundled fixtures.
+"""Show the recovery decision the app would make on the current data.
 
-No cloud, no API key, no internet. Just:
+No API key. Uses whatever DATA_BACKEND points at (local fixtures or Firestore).
+
     python -m scripts.demo
 
-It proves the core idea: a port delay turns a healthy order into an 80-unit
-shortage, and SignalBridge finds a governed recovery plan.
+A recovery plan is built only when a shipment's risk_zone is already "risk"
+(set by triage from a weather or news signal). Otherwise the order is covered.
 """
 from __future__ import annotations
 
 from backend.core.store import get_store
-from backend.domain import exposure as exposure_mod
 from backend.domain import planner as planner_mod
 
 SKU = "JACKET-BLUE-M"
@@ -22,38 +22,24 @@ def rupees(minor: int) -> str:
 
 def main() -> None:
     store = get_store()
-    order_lines = store.list("order_lines")
-    shipments = store.list("shipments")
-    deadline = planner_mod._earliest_deadline(order_lines, SKU, LOCATION)
-    on_hand = next(
-        int(b["on_hand_qty"])
-        for b in store.list("stock_balances")
-        if b["sku"] == SKU and b["location_id"] == LOCATION
-    )
 
     print("=" * 64)
     print(f"  SignalBridge demo  -  {SKU} @ {LOCATION}")
     print("=" * 64)
 
-    baseline = exposure_mod.assess_exposure(
-        sku=SKU, location_id=LOCATION, deadline=deadline, on_hand_qty=on_hand,
-        shipments=shipments, order_lines=order_lines, scenario="baseline",
-    )
-    disrupted = exposure_mod.assess_exposure(
-        sku=SKU, location_id=LOCATION, deadline=deadline, on_hand_qty=on_hand,
-        shipments=shipments, order_lines=order_lines, scenario="disrupted",
-    )
-
-    print(f"\nDeadline: {baseline['deadline']}")
-    print(f"  Normal    : supply {baseline['supply_by_deadline']:>4}  "
-          f"demand {baseline['demand_by_deadline']:>4}  "
-          f"shortage {baseline['shortage_qty']:>4}")
-    print(f"  Disrupted : supply {disrupted['supply_by_deadline']:>4}  "
-          f"demand {disrupted['demand_by_deadline']:>4}  "
-          f"shortage {disrupted['shortage_qty']:>4}  <-- port delay")
+    plan = planner_mod.build_plan(store, sku=SKU, location_id=LOCATION)
+    picture = plan.get("exposure") or {}
+    print(f"\nDeadline: {picture.get('deadline')}")
+    print(f"  Supply {picture.get('supply_by_deadline')}  "
+          f"demand {picture.get('demand_by_deadline')}  "
+          f"shortage {picture.get('shortage_qty')}")
 
     print("\n--- Building recovery plan ---")
-    plan = planner_mod.build_plan(store, sku=SKU, location_id=LOCATION)
+    if plan.get("status") == "no_action_needed":
+        print("  No shipment is marked risk. Nothing to buy.")
+        print(f"  Shortage            : {plan['exposure']['shortage_qty']}")
+        print("\nDone.")
+        return
 
     print(f"  Internal stock used : {plan['internal_used_qty']} units")
     print(f"  Chosen supplier     : {plan['selected_offer_id']}")

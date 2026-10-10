@@ -33,12 +33,12 @@ def _earliest_deadline(order_lines: list[dict], sku: str, location_id: str):
 
 
 def _delayed_units(shipments: list[dict], sku: str, location_id: str) -> int:
-    """Units on shipments that are flagged as delayed for this SKU/location."""
+    """Units on shipments triage has marked risk for this SKU/location."""
     total = 0
     for shipment in shipments:
         if shipment.get("destination_location_id") != location_id:
             continue
-        if shipment.get("delay_state") not in ("assumed_delayed", "confirmed_delayed"):
+        if shipment.get("risk_zone") != "risk":
             continue
         for item in shipment.get("items", []):
             if item.get("sku") == sku:
@@ -82,8 +82,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     if deadline is None:
         return {"sku": sku, "location_id": location_id, "status": "no_open_orders"}
 
-    # "disrupted" only if a real shipment is actually flagged delayed/at-risk —
-    # never assumed by default. See exposure.is_disrupted().
+    # Delayed arrival is used only after triage sets risk_zone from a live signal.
     scenario = "disrupted" if exposure_mod.is_disrupted(shipments, sku, location_id) else "baseline"
     exposure = exposure_mod.assess_exposure(
         sku=sku,

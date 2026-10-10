@@ -12,8 +12,7 @@ router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 @router.get("")
 def list_incidents(store=Depends(store_dep)) -> dict:
-    """List every SKU/location pair that is short because a real shipment is
-    flagged delayed/at-risk (see exposure.is_disrupted) — not an assumption."""
+    """List every SKU/location pair that is short because triage set risk_zone."""
     order_lines = store.list("order_lines")
     shipments = store.list("shipments")
     balances = store.list("stock_balances")

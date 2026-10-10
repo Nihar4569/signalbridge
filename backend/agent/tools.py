@@ -37,8 +37,8 @@ def news_scan_tool(location_id: str) -> dict:
 
 def exposure_tool(sku: str, location_id: str) -> dict:
     """Return how many units of a SKU will be short at a location by its earliest
-    order deadline. Uses the disrupted (delayed-arrival) scenario only when a
-    real shipment for this sku/location is flagged delayed or at-risk."""
+    order deadline. Counts a shipment as delayed only when triage has set its
+    risk_zone to "risk" from a live weather or news signal."""
     store = get_store()
     order_lines = store.list("order_lines")
     deadline = planner_mod._earliest_deadline(order_lines, sku, location_id)
