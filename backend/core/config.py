@@ -24,7 +24,8 @@ TENANT_ID = os.getenv("TENANT_ID", "buildx-demo")
 
 # --- gemini / agent ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+# Free-tier lite model. gemini-flash-latest is the overloaded alias that returns 503.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 # --- google cloud ---
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")

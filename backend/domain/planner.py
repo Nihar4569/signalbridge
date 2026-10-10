@@ -119,6 +119,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         exclude_location_id=location_id,
         stock_balances=stock_balances,
         locations=locations,
+        origin_location_id=location_id,
     )
     internal_free = sum(option["free_qty"] for option in internal)
     internal_used = min(internal_free, shortage)

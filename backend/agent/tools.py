@@ -72,6 +72,7 @@ def internal_balance_tool(sku: str, location_id: str) -> dict:
         exclude_location_id=location_id,
         stock_balances=store.list("stock_balances"),
         locations=store.list("locations"),
+        origin_location_id=location_id,
     )
     return {"options": options, "total_free_qty": sum(o["free_qty"] for o in options)}
 

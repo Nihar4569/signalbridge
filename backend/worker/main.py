@@ -11,6 +11,7 @@ import time
 
 from ..adapters import news as news_adapter
 from ..adapters import weather as weather_adapter
+from ..ai import gemini as gemini_mod
 from ..core import config
 from ..core.logging import get_logger
 from ..core.store import get_store
@@ -68,7 +69,17 @@ def scan_route_signals(store=None) -> list[dict]:
             weather.get("risk"),
             news.get("count", news.get("error")),
         )
-    for row in triage_mod.run_triage(store):
+    judgments = gemini_mod.judge_shipment_risk(
+        shipments=store.list("shipments"),
+        signals=store.list("signals"),
+        locations=store.list("locations"),
+        products=store.list("products"),
+    )
+    if judgments is None:
+        log.warning("Triage skipped. Gemini did not answer, so risk flags were left unchanged.")
+        return results
+    log.info("Triage source=gemini model=%s", config.GEMINI_MODEL)
+    for row in triage_mod.run_triage(store, judgments=judgments):
         log.info(
             "Triage %s @ %s: risk_zone=%s shortage=%s decision=%s",
             row["sku"],
@@ -77,6 +88,7 @@ def scan_route_signals(store=None) -> list[dict]:
             row["shortage_qty"],
             row["triage_decision"],
         )
+    run_monitoring_once(store)
     return results
 
 
@@ -105,17 +117,20 @@ async def signal_scan_loop(stop: asyncio.Event) -> None:
             continue
 
 
-def run_monitoring_once() -> list[dict]:
-    """Build a plan for every SKU/location that has an open order. Returns plans."""
-    store = get_store()
-    order_lines = store.list("order_lines")
+def run_monitoring_once(store=None) -> list[dict]:
+    """Build a plan only for exposures triage marked risk. Returns those plans.
 
+    Safe rows are skipped. The four recovery steps (exposure, internal stock,
+    supplier, margin, surplus) run inside planner.build_plan — plain code,
+    no language-model loop.
+    """
+    store = store or get_store()
     seen: set[tuple[str, str]] = set()
     plans: list[dict] = []
-    for line in order_lines:
-        if line.get("status") != "open":
+    for exposure in store.list("exposures"):
+        if exposure.get("risk_zone") != "risk":
             continue
-        key = (line["sku"], line["location_id"])
+        key = (exposure["sku"], exposure["location_id"])
         if key in seen:
             continue
         seen.add(key)
@@ -130,4 +145,3 @@ def run_monitoring_once() -> list[dict]:
 
 if __name__ == "__main__":
     scan_route_signals()
-    run_monitoring_once()

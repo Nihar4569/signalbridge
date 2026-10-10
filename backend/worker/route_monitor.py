@@ -28,7 +28,9 @@ def signal_scan_location_ids() -> list[str]:
     locations = get_store().list("locations")
     ids = set(active_shipment_locations())
     for loc in locations:
-        if loc.get("type") == "port" and loc.get("active", True):
+        # Ports, plus sample points along a lane. A hurricane sits on the
+        # sample point; the port may still be outside the worst winds.
+        if loc.get("type") in ("port", "sea_waypoint") and loc.get("active", True):
             ids.add(loc["location_id"])
     known = {loc["location_id"] for loc in locations}
     return sorted(ids & known)

@@ -28,6 +28,9 @@ def test_plan_uses_internal_then_supplier_once_shipment_is_at_risk():
     # The remaining 60 come from a feasible supplier offer.
     assert plan["selected_offer_id"] in {"OFFER-A", "OFFER-B", "OFFER-C"}
     assert plan["recovered_qty"] == 80
+    pune = next(o for o in plan["internal_options"] if o["location_id"] == "DS-PUN-01")
+    # Mumbai DC to the Pune dark store is a bit over 100 km.
+    assert 100 < pune["distance_km"] < 150
 
 
 def test_plan_picks_a_feasible_offer_before_the_deadline():
