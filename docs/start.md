@@ -78,6 +78,31 @@ Everyday commands with pip (venv activated):
 
 ---
 
+## Run the full app (backend + frontend)
+
+This is the end-to-end prototype: a dashboard that talks to the API. Use **two
+terminals**.
+
+```bash
+# Terminal 1 — the backend API (port 8000)
+cd signalbridge
+uv run uvicorn backend.app.main:app --reload --port 8000
+#   (pip users, venv active:  uvicorn backend.app.main:app --reload --port 8000)
+
+# Terminal 2 — the frontend (port 5173)
+cd signalbridge/frontend
+python3 -m http.server 5173
+```
+
+Then open **http://localhost:5173** and click **Scan for risk**.
+You'll see the incident → open it → review the plan → **Explain with AI** →
+**Approve & reserve**.
+
+The frontend is plain HTML/JS (no npm, no build). How it's wired is explained in
+[simple.md](simple.md).
+
+---
+
 ## What you should see
 
 `python -m scripts.demo` prints the jacket scenario: a port delay turns a healthy

@@ -61,12 +61,15 @@ and the writes; a human approves anything that costs money.**
 | Doc | What's in it |
 |---|---|
 | [docs/start.md](docs/start.md) | Set up and run (uv **and** pip) |
+| [docs/simple.md](docs/simple.md) | How the code is wired, traced click-by-click |
+| [docs/calculation.md](docs/calculation.md) | The math, with worked examples |
 | [docs/architecture.md](docs/architecture.md) | The big picture + diagrams |
 | [docs/agents.md](docs/agents.md) | What each AI agent does, in plain words |
 | [docs/schema.md](docs/schema.md) | The database model |
 | [docs/manual_work.md](docs/manual_work.md) | Human-only steps (Firebase, keys, deploy) |
 | [docs/blueprint.md](docs/blueprint.md) | The full original design |
 | [AGENTS.md](AGENTS.md) | Rules for editing this repo (read before coding) |
+| [todo.md](todo.md) | Our shared plan (Vibe_work + manual_work) |
 
 ---
 

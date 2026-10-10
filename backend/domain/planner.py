@@ -91,6 +91,16 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         order_lines=order_lines,
         scenario="disrupted",
     )
+    # The "nothing went wrong" picture, so the UI can show before vs after.
+    baseline_exposure = exposure_mod.assess_exposure(
+        sku=sku,
+        location_id=location_id,
+        deadline=deadline,
+        on_hand_qty=on_hand,
+        shipments=shipments,
+        order_lines=order_lines,
+        scenario="baseline",
+    )
     shortage = exposure["shortage_qty"]
     if shortage == 0:
         return {
@@ -98,6 +108,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
             "location_id": location_id,
             "status": "no_action_needed",
             "exposure": exposure,
+            "baseline_exposure": baseline_exposure,
         }
 
     # Step 2: use our own free internal stock first.
@@ -179,6 +190,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         "location_id": location_id,
         "status": "awaiting_approval" if chosen else "no_feasible_option",
         "exposure": exposure,
+        "baseline_exposure": baseline_exposure,
         "internal_options": internal,
         "internal_used_qty": internal_used,
         "supplier_options": options,

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalBridge</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>SignalBridge</h1>
+    </div>
+    <p class="tagline">Turn a supply-chain disruption into a traceable recovery plan.</p>
+  </header>
+
+  <main>
+    <!-- LEFT: list of at-risk items -->
+    <section class="panel" id="incidents-panel">
+      <div class="panel-head">
+        <h2>Incidents</h2>
+        <button id="scan-btn" class="btn">Scan for risk</button>
+      </div>
+      <p class="hint" id="incidents-hint">Click “Scan for risk” to find threatened orders.</p>
+      <ul id="incidents-list" class="list"></ul>
+    </section>
+
+    <!-- RIGHT: the recovery plan for the selected item -->
+    <section class="panel" id="plan-panel">
+      <div class="panel-head">
+        <h2>Recovery plan</h2>
+      </div>
+      <p class="hint" id="plan-hint">Select an incident to see its recovery plan.</p>
+      <div id="plan-body" class="hidden"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="api-status">API: checking…</span>
+    <span>Prototype · dummy data · no real purchases</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
