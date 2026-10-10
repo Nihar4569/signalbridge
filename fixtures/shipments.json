@@ -1,0 +1,16 @@
+[
+  {
+    "shipment_id": "SHP-001",
+    "lane_id": "ROUTE-ET-MUM",
+    "destination_location_id": "WH-MUM",
+    "status": "in_transit",
+    "items": [{ "sku": "JACKET-BLUE-M", "quantity": 500 }],
+    "expected_arrival_at": "2026-10-12T12:00:00Z",
+    "assumed_arrival_at": "2026-10-19T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": "assumed_delayed",
+    "carrier_id": "CARR-XYZ",
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  }
+]

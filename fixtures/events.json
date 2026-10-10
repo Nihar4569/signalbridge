@@ -1,0 +1,25 @@
+[
+  {
+    "event_id": "EVT-0007",
+    "signal_ids": ["SIG-0042"],
+    "what": { "subject_type": "location", "subject_id": "IN-JNPA" },
+    "when": {
+      "occurred_at": "2026-10-10T06:00:00Z",
+      "effective_from": "2026-10-10T06:00:00Z",
+      "effective_until": "2026-10-14T06:00:00Z",
+      "recorded_at": "2026-10-10T08:06:00Z"
+    },
+    "where": { "location_id": "IN-JNPA", "unlocode": "INNSA" },
+    "why": {
+      "event_type": "port_suspension",
+      "biz_step": "departing",
+      "disposition": "in_transit_blocked"
+    },
+    "confidence": 0.82,
+    "verification_status": "corroborated",
+    "is_assumption": true,
+    "matched_shipment_ids": ["SHP-001"],
+    "superseded_by": null,
+    "version": 1
+  }
+]

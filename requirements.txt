@@ -1,0 +1,9 @@
+# Runtime dependencies (the pip way).
+# Prefer `uv` if you can — see docs/start.md. This file is the fallback.
+google-adk>=0.2.0
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+python-dotenv>=1.0
+google-cloud-firestore>=2.16
+requests>=2.31

@@ -1,0 +1,17 @@
+[
+  {
+    "sku": "JACKET-BLUE-M",
+    "gtin": null,
+    "name": "Blue winter jacket - Medium",
+    "category": "apparel",
+    "uom": "EA",
+    "unit_cost_minor": 120000,
+    "unit_price_minor": 249900,
+    "currency": "INR",
+    "substitute_skus": ["JACKET-BLUE-L"],
+    "perishable": false,
+    "shelf_life_days": null,
+    "temp_range_c": null,
+    "version": 1
+  }
+]

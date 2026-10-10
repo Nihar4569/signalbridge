@@ -1,0 +1,34 @@
+[project]
+name = "signalbridge"
+version = "0.1.0"
+description = "Turn a supply-chain disruption into a traceable inventory recovery plan."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=0.2.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.6",
+    "python-dotenv>=1.0",
+    "google-cloud-firestore>=2.16",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
