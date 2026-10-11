@@ -276,8 +276,9 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; color: var(--foreground-strong); f
 .card-head h3 { font-size: 16px; font-weight: 500; }
 .card-sub { font-size: 12px; color: var(--muted-foreground); }
 .grid { display: grid; gap: 16px; }
-.cols-2 { grid-template-columns: 1.6fr 1fr; }
-@media (max-width: 1150px) { .cols-2 { grid-template-columns: 1fr; } }
+.grid > * { min-width: 0; } /* long one-line content (alert ticker) must not widen a column */
+.cols-2 { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+@media (max-width: 1150px) { .cols-2 { grid-template-columns: minmax(0, 1fr); } }
 
 .well { background: var(--well); border-radius: var(--radius-sm); }
 
@@ -392,7 +393,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; color: var(--foreground-strong); f
 
 .ticker { display: flex; align-items: center; gap: 12px; margin-top: 14px; background: var(--well); border-radius: var(--radius-sm); padding: 10px 14px; overflow: hidden; }
 .ticker-label { font-size: 12px; font-weight: 500; color: var(--violet); flex: none; }
-.ticker-text { font-size: 13px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticker-text { flex: 1; min-width: 0; font-size: 13px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ============================ table ============================ */
 
