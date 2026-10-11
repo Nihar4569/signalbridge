@@ -22,7 +22,7 @@ def get_signals(location_id: str, store=Depends(store_dep)) -> dict:
     else:
         weather = {"ok": False, "risk": "unknown", "error": "no coordinates"}
 
-    news = news_adapter.search_disruptions(location.get("name", location_id))
+    news = news_adapter.search_disruptions(location.get("news_query") or location.get("name", location_id))
 
     return {
         "location_id": location_id,

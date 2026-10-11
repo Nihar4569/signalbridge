@@ -10,11 +10,15 @@ Paths in Firestore (docs/schema.md):
 from __future__ import annotations
 
 import json
+import os
+import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from . import config
+
+LIST_CACHE_SECONDS = 15
 
 
 @runtime_checkable
@@ -115,6 +119,7 @@ class FirestoreStore:
     ) -> None:
         self.tenant_id = tenant_id or config.TENANT_ID
         self.project = project or config.GOOGLE_CLOUD_PROJECT
+        self._cache: dict[str, tuple[float, list[dict]]] = {}
         if client is not None:
             self._client = client
         else:
@@ -125,6 +130,9 @@ class FirestoreStore:
                 )
             from google.cloud import firestore
 
+            # The SDK treats an empty FIRESTORE_EMULATOR_HOST (as in .env.example) as "use emulator at ''".
+            if not config.FIRESTORE_EMULATOR_HOST:
+                os.environ.pop("FIRESTORE_EMULATOR_HOST", None)
             kwargs: dict[str, Any] = {}
             if self.project:
                 kwargs["project"] = self.project
@@ -138,11 +146,13 @@ class FirestoreStore:
         )
 
     def list(self, collection: str) -> list[dict]:
-        out: list[dict] = []
-        for snap in self._coll(collection).stream():
-            data = snap.to_dict() or {}
-            out.append(dict(data))
-        return out
+        # One page builds several plans, each reading the same collections; cache briefly.
+        hit = self._cache.get(collection)
+        if hit and time.monotonic() - hit[0] < LIST_CACHE_SECONDS:
+            return [dict(d) for d in hit[1]]
+        out = [dict(snap.to_dict() or {}) for snap in self._coll(collection).stream()]
+        self._cache[collection] = (time.monotonic(), out)
+        return [dict(d) for d in out]
 
     def get(self, collection: str, id_field: str, doc_id: str) -> dict | None:
         by_id = self.get_by_id(collection, doc_id)
@@ -161,9 +171,11 @@ class FirestoreStore:
 
     def upsert(self, collection: str, doc_id: str, data: dict) -> None:
         self._coll(collection).document(doc_id).set(dict(data))
+        self._cache.pop(collection, None)
 
     def delete(self, collection: str, doc_id: str) -> None:
         self._coll(collection).document(doc_id).delete()
+        self._cache.pop(collection, None)
 
     def batch_upsert(self, collection: str, items: list[tuple[str, dict]]) -> int:
         """Write many docs efficiently (chunks of 400; Firestore limit is 500)."""
@@ -183,6 +195,7 @@ class FirestoreStore:
                 pending = 0
         if pending:
             batch.commit()
+        self._cache.pop(collection, None)
         return written
 
     def ping(self) -> bool:

@@ -15,6 +15,7 @@ from __future__ import annotations
 from . import exposure as exposure_mod
 from . import governance as governance_mod
 from . import margin as margin_mod
+from . import network as network_mod
 from . import network_balance as nb_mod
 from . import surplus as surplus_mod
 
@@ -44,6 +45,25 @@ def _delayed_units(shipments: list[dict], sku: str, location_id: str) -> int:
             if item.get("sku") == sku:
                 total += int(item["quantity"])
     return total
+
+
+def _disrupted_chokepoints(shipments, lanes, locations, signals) -> dict[str, str]:
+    """Chokepoints delaying our shipments right now: {location_id: name}.
+
+    A sea waypoint counts when it is on an at-risk shipment's lane AND has a live
+    disruptive signal (high-risk weather or a news report) at that place.
+    """
+    sea = {loc["location_id"]: loc for loc in locations if loc.get("type") == "sea_waypoint"}
+    disrupted = {(s.get("payload") or {}).get("location_id") for s in signals if network_mod.is_disruptive(s)}
+    found: dict[str, str] = {}
+    for shipment in shipments:
+        if shipment.get("risk_zone") != "risk":
+            continue
+        for point in (lanes.get(shipment.get("lane_id")) or {}).get("points", []):
+            place = point.get("location_id")
+            if place in sea and place in disrupted:
+                found[place] = sea[place].get("name", place)
+    return found
 
 
 def _penalty_at_risk(order_lines, partners, sku, location_id) -> int:
@@ -125,28 +145,40 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     internal_used = min(internal_free, shortage)
     remainder = shortage - internal_used
 
-    # Step 3: cheapest feasible supplier offer for the remainder.
+    # Step 3: cheapest feasible supplier offer for the remainder. An offer that
+    # sails through a chokepoint that is already delaying our shipments is no rescue.
+    lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
+    blocked = _disrupted_chokepoints(shipments, lanes, locations, store.list("signals"))
     options: list[dict] = []
     for offer in offers:
         if offer.get("sku") != sku:
             continue
+        if offer.get("deliver_to_location_id") not in (None, location_id):
+            continue
         in_time = exposure_mod.parse_ts(offer["delivery_latest"]) <= deadline
         enough = int(offer["available_qty"]) >= remainder
-        feasible = in_time and enough and remainder > 0
+        crosses = [blocked[i] for i in offer.get("route_location_ids") or [] if i in blocked]
+        feasible = in_time and enough and not crosses and remainder > 0
         cost = (
             remainder * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
             if feasible
             else None
         )
-        reason = (
-            "Covers the remaining units before the deadline."
-            if feasible
-            else ("Arrives after the deadline." if not in_time else "Not enough stock.")
-        )
+        if feasible:
+            reason = "Covers the remaining units before the deadline."
+        elif crosses:
+            reason = f"Routes through a chokepoint that is delaying our shipments ({', '.join(crosses)})."
+        elif not in_time:
+            reason = "Arrives after the deadline."
+        else:
+            reason = "Not enough stock."
         options.append(
             {
                 "offer_id": offer["offer_id"],
                 "supplier_id": offer.get("supplier_id"),
+                "ships_from": offer.get("ships_from"),
+                "mode": offer.get("mode"),
+                "route": offer.get("route"),
                 "qty": remainder if feasible else 0,
                 "cost_minor": cost,
                 "arrives_at": offer["delivery_latest"],

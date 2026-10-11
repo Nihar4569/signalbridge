@@ -1,5 +1,71 @@
 [
   {
+    "location_id": "AE-JEA",
+    "name": "Jebel Ali port",
+    "type": "port",
+    "country": "AE",
+    "lat": 25.01,
+    "lon": 55.06,
+    "unlocode": "AEJEA",
+    "news_query": "Jebel Ali",
+    "aliases": [
+      "Jebel Ali",
+      "Dubai port"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "BE-ANR",
+    "name": "Port of Antwerp-Bruges",
+    "type": "port",
+    "country": "BE",
+    "lat": 51.26,
+    "lon": 4.4,
+    "unlocode": "BEANR",
+    "news_query": "Antwerp port",
+    "aliases": [
+      "Antwerp"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "CN-YTN",
+    "name": "Yantian port (Shenzhen)",
+    "type": "port",
+    "country": "CN",
+    "lat": 22.57,
+    "lon": 114.27,
+    "unlocode": "CNYTN",
+    "news_query": "Yantian port",
+    "aliases": [
+      "Yantian",
+      "Shenzhen port"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "DJ-JIB",
+    "name": "Port of Djibouti",
+    "type": "port",
+    "country": "DJ",
+    "lat": 11.6,
+    "lon": 43.14,
+    "unlocode": "DJJIB",
+    "news_query": "Djibouti port",
+    "aliases": [
+      "Djibouti"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
     "location_id": "DS-PUN-01",
     "active": true,
     "aliases": [
@@ -46,7 +112,41 @@
     "lon": 72.94,
     "name": "Nhava Sheva port",
     "type": "port",
-    "unlocode": "INNSA"
+    "unlocode": "INNSA",
+    "news_query": "Nhava Sheva"
+  },
+  {
+    "location_id": "IN-MAA",
+    "name": "Chennai port",
+    "type": "port",
+    "country": "IN",
+    "lat": 13.1,
+    "lon": 80.3,
+    "unlocode": "INMAA",
+    "news_query": "Chennai port",
+    "aliases": [
+      "Chennai port"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "IN-MUN",
+    "name": "Mundra port",
+    "type": "port",
+    "country": "IN",
+    "lat": 22.74,
+    "lon": 69.7,
+    "unlocode": "INMUN",
+    "news_query": "Mundra port",
+    "aliases": [
+      "Mundra",
+      "Adani Mundra"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
   },
   {
     "location_id": "MX-ZLO",
@@ -64,7 +164,168 @@
     "lon": -104.315,
     "name": "Manzanillo port",
     "type": "port",
-    "unlocode": "MXZLO"
+    "unlocode": "MXZLO",
+    "news_query": "Manzanillo"
+  },
+  {
+    "location_id": "SEA-ADEN",
+    "name": "Gulf of Aden",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 12.5,
+    "lon": 47.5,
+    "unlocode": null,
+    "news_query": "Gulf of Aden",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-ANDAMAN",
+    "name": "Andaman Sea",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 7.5,
+    "lon": 95.0,
+    "unlocode": null,
+    "news_query": "Andaman Sea",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-BAB",
+    "name": "Bab el-Mandeb Strait",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 12.6,
+    "lon": 43.4,
+    "unlocode": null,
+    "news_query": "Bab el-Mandeb",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-BLACK",
+    "name": "Black Sea",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 43.8,
+    "lon": 30.5,
+    "unlocode": null,
+    "news_query": "Black Sea",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-BOB",
+    "name": "Bay of Bengal",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 11.0,
+    "lon": 85.5,
+    "unlocode": null,
+    "news_query": "Bay of Bengal",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-HORMUZ",
+    "name": "Strait of Hormuz",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 26.55,
+    "lon": 56.45,
+    "unlocode": null,
+    "news_query": "Strait of Hormuz",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-MALACCA",
+    "name": "Strait of Malacca",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 3.5,
+    "lon": 100.5,
+    "unlocode": null,
+    "news_query": "Strait of Malacca",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-REDSEA",
+    "name": "Red Sea",
+    "type": "sea_waypoint",
+    "country": null,
+    "lat": 20.0,
+    "lon": 38.8,
+    "unlocode": null,
+    "news_query": "Red Sea",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "SEA-SUEZ",
+    "name": "Suez Canal",
+    "type": "sea_waypoint",
+    "country": "EG",
+    "lat": 30.6,
+    "lon": 32.33,
+    "unlocode": null,
+    "news_query": "Suez Canal",
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "UA-CHO",
+    "name": "Chornomorsk port",
+    "type": "port",
+    "country": "UA",
+    "lat": 46.3,
+    "lon": 30.66,
+    "unlocode": "UAILK",
+    "news_query": "Chornomorsk",
+    "aliases": [
+      "Chornomorsk",
+      "Illichivsk"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "WH-CHN",
+    "name": "Chennai Distribution Centre",
+    "type": "dc",
+    "country": "IN",
+    "lat": 12.97,
+    "lon": 79.95,
+    "unlocode": null,
+    "news_query": null,
+    "aliases": [
+      "Chennai DC",
+      "Sriperumbudur DC"
+    ],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
   },
   {
     "location_id": "WH-DEL",

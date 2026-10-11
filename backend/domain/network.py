@@ -6,6 +6,23 @@ These helpers derive the display view from those facts in one place.
 """
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
+from ..core import config
+
+NEWS_ALERT_DAYS = 3
+
+
+def is_disruptive(signal: dict) -> bool:
+    """High-risk weather, or recent news whose headline names a disruption."""
+    payload = signal.get("payload") or {}
+    if signal.get("source") == "open-meteo":
+        return payload.get("risk") == "high"
+    since = (datetime.now(timezone.utc) - timedelta(days=NEWS_ALERT_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
+    if (signal.get("published_at") or "") < since:
+        return False
+    title = (signal.get("title") or "").lower()
+    return bool(payload.get("event_type")) or any(word in title for word in config.DISRUPTION_KEYWORDS)
 
 def shipment_health(shipment: dict) -> str:
     """on_time | at_risk | delayed. Triage (risk_zone) is the source of truth."""
@@ -14,6 +31,17 @@ def shipment_health(shipment: dict) -> str:
     if shipment.get("risk_zone") == "risk":
         return "at_risk"
     return "on_time"
+
+
+def shipment_progress(shipment: dict) -> float:
+    """How far along its lane a shipment is (0-1), from departure and ETA dates."""
+    try:
+        start = datetime.fromisoformat(shipment["departed_at"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(shipment["expected_arrival_at"].replace("Z", "+00:00"))
+    except (KeyError, AttributeError, ValueError):
+        return float(shipment.get("progress", 0.5))
+    done = (datetime.now(timezone.utc) - start) / (end - start)
+    return round(min(max(done, 0.02), 0.98), 3)
 
 
 def lane_points(lane: dict | None, locations: dict) -> list[dict]:
@@ -47,16 +75,28 @@ def _near(a: dict, lat: float, lon: float) -> bool:
 
 
 def active_alerts(store) -> list[dict]:
-    """Stored alerts plus every disruptive signal (high-risk weather, any news)."""
+    """Stored alerts, high-risk weather, and one news alert per place (latest headline)."""
     locations = {loc["location_id"]: loc for loc in store.list("locations")}
     lanes = store.list("lanes")
     alerts = list(store.list("alerts"))
 
+    weather, news_by_place = [], {}
     for signal in store.list("signals"):
+        if not is_disruptive(signal):
+            continue
+        if signal.get("source") == "open-meteo":
+            weather.append(signal)
+        else:
+            news_by_place.setdefault((signal.get("payload") or {}).get("location_id"), []).append(signal)
+
+    latest_news = []
+    for items in news_by_place.values():
+        items.sort(key=lambda s: s.get("published_at") or "", reverse=True)
+        latest_news.append((items[0], len(items)))
+
+    for signal, count in [(s, 1) for s in weather] + latest_news:
         payload = signal.get("payload") or {}
         is_weather = signal.get("source") == "open-meteo"
-        if is_weather and payload.get("risk") != "high":
-            continue
         loc = locations.get(payload.get("location_id")) or {}
         if loc.get("lat") is None:
             continue
@@ -69,20 +109,23 @@ def active_alerts(store) -> list[dict]:
             None,
         )
         if is_weather:
+            title = signal.get("title")
             detail = (
                 f"Gusts up to {payload.get('max_wind_gust_kmh')} km/h, "
                 f"rain up to {payload.get('max_precip_mm')} mm"
             )
         else:
-            detail = signal.get("source_url") or ""
+            title = f"{loc.get('name')}: {signal.get('title')}"
+            detail = f"{count} disruption report(s) in the last {NEWS_ALERT_DAYS} days"
         alerts.append({
             "alert_id": signal.get("signal_id"),
             "type": "weather" if is_weather else "disruption",
             "severity": "high",
             "lat": loc["lat"],
             "lon": loc["lon"],
-            "title": signal.get("title"),
+            "title": title,
             "detail": detail,
+            "source_url": signal.get("source_url"),
             "lane_id": lane_id,
             "fetched_at": signal.get("fetched_at"),
         })

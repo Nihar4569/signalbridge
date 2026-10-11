@@ -70,7 +70,7 @@ def ingest_news_signals(location: dict, news: dict, *, store) -> list[dict]:
             continue
         doc = {
             "signal_id": news_signal_id(url),
-            "source": "gdelt",
+            "source": article.get("provider") or news.get("source") or "gdelt",
             "source_url": url,
             "title": (article.get("title") or "")[:300],
             "raw_hash": hashlib.sha1(url.encode("utf-8")).hexdigest(),
@@ -81,6 +81,7 @@ def ingest_news_signals(location: dict, news: dict, *, store) -> list[dict]:
             "payload": {
                 "location_id": location["location_id"],
                 "domain": article.get("domain"),
+                "source_name": article.get("source_name"),
                 "country": article.get("sourcecountry"),
             },
         }

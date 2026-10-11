@@ -49,6 +49,7 @@ class Location(_Model):
     lat: float | None = None
     lon: float | None = None
     aliases: list[str] = Field(default_factory=list)
+    news_query: str | None = None
     can_transfer_to: list[str] = Field(default_factory=list)
     active: bool = True
 
@@ -66,6 +67,9 @@ class Partner(_Model):
     roles: list[str] = Field(default_factory=list)
     gln: str | None = None
     service_level: ServiceLevel | None = None
+    email: str | None = None
+    country: str | None = None
+    city: str | None = None
     active: bool = True
 
 
@@ -138,6 +142,7 @@ class Shipment(_Model):
     destination_location_id: str
     status: str = "in_transit"
     items: list[ShipmentItem] = Field(default_factory=list)
+    departed_at: str | None = None
     expected_arrival_at: str | None = None
     assumed_arrival_at: str | None = None
     confirmed_arrival_at: str | None = None
@@ -164,6 +169,11 @@ class SupplierOffer(_Model):
     currency: str = "INR"
     delivery_latest: str
     expires_at: str | None = None
+    ships_from: str | None = None
+    mode: str | None = None  # sea | air | road | rail
+    route: str | None = None
+    route_location_ids: list[str] = Field(default_factory=list)
+    note: str | None = None
     version: int = 1
 
 

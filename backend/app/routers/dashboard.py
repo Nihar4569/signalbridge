@@ -74,7 +74,7 @@ def map_data(store=Depends(store_dep)) -> dict:
                 "carrier_id": shipment.get("carrier_id"),
                 "health": health,
                 "color": HEALTH_COLORS.get(health, "green"),
-                "progress": shipment.get("progress", 0.5),
+                "progress": network_mod.shipment_progress(shipment),
                 "points": [[p["lat"], p["lon"]] for p in points],
                 "destination_location_id": shipment.get("destination_location_id"),
                 "eta": shipment.get("assumed_arrival_at") or shipment.get("expected_arrival_at"),

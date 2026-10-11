@@ -111,6 +111,11 @@ def build_qa_context(store, plan: dict) -> dict:
             "shipping_minor": offer.get("shipping_minor"),
             "delivery_latest": offer.get("delivery_latest"),
             "expires_at": offer.get("expires_at"),
+            "deliver_to": offer.get("deliver_to_location_id"),
+            "ships_from": offer.get("ships_from"),
+            "mode": offer.get("mode"),
+            "route": offer.get("route"),
+            "note": offer.get("note"),
         })
 
     return {

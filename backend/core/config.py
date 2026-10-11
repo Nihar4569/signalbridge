@@ -48,7 +48,7 @@ GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 FIRESTORE_EMULATOR_HOST = os.getenv("FIRESTORE_EMULATOR_HOST", "")
 
 # Weather + news scan while the API process is running. 0 turns the loop off.
-SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "120"))
+SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "900"))
 
 # --- external APIs (free, no key needed) ---
 HTTP_TIMEOUT = 15  # seconds, for any outbound API call
@@ -64,6 +64,7 @@ NEWS_MAX_RECORDS = int(os.getenv("NEWS_MAX_RECORDS", "10"))
 DISRUPTION_KEYWORDS = [
     "strike", "closure", "closed", "suspended", "congestion",
     "blocked", "shutdown", "cyclone", "storm", "flood",
+    "attack", "attacked", "drone", "missile", "seized", "diverted", "blockade",
 ]
 
 # Weather risk thresholds (worst value in the forecast window).

@@ -15,6 +15,114 @@
     }
   },
   {
+    "partner_id": "CUST-BHARATMART",
+    "name": "BharatMart Online (Diwali sale)",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Chennai",
+    "gln": null,
+    "service_level": {
+      "tier": "vip",
+      "otif_target_pct": 98.0,
+      "penalty_per_late_order_minor": 50000000,
+      "sla_hours": 24
+    },
+    "email": "cust-bharatmart@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-HORECA",
+    "name": "Capital HoReCa Wholesale",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Delhi",
+    "gln": null,
+    "service_level": {
+      "tier": "standard",
+      "otif_target_pct": 95.0,
+      "penalty_per_late_order_minor": 4000000,
+      "sla_hours": 72
+    },
+    "email": "cust-horeca@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-MITHAI",
+    "name": "Shree Annapurna Sweets & Namkeen",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Delhi NCR",
+    "gln": null,
+    "service_level": {
+      "tier": "vip",
+      "otif_target_pct": 98.0,
+      "penalty_per_late_order_minor": 15000000,
+      "sla_hours": 48
+    },
+    "email": "cust-mithai@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-NORTHSTAR",
+    "name": "Northstar Corporate Gifting Pvt Ltd",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Mumbai",
+    "gln": null,
+    "service_level": {
+      "tier": "vip",
+      "otif_target_pct": 98.0,
+      "penalty_per_late_order_minor": 20000000,
+      "sla_hours": 24
+    },
+    "email": "cust-northstar@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-QCOM",
+    "name": "Quick-commerce partner (Mumbai dark stores)",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Mumbai",
+    "gln": null,
+    "service_level": {
+      "tier": "gold",
+      "otif_target_pct": 95.0,
+      "penalty_per_late_order_minor": 7500000,
+      "sla_hours": 12
+    },
+    "email": "cust-qcom@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-TECHCORP",
+    "name": "Chennai IT services firm (laptop refresh)",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Chennai",
+    "gln": null,
+    "service_level": {
+      "tier": "standard",
+      "otif_target_pct": 95.0,
+      "penalty_per_late_order_minor": 10000000,
+      "sla_hours": 72
+    },
+    "email": "cust-techcorp@partners.signalbridge.demo",
+    "active": true
+  },
+  {
     "partner_id": "SUP-A",
     "active": true,
     "gln": null,
@@ -23,5 +131,200 @@
       "supplier"
     ],
     "service_level": null
+  },
+  {
+    "partner_id": "SUP-AE-DATES",
+    "name": "UAE dates trader",
+    "roles": [
+      "supplier"
+    ],
+    "country": "AE",
+    "city": "Jebel Ali",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-ae-dates@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-AR-OIL",
+    "name": "Argentine sunflower oil exporter",
+    "roles": [
+      "supplier"
+    ],
+    "country": "AR",
+    "city": "Rosario",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-ar-oil@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-BE-CHOC",
+    "name": "Belgian praline maker",
+    "roles": [
+      "supplier"
+    ],
+    "country": "BE",
+    "city": "Antwerp",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-be-choc@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-BLR-DIST",
+    "name": "Bengaluru IT distributor",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Bengaluru",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-blr-dist@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-DEL-OIL",
+    "name": "Naya Bazar edible-oil distributor",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Delhi",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-del-oil@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-DXB-FMCG",
+    "name": "Dubai FMCG re-exporter",
+    "roles": [
+      "supplier"
+    ],
+    "country": "AE",
+    "city": "Jebel Ali",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-dxb-fmcg@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-JNPA-BOND",
+    "name": "Nhava Sheva bonded-warehouse importer",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Navi Mumbai",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-jnpa-bond@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-KANDLA",
+    "name": "Kandla edible-oil refinery",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Kandla, Gujarat",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-kandla@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-NOIDA-EMS",
+    "name": "Noida electronics contract assembler",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Noida",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-noida-ems@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-OM-DATES",
+    "name": "Omani dates exporter",
+    "roles": [
+      "supplier"
+    ],
+    "country": "OM",
+    "city": "Sohar",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-om-dates@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-RU-AGRO",
+    "name": "Black Sea sunflower oil exporter",
+    "roles": [
+      "supplier"
+    ],
+    "country": "RU",
+    "city": "Novorossiysk",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-ru-agro@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-SA-DATES",
+    "name": "Saudi dates exporter (Al-Qassim)",
+    "roles": [
+      "supplier"
+    ],
+    "country": "SA",
+    "city": "Jeddah",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-sa-dates@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-SG-DIST",
+    "name": "Singapore IT distributor",
+    "roles": [
+      "supplier"
+    ],
+    "country": "SG",
+    "city": "Singapore",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-sg-dist@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-SZ-OEM",
+    "name": "Shenzhen laptop OEM",
+    "roles": [
+      "supplier"
+    ],
+    "country": "CN",
+    "city": "Shenzhen",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-sz-oem@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-VASHI",
+    "name": "Vashi APMC dry-fruit wholesaler",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Navi Mumbai",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-vashi@partners.signalbridge.demo",
+    "active": true
   }
 ]

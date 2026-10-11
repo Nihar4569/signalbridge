@@ -33,19 +33,21 @@ def scan_route_signals(store=None) -> list[dict]:
     store = store or get_store()
     locations = {loc["location_id"]: loc for loc in store.list("locations")}
     results: list[dict] = []
-    # GDELT allows about one search every 5 seconds. Space news calls out.
-    for index, location_id in enumerate(signal_scan_location_ids()):
+    # The news adapter spaces out GDELT calls and falls back to Google News itself.
+    for location_id in signal_scan_location_ids():
         location = locations.get(location_id)
         if not location:
             continue
-        if index > 0:
-            time.sleep(5)
         weather = (
             weather_adapter.get_weather_risk(location["lat"], location["lon"])
             if location.get("lat") is not None
             else {"ok": False, "risk": "unknown", "error": "no coordinates"}
         )
-        news = news_adapter.search_disruptions(location.get("name", location_id))
+        # Our own warehouses are not in the news; ports and sea areas are.
+        if location.get("type") in ("dc", "dark_store"):
+            news = {"ok": True, "count": 0, "articles": []}
+        else:
+            news = news_adapter.search_disruptions(location.get("news_query") or location.get("name", location_id))
         ingestion_mod.ingest_weather_signal(location, weather, store=store)
         ingestion_mod.ingest_news_signals(location, news, store=store)
         articles = news.get("articles") or []
@@ -74,6 +76,7 @@ def scan_route_signals(store=None) -> list[dict]:
         signals=store.list("signals"),
         locations=store.list("locations"),
         products=store.list("products"),
+        lanes=store.list("lanes"),
     )
     if judgments is None:
         log.warning("Triage skipped. Gemini did not answer, so risk flags were left unchanged.")
