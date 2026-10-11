@@ -1,0 +1,97 @@
+[
+  {
+    "signal_id": "SIG-WEATHER-EP-SIMON-1011",
+    "fetched_at": "2026-10-10T20:10:19.721981Z",
+    "payload": {
+      "error": null,
+      "worst_weather_code": 96,
+      "location_id": "EP-SIMON-1011",
+      "max_precip_mm": 24.2,
+      "risk": "high",
+      "max_wind_gust_kmh": 192.2
+    },
+    "published_at": "2026-10-10T20:10:19.721981Z",
+    "raw_hash": null,
+    "source": "open-meteo",
+    "source_url": null,
+    "status": "processed",
+    "title": "Weather risk at Eastern Pacific approach to Manzanillo: high",
+    "ttl_at": null
+  },
+  {
+    "signal_id": "SIG-WEATHER-IN-JNPA",
+    "fetched_at": "2026-10-10T20:10:38.661052Z",
+    "payload": {
+      "risk": "low",
+      "error": null,
+      "max_precip_mm": 0.7,
+      "max_wind_gust_kmh": 24.8,
+      "location_id": "IN-JNPA",
+      "worst_weather_code": 53
+    },
+    "published_at": "2026-10-10T20:10:38.661052Z",
+    "raw_hash": null,
+    "source": "open-meteo",
+    "source_url": null,
+    "status": "processed",
+    "title": "Weather risk at Nhava Sheva port: low",
+    "ttl_at": null
+  },
+  {
+    "signal_id": "SIG-WEATHER-MX-ZLO",
+    "fetched_at": "2026-10-10T20:10:59.111744Z",
+    "payload": {
+      "risk": "high",
+      "error": null,
+      "worst_weather_code": 95,
+      "location_id": "MX-ZLO",
+      "max_precip_mm": 16.5,
+      "max_wind_gust_kmh": 86.0
+    },
+    "published_at": "2026-10-10T20:10:59.111744Z",
+    "raw_hash": null,
+    "source": "open-meteo",
+    "source_url": null,
+    "status": "processed",
+    "title": "Weather risk at Manzanillo port: high",
+    "ttl_at": null
+  },
+  {
+    "signal_id": "SIG-WEATHER-WH-MUM",
+    "fetched_at": "2026-10-10T20:11:16.971572Z",
+    "payload": {
+      "max_wind_gust_kmh": 35.3,
+      "error": null,
+      "max_precip_mm": 0.8,
+      "location_id": "WH-MUM",
+      "worst_weather_code": 53,
+      "risk": "low"
+    },
+    "published_at": "2026-10-10T20:11:16.971572Z",
+    "raw_hash": null,
+    "source": "open-meteo",
+    "source_url": null,
+    "status": "processed",
+    "title": "Weather risk at Mumbai Distribution Centre: low",
+    "ttl_at": null
+  },
+  {
+    "signal_id": "SIG-WEATHER-WH-ZLO",
+    "fetched_at": "2026-10-10T20:11:34.343941Z",
+    "payload": {
+      "max_wind_gust_kmh": 86.0,
+      "location_id": "WH-ZLO",
+      "risk": "high",
+      "error": null,
+      "worst_weather_code": 95,
+      "max_precip_mm": 16.5
+    },
+    "published_at": "2026-10-10T20:11:34.343941Z",
+    "raw_hash": null,
+    "source": "open-meteo",
+    "source_url": null,
+    "status": "processed",
+    "title": "Weather risk at Manzanillo distribution centre: high",
+    "ttl_at": null
+  }
+]

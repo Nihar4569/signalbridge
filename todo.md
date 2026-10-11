@@ -17,8 +17,18 @@ Last updated: 2026-10-10 · Status: **prototype runs end-to-end on dummy data**.
 - [x] Frontend dashboard (`frontend/`) — scan → plan → explain → approve. No build step.
 - [x] **Live external APIs (free, no key): Open-Meteo weather + GDELT news**, with location
       filtering. Exposed via `GET /signals/{location}`, the `signal_agent` (ADK), and the worker.
+- [x] **Impressive control-tower UI**: live Leaflet map with colored routes, pulsing moving
+      shipment markers, weather/disruption pins, alerts ticker, KPI row, features grid.
+      Endpoints `/overview` + `/map`. Rich multi-route dummy data. Deploys to Firebase Hosting.
+- [x] **Professional React dashboard** (Vite + React, Material 3 dark / Gemini palette):
+      collapsible sidebar with all features, 6 pages, animated KPIs, live map, and a
+      Gemini-branded **AI Plan modal** (thinking animation → full plan → approve → fulfilment).
+      One-command build: `npm run build` → `frontend/dist/` → Firebase Hosting.
+- [x] **Post-approval automation**: approve → reserve → internal transfer + supplier purchase
+      order → emails (simulated by default, real SMTP optional) → order covered. `GET /fulfillments`
+      tracking. Recovered route turns green on the map. See docs/after_plan_approval.md.
 - [x] Dummy data in `fixtures/`. 7 unit tests pass.
-- [x] Docs: start, simple, calculation, architecture, agents, schema, external_api, scheduler, manual_work.
+- [x] Docs: start, frontend_setup, simple, calculation, architecture, agents, schema, external_api, scheduler, manual_work.
 
 ---
 
@@ -35,8 +45,8 @@ Pick any; they don't need cloud access.
 - [ ] **Severity sorting** — rank incidents by revenue-at-risk on the dashboard.
 - [ ] **Rejected-options clarity** — show *why* each supplier was rejected (already
       in the data; just surface it nicer in the UI).
-- [ ] **`FirestoreStore` class** — write the Firestore version of `core/store.py`
-      so the swap is ready (still needs you to create the DB — see manual_work).
+- [x] **`FirestoreStore` class** — `backend/core/store.py` + models + seed script
+      ready. Still needs you to create the DB / auth — see manual_work.
 - [ ] **Full ADK agent run endpoint** — expose the 3-agent pipeline
       (`backend/agent/`) over an endpoint instead of the single REST call.
 - [ ] **Tests for the API** — add endpoint tests with FastAPI's TestClient.

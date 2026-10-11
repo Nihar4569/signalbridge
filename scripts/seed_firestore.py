@@ -1,65 +1,93 @@
-"""Seed Google Firestore from the fixtures (MANUAL step - needs cloud auth).
+"""Seed Google Firestore from fixtures/ (needs cloud auth or emulator).
 
-Do NOT run this until you have finished the Firebase setup in
-docs/manual_work.md. It is a skeleton that shows how seeding will work.
-
+    # real cloud (ADC + GOOGLE_CLOUD_PROJECT)
     python -m scripts.seed_firestore
+
+    # emulator
+    set FIRESTORE_EMULATOR_HOST=localhost:8080
+    python -m scripts.seed_firestore
+
+Writes to: tenants/{TENANT_ID}/{collection}/{doc_id}
+Validates each doc against backend.models before writing.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 
 from backend.core import config
-from backend.core.store import LocalStore
-
-COLLECTIONS = [
-    "products", "locations", "stock_balances", "order_lines",
-    "shipments", "supplier_offers", "partners", "events",
-]
+from backend.core.store import FirestoreStore, LocalStore, reset_store_cache
+from backend.models import SEED_COLLECTIONS, doc_id_for, parse_doc
 
 
-def main() -> None:
-    if not config.GOOGLE_CLOUD_PROJECT:
-        print("GOOGLE_CLOUD_PROJECT is not set. See docs/manual_work.md.")
-        sys.exit(1)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Seed Firestore from fixtures/")
+    parser.add_argument(
+        "--tenant",
+        default=config.TENANT_ID,
+        help=f"Tenant id (default: {config.TENANT_ID})",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate and print paths only; do not write",
+    )
+    args = parser.parse_args(argv)
 
-    # Imported here so the project runs without google-cloud-firestore installed.
-    from google.cloud import firestore  # type: ignore
-
-    client = firestore.Client(project=config.GOOGLE_CLOUD_PROJECT)
     local = LocalStore()
-    tenant = config.TENANT_ID
+    total = 0
+    prepared: dict[str, list[tuple[str, dict]]] = {}
 
-    for collection in COLLECTIONS:
-        docs = local.list(collection)
-        for doc in docs:
-            doc_id = _doc_id(collection, doc)
-            path = f"tenants/{tenant}/{collection}/{doc_id}"
-            client.document(path).set(doc)
-        print(f"Seeded {len(docs):>3} docs into {collection}")
+    for collection in SEED_COLLECTIONS:
+        items: list[tuple[str, dict]] = []
+        for raw in local._load_file(collection):
+            try:
+                doc = parse_doc(collection, raw)
+                did = doc_id_for(collection, doc)
+            except Exception as exc:  # noqa: BLE001 — show which fixture failed
+                print(f"  VALIDATION FAIL {collection}: {exc}")
+                return 1
+            items.append((did, doc))
+            total += 1
+        prepared[collection] = items
+        print(f"  prepared {len(items):>3} docs → tenants/{args.tenant}/{collection}/")
 
-    print("\nDone. Firestore now has the demo data.")
+    if args.dry_run:
+        print(f"\nDry run OK — {total} documents would be written.")
+        return 0
 
+    if not config.GOOGLE_CLOUD_PROJECT and not config.FIRESTORE_EMULATOR_HOST:
+        print(
+            "Set GOOGLE_CLOUD_PROJECT (cloud) or FIRESTORE_EMULATOR_HOST (emulator).\n"
+            "See docs/manual_work.md."
+        )
+        return 1
 
-def _doc_id(collection: str, doc: dict) -> str:
-    if collection == "products":
-        return doc["sku"]
-    if collection == "locations":
-        return doc["location_id"]
-    if collection == "stock_balances":
-        return f"{doc['location_id']}__{doc['sku']}"
-    if collection == "order_lines":
-        return doc["line_id"]
-    if collection == "shipments":
-        return doc["shipment_id"]
-    if collection == "supplier_offers":
-        return doc["offer_id"]
-    if collection == "partners":
-        return doc["partner_id"]
-    if collection == "events":
-        return doc["event_id"]
-    raise ValueError(f"No id rule for collection {collection}")
+    store = FirestoreStore(tenant_id=args.tenant)
+    store._client.collection("tenants").document(args.tenant).set(
+        {
+            "tenant_id": args.tenant,
+            "name": "SignalBridge demo tenant",
+            "seeded_from": "fixtures/",
+        },
+        merge=True,
+    )
+
+    written = 0
+    for collection, items in prepared.items():
+        n = store.batch_upsert(collection, items)
+        written += n
+        print(f"  seeded  {n:>3} docs → tenants/{args.tenant}/{collection}/")
+
+    reset_store_cache()
+    print(
+        f"\nDone. Wrote {written} documents to project "
+        f"{config.GOOGLE_CLOUD_PROJECT or '(emulator)'} "
+        f"as tenant '{args.tenant}'."
+    )
+    print("Set DATA_BACKEND=firestore in .env to use this data.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

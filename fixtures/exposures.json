@@ -1,0 +1,42 @@
+[
+  {
+    "exposure_id": "EXP-JACKET-BLUE-M__WH-MUM",
+    "affected_order_line_ids": [
+      "LINE-001"
+    ],
+    "computed_at": "2026-10-10T20:11:37.987562Z",
+    "deadline_at": "2026-10-16T12:00:00+00:00",
+    "demand_by_deadline": 200,
+    "event_id": null,
+    "location_id": "WH-MUM",
+    "penalty_at_risk_minor": 0,
+    "revenue_at_risk_minor": 0,
+    "risk_zone": "safe",
+    "severity": null,
+    "shipment_id": "SHP-001",
+    "shortage_qty": 0,
+    "sku": "JACKET-BLUE-M",
+    "supply_by_deadline": 620,
+    "triage_decision": "ignored"
+  },
+  {
+    "exposure_id": "EXP-JACKET-NAVY-M__WH-ZLO",
+    "affected_order_line_ids": [
+      "LINE-MX-001"
+    ],
+    "computed_at": "2026-10-10T20:11:37.987562Z",
+    "deadline_at": "2026-10-16T12:00:00+00:00",
+    "demand_by_deadline": 100,
+    "event_id": null,
+    "location_id": "WH-ZLO",
+    "penalty_at_risk_minor": 0,
+    "revenue_at_risk_minor": 19992000,
+    "risk_zone": "risk",
+    "severity": "high",
+    "shipment_id": "SHP-MX-001",
+    "shortage_qty": 80,
+    "sku": "JACKET-NAVY-M",
+    "supply_by_deadline": 20,
+    "triage_decision": "actionable"
+  }
+]

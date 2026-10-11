@@ -1,32 +1,172 @@
 [
   {
-    "sku": "JACKET-BLUE-M",
-    "location_id": "WH-MUM",
-    "on_hand_qty": 120,
+    "sku": "CHOC-GIFT-500",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 150,
     "reserved_qty": 0,
-    "incoming_qty": 500,
+    "incoming_qty": 0,
     "outgoing_qty": 0,
-    "updated_at": "2026-10-10T08:00:00Z",
+    "updated_at": "2026-10-11T06:00:00Z",
     "version": 1
   },
   {
-    "sku": "JACKET-BLUE-M",
+    "incoming_qty": 0,
     "location_id": "DS-PUN-01",
     "on_hand_qty": 20,
-    "reserved_qty": 0,
-    "incoming_qty": 0,
     "outgoing_qty": 0,
+    "reserved_qty": 0,
+    "sku": "JACKET-BLUE-M",
     "updated_at": "2026-10-10T08:00:00Z",
     "version": 1
   },
   {
-    "sku": "JACKET-BLUE-M",
-    "location_id": "WH-DEL",
-    "on_hand_qty": 15,
-    "reserved_qty": 15,
+    "sku": "SUNOIL-15L",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 60,
+    "reserved_qty": 0,
     "incoming_qty": 0,
     "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "CHOC-GIFT-500",
+    "location_id": "WH-CHN",
+    "on_hand_qty": 900,
+    "reserved_qty": 100,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "DATES-KHALAS-1KG",
+    "location_id": "WH-CHN",
+    "on_hand_qty": 600,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "LAPTOP-14-I5",
+    "location_id": "WH-CHN",
+    "on_hand_qty": 250,
+    "reserved_qty": 0,
+    "incoming_qty": 1500,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "CHOC-GIFT-500",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 1400,
+    "reserved_qty": 200,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "DATES-KHALAS-1KG",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 2500,
+    "reserved_qty": 500,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "incoming_qty": 0,
+    "location_id": "WH-DEL",
+    "on_hand_qty": 15,
+    "outgoing_qty": 0,
+    "reserved_qty": 15,
+    "sku": "JACKET-BLUE-M",
     "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "LAPTOP-14-I5",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 180,
+    "reserved_qty": 30,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "SUNOIL-15L",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 900,
+    "reserved_qty": 0,
+    "incoming_qty": 6000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "CHOC-GIFT-500",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 1800,
+    "reserved_qty": 0,
+    "incoming_qty": 12000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "DATES-KHALAS-1KG",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 3000,
+    "reserved_qty": 0,
+    "incoming_qty": 20000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "incoming_qty": 500,
+    "location_id": "WH-MUM",
+    "on_hand_qty": 120,
+    "outgoing_qty": 0,
+    "reserved_qty": 0,
+    "sku": "JACKET-BLUE-M",
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "LAPTOP-14-I5",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 300,
+    "reserved_qty": 100,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "SUNOIL-15L",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 1200,
+    "reserved_qty": 400,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "incoming_qty": 400,
+    "location_id": "WH-ZLO",
+    "on_hand_qty": 20,
+    "outgoing_qty": 0,
+    "reserved_qty": 0,
+    "sku": "JACKET-NAVY-M",
+    "updated_at": "2026-10-10T20:00:00Z",
     "version": 1
   }
 ]

@@ -1,1 +1,1 @@
-"""Background worker (runs on Cloud Run, triggered by Cloud Scheduler)."""
+"""Background monitor. The API runs the weather and news scan while it is up."""

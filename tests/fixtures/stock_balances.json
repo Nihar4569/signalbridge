@@ -1,0 +1,32 @@
+[
+  {
+    "sku": "JACKET-BLUE-M",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 120,
+    "reserved_qty": 0,
+    "incoming_qty": 500,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "JACKET-BLUE-M",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 20,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "JACKET-BLUE-M",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 15,
+    "reserved_qty": 15,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  }
+]

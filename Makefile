@@ -1,7 +1,7 @@
 # SignalBridge — common commands. Run `make help` to see them.
 # These are shortcuts. If `make` is not your thing, the real commands are in docs/start.md.
 
-.PHONY: help setup-uv setup-pip demo test api agent worker seed lint
+.PHONY: help setup-uv setup-pip demo test api agent worker seed seed-dry lint
 
 help:
 	@echo "SignalBridge commands:"
@@ -12,6 +12,8 @@ help:
 	@echo "  make api         - start the backend API (http://localhost:8000)"
 	@echo "  make agent       - run the ADK agent in the terminal (needs GOOGLE_API_KEY)"
 	@echo "  make worker      - run the background monitor once"
+	@echo "  make seed        - seed Firestore from fixtures/ (needs GCP auth)"
+	@echo "  make seed-dry    - validate fixtures -> Firestore mapping, no write"
 	@echo "  make lint        - check code style with ruff"
 
 setup-uv:
@@ -34,6 +36,12 @@ agent:
 
 worker:
 	python -m backend.worker.main
+
+seed:
+	python -m scripts.seed_firestore
+
+seed-dry:
+	python -m scripts.seed_firestore --dry-run
 
 lint:
 	ruff check .

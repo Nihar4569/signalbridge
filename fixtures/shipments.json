@@ -1,16 +1,134 @@
 [
   {
     "shipment_id": "SHP-001",
+    "assumed_arrival_at": "2026-10-19T12:00:00Z",
+    "carrier_id": "CARR-XYZ",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "destination_location_id": "WH-MUM",
+    "expected_arrival_at": "2026-10-12T12:00:00Z",
+    "items": [
+      {
+        "quantity": 500,
+        "sku": "JACKET-BLUE-M"
+      }
+    ],
     "lane_id": "ROUTE-ET-MUM",
+    "risk_reason": null,
+    "risk_zone": "safe",
+    "status": "in_transit",
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1,
+    "departed_at": "2026-10-06T06:00:00Z"
+  },
+  {
+    "shipment_id": "SHP-BB-401",
+    "lane_id": "LANE-YTN-MAA",
+    "destination_location_id": "WH-CHN",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "LAPTOP-14-I5",
+        "quantity": 1500
+      }
+    ],
+    "carrier_id": "CARR-ASIA-INDIA-EXPRESS",
+    "departed_at": "2026-10-03T06:00:00Z",
+    "expected_arrival_at": "2026-10-17T12:00:00Z",
+    "assumed_arrival_at": "2026-10-23T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-BS-101",
+    "lane_id": "LANE-CHO-MUN",
+    "destination_location_id": "WH-DEL",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "SUNOIL-15L",
+        "quantity": 6000
+      }
+    ],
+    "carrier_id": "CARR-MED-EXPRESS",
+    "departed_at": "2026-09-30T06:00:00Z",
+    "expected_arrival_at": "2026-10-24T12:00:00Z",
+    "assumed_arrival_at": "2026-11-09T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-HZ-201",
+    "lane_id": "LANE-JEA-JNPA",
     "destination_location_id": "WH-MUM",
     "status": "in_transit",
-    "items": [{ "sku": "JACKET-BLUE-M", "quantity": 500 }],
-    "expected_arrival_at": "2026-10-12T12:00:00Z",
-    "assumed_arrival_at": "2026-10-19T12:00:00Z",
+    "items": [
+      {
+        "sku": "DATES-KHALAS-1KG",
+        "quantity": 20000
+      }
+    ],
+    "carrier_id": "CARR-GULF-FEEDER",
+    "departed_at": "2026-10-09T06:00:00Z",
+    "expected_arrival_at": "2026-10-15T12:00:00Z",
+    "assumed_arrival_at": "2026-10-26T12:00:00Z",
     "confirmed_arrival_at": null,
-    "delay_state": "assumed_delayed",
-    "carrier_id": "CARR-XYZ",
-    "updated_at": "2026-10-10T08:00:00Z",
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-11T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-MX-001",
+    "assumed_arrival_at": "2026-10-21T12:00:00Z",
+    "carrier_id": "CARR-PAC",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "destination_location_id": "WH-ZLO",
+    "expected_arrival_at": "2026-10-13T12:00:00Z",
+    "items": [
+      {
+        "quantity": 400,
+        "sku": "JACKET-NAVY-M"
+      }
+    ],
+    "lane_id": "LANE-EPAC-ZLO",
+    "risk_reason": "High-risk weather including strong wind gusts and precipitation affects the Eastern Pacific approach, Manzanillo port, and the destination distribution centre.",
+    "risk_zone": "risk",
+    "status": "in_transit",
+    "updated_at": "2026-10-10T20:00:00Z",
+    "version": 1,
+    "departed_at": "2026-10-08T06:00:00Z"
+  },
+  {
+    "shipment_id": "SHP-RS-301",
+    "lane_id": "LANE-ANR-JNPA",
+    "destination_location_id": "WH-MUM",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "CHOC-GIFT-500",
+        "quantity": 12000
+      }
+    ],
+    "carrier_id": "CARR-EURO-INDIA-LOOP",
+    "departed_at": "2026-09-26T06:00:00Z",
+    "expected_arrival_at": "2026-10-22T12:00:00Z",
+    "assumed_arrival_at": "2026-11-06T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-11T06:00:00Z",
     "version": 1
   }
 ]

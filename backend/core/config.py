@@ -24,11 +24,31 @@ TENANT_ID = os.getenv("TENANT_ID", "buildx-demo")
 
 # --- gemini / agent ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+
+# We try these models in order. If one is rate-limited (429), overloaded (503) or
+# retired (404) we fall through to the next, so one bad model never breaks the app.
+# Override with a comma-separated list in GEMINI_MODELS.
+GEMINI_MODELS = [
+    m.strip()
+    for m in os.getenv(
+        "GEMINI_MODELS",
+        "gemini-flash-lite-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite,"
+        "gemini-3.8-flash,gemini-flash-latest",
+    ).split(",")
+    if m.strip()
+]
+# Kept for anything that wants a single name; the chain above is what's used.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", GEMINI_MODELS[0])
+
+# How long to skip a model after it reports quota exhaustion (seconds).
+GEMINI_COOLDOWN_SECONDS = int(os.getenv("GEMINI_COOLDOWN_SECONDS", "900"))
 
 # --- google cloud ---
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 FIRESTORE_EMULATOR_HOST = os.getenv("FIRESTORE_EMULATOR_HOST", "")
+
+# Weather + news scan while the API process is running. 0 turns the loop off.
+SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "900"))
 
 # --- external APIs (free, no key needed) ---
 HTTP_TIMEOUT = 15  # seconds, for any outbound API call
@@ -44,6 +64,7 @@ NEWS_MAX_RECORDS = int(os.getenv("NEWS_MAX_RECORDS", "10"))
 DISRUPTION_KEYWORDS = [
     "strike", "closure", "closed", "suspended", "congestion",
     "blocked", "shutdown", "cyclone", "storm", "flood",
+    "attack", "attacked", "drone", "missile", "seized", "diverted", "blockade",
 ]
 
 # Weather risk thresholds (worst value in the forecast window).
@@ -52,6 +73,19 @@ WEATHER_WIND_GUST_MED_KMH = 40
 WEATHER_PRECIP_HIGH_MM = 20
 WEATHER_PRECIP_MED_MM = 10
 WEATHER_STORM_CODES = {95, 96, 97, 99}  # WMO thunderstorm codes
+
+# --- email (post-approval notifications) ---
+# "simulated" = don't really send, just build + log the email (default, no setup).
+# "smtp"      = actually send via the SMTP_* settings below.
+EMAIL_MODE = os.getenv("EMAIL_MODE", "simulated")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "ops@signalbridge.demo")
+OPS_EMAIL = os.getenv("OPS_EMAIL", "warehouse-ops@signalbridge.demo")
+DEFAULT_SUPPLIER_EMAIL = os.getenv("DEFAULT_SUPPLIER_EMAIL", "orders@supplier.demo")
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+
 
 
 # Governance approval tiers, in integer minor units (paise).

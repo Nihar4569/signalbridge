@@ -37,7 +37,8 @@ def news_scan_tool(location_id: str) -> dict:
 
 def exposure_tool(sku: str, location_id: str) -> dict:
     """Return how many units of a SKU will be short at a location by its earliest
-    order deadline, under the disruption scenario."""
+    order deadline. Counts a shipment as delayed only when triage has set its
+    risk_zone to "risk" from a live weather or news signal."""
     store = get_store()
     order_lines = store.list("order_lines")
     deadline = planner_mod._earliest_deadline(order_lines, sku, location_id)
@@ -49,14 +50,16 @@ def exposure_tool(sku: str, location_id: str) -> dict:
         if b["sku"] == sku and b["location_id"] == location_id:
             on_hand = int(b["on_hand_qty"])
             break
+    shipments = store.list("shipments")
+    scenario = "disrupted" if exposure_mod.is_disrupted(shipments, sku, location_id) else "baseline"
     return exposure_mod.assess_exposure(
         sku=sku,
         location_id=location_id,
         deadline=deadline,
         on_hand_qty=on_hand,
-        shipments=store.list("shipments"),
+        shipments=shipments,
         order_lines=order_lines,
-        scenario="disrupted",
+        scenario=scenario,
     )
 
 
@@ -69,6 +72,7 @@ def internal_balance_tool(sku: str, location_id: str) -> dict:
         exclude_location_id=location_id,
         stock_balances=store.list("stock_balances"),
         locations=store.list("locations"),
+        origin_location_id=location_id,
     )
     return {"options": options, "total_free_qty": sum(o["free_qty"] for o in options)}
 

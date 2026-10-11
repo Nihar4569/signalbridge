@@ -1,0 +1,415 @@
+[
+  {
+    "lane_id": "LANE-ANR-JNPA",
+    "name": "Antwerp → Gibraltar → Suez → Bab el-Mandeb → Nhava Sheva",
+    "origin_location_id": "BE-ANR",
+    "destination_location_id": "WH-MUM",
+    "legs": [],
+    "points": [
+      {
+        "name": null,
+        "lat": 51.4,
+        "lon": 3.6
+      },
+      {
+        "name": "Strait of Dover",
+        "lat": 51.0,
+        "lon": 1.6
+      },
+      {
+        "name": null,
+        "lat": 49.9,
+        "lon": -2.0
+      },
+      {
+        "name": null,
+        "lat": 48.6,
+        "lon": -5.6
+      },
+      {
+        "name": "Bay of Biscay",
+        "lat": 45.0,
+        "lon": -9.5
+      },
+      {
+        "name": null,
+        "lat": 40.0,
+        "lon": -10.0
+      },
+      {
+        "name": null,
+        "lat": 37.0,
+        "lon": -9.2
+      },
+      {
+        "name": "Strait of Gibraltar",
+        "lat": 35.95,
+        "lon": -5.6
+      },
+      {
+        "name": null,
+        "lat": 37.3,
+        "lon": 5.0
+      },
+      {
+        "name": "Strait of Sicily",
+        "lat": 37.5,
+        "lon": 11.2
+      },
+      {
+        "name": null,
+        "lat": 34.5,
+        "lon": 20.0
+      },
+      {
+        "name": null,
+        "lat": 33.0,
+        "lon": 28.0
+      },
+      {
+        "name": "Port Said",
+        "lat": 31.35,
+        "lon": 32.35
+      },
+      {
+        "name": "Suez Canal",
+        "lat": 30.6,
+        "lon": 32.33,
+        "location_id": "SEA-SUEZ"
+      },
+      {
+        "name": null,
+        "lat": 29.9,
+        "lon": 32.56
+      },
+      {
+        "name": "Gulf of Suez",
+        "lat": 28.3,
+        "lon": 33.4
+      },
+      {
+        "name": null,
+        "lat": 25.0,
+        "lon": 35.6
+      },
+      {
+        "name": "Red Sea",
+        "lat": 20.0,
+        "lon": 38.8,
+        "location_id": "SEA-REDSEA"
+      },
+      {
+        "name": null,
+        "lat": 15.5,
+        "lon": 41.5
+      },
+      {
+        "name": "Bab el-Mandeb Strait",
+        "lat": 12.6,
+        "lon": 43.4,
+        "location_id": "SEA-BAB"
+      },
+      {
+        "name": "Gulf of Aden",
+        "lat": 12.5,
+        "lon": 47.5,
+        "location_id": "SEA-ADEN"
+      },
+      {
+        "name": null,
+        "lat": 14.5,
+        "lon": 54.5
+      },
+      {
+        "name": "Arabian Sea",
+        "lat": 17.5,
+        "lon": 63.0
+      },
+      {
+        "name": null,
+        "lat": 18.9,
+        "lon": 71.5
+      },
+      {
+        "name": "Nhava Sheva",
+        "lat": 18.95,
+        "lon": 72.94,
+        "location_id": "IN-JNPA"
+      }
+    ]
+  },
+  {
+    "lane_id": "LANE-CHO-MUN",
+    "name": "Chornomorsk → Black Sea → Suez → Bab el-Mandeb → Mundra (rail to Delhi)",
+    "origin_location_id": "UA-CHO",
+    "destination_location_id": "WH-DEL",
+    "legs": [],
+    "points": [
+      {
+        "name": "Black Sea",
+        "lat": 43.8,
+        "lon": 30.5,
+        "location_id": "SEA-BLACK"
+      },
+      {
+        "name": "Bosphorus (Istanbul)",
+        "lat": 41.2,
+        "lon": 29.1
+      },
+      {
+        "name": null,
+        "lat": 40.75,
+        "lon": 28.3
+      },
+      {
+        "name": "Dardanelles",
+        "lat": 40.15,
+        "lon": 26.4
+      },
+      {
+        "name": null,
+        "lat": 38.8,
+        "lon": 25.3
+      },
+      {
+        "name": null,
+        "lat": 35.5,
+        "lon": 26.8
+      },
+      {
+        "name": null,
+        "lat": 33.5,
+        "lon": 30.0
+      },
+      {
+        "name": "Port Said",
+        "lat": 31.35,
+        "lon": 32.35
+      },
+      {
+        "name": "Suez Canal",
+        "lat": 30.6,
+        "lon": 32.33,
+        "location_id": "SEA-SUEZ"
+      },
+      {
+        "name": null,
+        "lat": 29.9,
+        "lon": 32.56
+      },
+      {
+        "name": "Gulf of Suez",
+        "lat": 28.3,
+        "lon": 33.4
+      },
+      {
+        "name": null,
+        "lat": 25.0,
+        "lon": 35.6
+      },
+      {
+        "name": "Red Sea",
+        "lat": 20.0,
+        "lon": 38.8,
+        "location_id": "SEA-REDSEA"
+      },
+      {
+        "name": null,
+        "lat": 15.5,
+        "lon": 41.5
+      },
+      {
+        "name": "Bab el-Mandeb Strait",
+        "lat": 12.6,
+        "lon": 43.4,
+        "location_id": "SEA-BAB"
+      },
+      {
+        "name": "Gulf of Aden",
+        "lat": 12.5,
+        "lon": 47.5,
+        "location_id": "SEA-ADEN"
+      },
+      {
+        "name": null,
+        "lat": 14.5,
+        "lon": 54.5
+      },
+      {
+        "name": "Arabian Sea",
+        "lat": 18.5,
+        "lon": 62.0
+      },
+      {
+        "name": null,
+        "lat": 21.8,
+        "lon": 67.5
+      },
+      {
+        "name": "Mundra port",
+        "lat": 22.74,
+        "lon": 69.7,
+        "location_id": "IN-MUN"
+      }
+    ]
+  },
+  {
+    "lane_id": "LANE-EPAC-ZLO",
+    "destination_location_id": "WH-ZLO",
+    "legs": [],
+    "name": "Eastern Pacific to Manzanillo",
+    "origin_location_id": "MX-ZLO",
+    "points": [
+      {
+        "name": "Hurricane Simon forecast position 11 Oct 2026 12:00 UTC",
+        "lat": 19.1,
+        "lon": -105.2
+      }
+    ]
+  },
+  {
+    "lane_id": "LANE-JEA-JNPA",
+    "name": "Jebel Ali → Strait of Hormuz → Nhava Sheva",
+    "origin_location_id": "AE-JEA",
+    "destination_location_id": "WH-MUM",
+    "legs": [],
+    "points": [
+      {
+        "name": null,
+        "lat": 25.6,
+        "lon": 55.8
+      },
+      {
+        "name": "Strait of Hormuz",
+        "lat": 26.55,
+        "lon": 56.45,
+        "location_id": "SEA-HORMUZ"
+      },
+      {
+        "name": "Gulf of Oman",
+        "lat": 25.3,
+        "lon": 57.8
+      },
+      {
+        "name": null,
+        "lat": 22.8,
+        "lon": 60.5
+      },
+      {
+        "name": "Arabian Sea",
+        "lat": 20.5,
+        "lon": 66.0
+      },
+      {
+        "name": null,
+        "lat": 19.0,
+        "lon": 71.5
+      },
+      {
+        "name": "Nhava Sheva",
+        "lat": 18.95,
+        "lon": 72.94,
+        "location_id": "IN-JNPA"
+      }
+    ]
+  },
+  {
+    "lane_id": "LANE-YTN-MAA",
+    "name": "Yantian → Singapore → Malacca → Andaman Sea → Bay of Bengal → Chennai",
+    "origin_location_id": "CN-YTN",
+    "destination_location_id": "WH-CHN",
+    "legs": [],
+    "points": [
+      {
+        "name": null,
+        "lat": 21.8,
+        "lon": 114.6
+      },
+      {
+        "name": "South China Sea",
+        "lat": 16.0,
+        "lon": 113.0
+      },
+      {
+        "name": null,
+        "lat": 10.0,
+        "lon": 109.8
+      },
+      {
+        "name": null,
+        "lat": 5.0,
+        "lon": 106.0
+      },
+      {
+        "name": "Singapore Strait",
+        "lat": 1.2,
+        "lon": 104.0
+      },
+      {
+        "name": "Strait of Malacca",
+        "lat": 3.5,
+        "lon": 100.5,
+        "location_id": "SEA-MALACCA"
+      },
+      {
+        "name": null,
+        "lat": 5.8,
+        "lon": 97.8
+      },
+      {
+        "name": "Andaman Sea",
+        "lat": 7.5,
+        "lon": 95.0,
+        "location_id": "SEA-ANDAMAN"
+      },
+      {
+        "name": "Bay of Bengal",
+        "lat": 11.0,
+        "lon": 85.5,
+        "location_id": "SEA-BOB"
+      },
+      {
+        "name": "Chennai port",
+        "lat": 13.1,
+        "lon": 80.3,
+        "location_id": "IN-MAA"
+      }
+    ]
+  },
+  {
+    "lane_id": "ROUTE-ET-MUM",
+    "name": "Djibouti → Gulf of Aden → Nhava Sheva",
+    "origin_location_id": "DJ-JIB",
+    "destination_location_id": "WH-MUM",
+    "legs": [],
+    "points": [
+      {
+        "name": "Gulf of Aden",
+        "lat": 12.5,
+        "lon": 47.5,
+        "location_id": "SEA-ADEN"
+      },
+      {
+        "name": null,
+        "lat": 14.5,
+        "lon": 54.5
+      },
+      {
+        "name": "Arabian Sea",
+        "lat": 17.0,
+        "lon": 63.0
+      },
+      {
+        "name": null,
+        "lat": 18.9,
+        "lon": 71.5
+      },
+      {
+        "name": "Nhava Sheva",
+        "lat": 18.95,
+        "lon": 72.94,
+        "location_id": "IN-JNPA"
+      }
+    ]
+  }
+]

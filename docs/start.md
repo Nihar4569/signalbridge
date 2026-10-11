@@ -110,7 +110,7 @@ order into an **80-unit shortage**, then SignalBridge uses 20 units of internal
 stock, buys 60 from a supplier, confirms it's worth it, and routes it for
 approval. That is the whole product in one screen.
 
-`pytest` should say **7 passed**.
+`pytest` should say **11 passed** (domain + models/store).
 
 ---
 
@@ -125,7 +125,41 @@ For the **core demo and the API read-paths you don't need to change anything** �
 
 You only edit `.env` when you want to:
 - run the **AI agent** → add `GOOGLE_API_KEY` (free key from <https://aistudio.google.com/apikey>)
-- use **Firestore** or **deploy** → see [manual_work.md](manual_work.md)
+- use **Firestore** or **deploy** → see below and [manual_work.md](manual_work.md)
+
+---
+
+## Use Firestore instead of fixtures (optional)
+
+The app already has a real `FirestoreStore` (`backend/core/store.py`). Fixtures stay
+the seed source; runtime reads go to Cloud Firestore when you flip the switch.
+
+```bash
+# 1. Copy env and point at your Firebase/GCP project (see .firebaserc)
+cp .env.example .env
+#    DATA_BACKEND=firestore
+#    GOOGLE_CLOUD_PROJECT=signalbridge-8b80a   # or your project id
+#    TENANT_ID=buildx-demo
+
+# 2. Login (once)
+gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+
+# 3. Create Firestore Native DB in console if needed (asia-south1 matches firebase.json)
+
+# 4. Validate mapping, then seed
+python -m scripts.seed_firestore --dry-run
+python -m scripts.seed_firestore
+
+# 5. Deploy rules + indexes
+firebase deploy --only firestore
+
+# 6. Run API — GET /health should show data_backend: firestore
+uvicorn backend.app.main:app --reload --port 8000
+```
+
+Data path: `tenants/{TENANT_ID}/{collection}/{doc_id}`  
+Models: `backend/models/` · IDs: `backend/models/ids.py`
 
 ---
 
