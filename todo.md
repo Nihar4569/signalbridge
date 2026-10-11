@@ -80,7 +80,7 @@ If you set up one of these and give me the key (or connect its MCP), here's the
 
 | You give me… | …and I can then build |
 |---|---|
-| **Gemini API key** *(already done ✅)* | AI explanations, and the full ADK triage→recovery→governance agent |
+| **Gemini API key** *(already done ✅)* | AI explanations, and the optional ADK chat agent |
 | **Google Cloud project + billing** | Real Firestore storage, Cloud Run deploy configs, Secret Manager for keys |
 | **Firebase project** | Login (Auth), hosting the dashboard on a public URL, push notifications (FCM) |
 | **Google Maps Platform key** | A live map of ports / warehouses / suppliers, and road-route ETAs for inland transfers |

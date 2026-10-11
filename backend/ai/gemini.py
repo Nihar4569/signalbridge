@@ -304,7 +304,7 @@ def _build_prompt(plan: dict) -> str:
         f"Recovery cost: {rupees_text(margin.get('recovery_cost_minor') or 0)}\n"
         f"Revenue protected: {rupees_text(margin.get('protected_revenue_minor') or 0)}\n"
         f"Verdict: {margin.get('verdict')}\n"
-        f"Needs approval from: {approval.get('tier')}\n"
+        f"Needs approval from: {approval.get('approver_title') or approval.get('tier')}\n"
     )
 
 

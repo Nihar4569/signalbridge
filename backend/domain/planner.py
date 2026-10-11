@@ -209,7 +209,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         original_still_arriving=True,
     )
 
-    # Step 6: governance.
+    # Step 6: governance (plain rules: cost -> tier -> default approver).
     approval = governance_mod.route_approval(recovery_cost)
 
     narrative = (
@@ -217,7 +217,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         f"{deadline.date()}. Used {internal_used} from internal stock; "
         f"{'bought ' + str(remainder) + ' from ' + chosen['offer_id'] if chosen else 'no feasible supplier found for the remainder'}"
         f". Recovery cost ₹{recovery_cost / 100:,.0f}; "
-        f"verdict: {margin['verdict']}. Approval: {approval['tier']}."
+        f"verdict: {margin['verdict']}. Approval: {approval['approver_title']}."
     )
 
     return {

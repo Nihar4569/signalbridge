@@ -95,3 +95,20 @@ GOVERNANCE_TIERS = [
     ("regional_manager", 50_000_000),  # up to  ₹5,00,000
     ("executive", None),               # anything above
 ]
+
+# The default person each tier's approval request goes to. Plain config, no AI.
+# Put real addresses in .env; the titles are what the UI shows.
+APPROVERS = {
+    "local_planner": {
+        "title": "Warehouse Operations Manager",
+        "email": os.getenv("APPROVER_LOCAL_EMAIL") or OPS_EMAIL,
+    },
+    "regional_manager": {
+        "title": "Regional Supply Chain Manager",
+        "email": os.getenv("APPROVER_REGIONAL_EMAIL") or "regional-supply@signalbridge.demo",
+    },
+    "executive": {
+        "title": "Head of Supply Chain",
+        "email": os.getenv("APPROVER_EXECUTIVE_EMAIL") or "head-supply-chain@signalbridge.demo",
+    },
+}

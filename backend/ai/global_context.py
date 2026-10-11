@@ -200,7 +200,8 @@ def _plan_summary(plan: dict, locations: dict, products: dict) -> dict:
         "penalty_avoided_minor": margin.get("penalty_avoided_minor"),
         "net_benefit_minor": margin.get("net_benefit_minor"),
         "verdict": margin.get("verdict"),
-        "approval_needed_from": (plan.get("approval") or {}).get("tier"),
+        "approval_needed_from": (plan.get("approval") or {}).get("approver_title")
+        or (plan.get("approval") or {}).get("tier"),
         "future_surplus_qty": surplus.get("expected_surplus_qty"),
         "surplus_action": surplus.get("suggested_action"),
         "supplier_options": [

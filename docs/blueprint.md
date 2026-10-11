@@ -13,7 +13,7 @@ Goal of this doc: show *where every piece of code lives* and *how the agent is w
 | Automated Impact Triage | Keep only the shipments that will actually cause a stockout / OTIF penalty | `agent/sub_agents/triage_agent.py` + `domain/exposure.py` |
 | Dynamic Margin Optimization | Don't spend ₹100 to save ₹60 of margin | `domain/margin.py` (called via `tools/margin_tool.py`) |
 | Internal Network Balancing | Check our own DCs / dark stores before buying outside | `domain/network_balance.py` (via `tools/network_balance_tool.py`) |
-| Multi-Tier Governance | Small fix → local planner; big spend → executive sign-off | `agent/sub_agents/governance_agent.py` |
+| Multi-Tier Governance | Small fix → local planner; big spend → executive sign-off (plain rules, a default approver per tier) | `domain/governance.py` |
 | Predictive Surplus Management | Flag future overstock when the late shipment finally arrives | `domain/surplus.py` (via `tools/surplus_tool.py`) |
 
 > Rule of thumb: **Gemini/ADK decides and explains; `domain/` code does the math and the writes.** Numbers and reservations are never left to the model.
@@ -43,8 +43,7 @@ signalbridge/
 │   │   ├── agent.py           # root_agent — the coordinator (SequentialAgent)
 │   │   ├── sub_agents/
 │   │   │   ├── triage_agent.py      # Impact Triage  (LlmAgent)
-│   │   │   ├── recovery_agent.py    # builds the recovery plan (LlmAgent + tools)
-│   │   │   └── governance_agent.py  # routes approval tier (LlmAgent)
+│   │   │   └── recovery_agent.py    # builds the recovery plan (LlmAgent + tools)
 │   │   ├── tools/             # typed functions the agents are allowed to call
 │   │   │   ├── exposure_tool.py
 │   │   │   ├── margin_tool.py
@@ -60,6 +59,7 @@ signalbridge/
 │   │   ├── network_balance.py # scan internal DCs / dark stores for surplus
 │   │   ├── surplus.py         # predict future overstock from late arrivals
 │   │   ├── planner.py         # assemble the recovery plan object
+│   │   ├── governance.py      # cost → approval tier → default approver (no LLM)
 │   │   └── reservations.py    # hold stock exactly once, then read back
 │   │
 │   ├── adapters/              # outside-world data (easy to swap for fixtures)
@@ -114,7 +114,7 @@ signalbridge/
 >
 > 🗄️ **For the database plan, see [schema.md](schema.md)** — collections, fields, the quantity model, and how writes are kept safe.
 
-The root agent is a **coordinator** that runs three sub-agents in order. Each sub-agent is only allowed to call a small set of **typed tools**. Tools call `domain/` functions — the place where real math and writes happen.
+The root agent is a **coordinator** that runs two sub-agents in order. Each sub-agent is only allowed to call a small set of **typed tools**. Tools call `domain/` functions — the place where real math and writes happen.
 
 ```mermaid
 flowchart TB
@@ -124,7 +124,6 @@ flowchart TB
     subgraph ADK["Google ADK agent package"]
         ROOT --> TRIAGE["triage_agent<br/>Impact Triage"]
         TRIAGE --> RECOVERY["recovery_agent<br/>build recovery plan"]
-        RECOVERY --> GOV["governance_agent<br/>pick approval tier"]
     end
 
     TRIAGE -->|calls| T1["exposure_tool"]
@@ -132,6 +131,7 @@ flowchart TB
     RECOVERY -->|calls| T3["supplier_tool"]
     RECOVERY -->|calls| T4["margin_tool"]
     RECOVERY -->|calls| T5["surplus_tool"]
+    RECOVERY --> GOV["domain/governance.py<br/>cost → tier → default approver (plain code)"]
     GOV --> PLANDOC[("Firestore<br/>plans / events")]
 
     T1 --> DOM["domain/*.py<br/>deterministic math"]
@@ -149,7 +149,7 @@ flowchart TB
     EXEC --> PLANDOC
 ```
 
-**Gemini** powers the three `LlmAgent`s (triage / recovery / governance): it reads the permitted signals, extracts typed facts, and explains *why* a shipment is threatened and *which* option is best. It never writes stock numbers directly.
+**Gemini** powers the two `LlmAgent`s (triage / recovery): it reads the permitted signals, extracts typed facts, and explains *why* a shipment is threatened and *which* option is best. It never writes stock numbers directly. Who must approve a plan is decided by plain rules in `domain/governance.py`, not by Gemini.
 
 ---
 
@@ -185,7 +185,7 @@ sequenceDiagram
 
 | Product | Role in this repo |
 |---|---|
-| **Gemini on Google Cloud** | Reasoning inside the three ADK `LlmAgent`s (extract, plan, explain). |
+| **Gemini on Google Cloud** | Reasoning inside the two ADK `LlmAgent`s (extract, plan, explain). |
 | **Google ADK** | Orchestrates the agents + tools, gives tracing and the `tests/eval` harness. |
 | **Cloud Run** | Hosts `app/` (API) and `worker/` as two services. |
 | **Firestore** | Stores inventory, shipments, events, plans, reservations. |
@@ -229,7 +229,7 @@ make run-api                # uvicorn backend.app.main:app
 2. `domain/exposure.py` + `tests/test_exposure.py` — provable math.
 3. `agent/` triage + recovery with tools — the Gemini loop.
 4. `domain/margin.py`, `network_balance.py`, `surplus.py` — the differentiators.
-5. `governance_agent.py` + approval API — human-in-the-loop.
+5. `domain/governance.py` + approval API — human-in-the-loop.
 6. `domain/reservations.py` — hold-once + read-back.
 7. `frontend/` — evidence → exposure → approve → confirm.
 8. `tests/eval/` — hard / duplicate / stale / conflicting signals.
