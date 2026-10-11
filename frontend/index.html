@@ -1,46 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SignalBridge</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <div class="brand">
-      <span class="dot"></span>
-      <h1>SignalBridge</h1>
-    </div>
-    <p class="tagline">Turn a supply-chain disruption into a traceable recovery plan.</p>
-  </header>
-
-  <main>
-    <!-- LEFT: list of at-risk items -->
-    <section class="panel" id="incidents-panel">
-      <div class="panel-head">
-        <h2>Incidents</h2>
-        <button id="scan-btn" class="btn">Scan for risk</button>
-      </div>
-      <p class="hint" id="incidents-hint">Click “Scan for risk” to find threatened orders.</p>
-      <ul id="incidents-list" class="list"></ul>
-    </section>
-
-    <!-- RIGHT: the recovery plan for the selected item -->
-    <section class="panel" id="plan-panel">
-      <div class="panel-head">
-        <h2>Recovery plan</h2>
-      </div>
-      <p class="hint" id="plan-hint">Select an incident to see its recovery plan.</p>
-      <div id="plan-body" class="hidden"></div>
-    </section>
-  </main>
-
-  <footer>
-    <span id="api-status">API: checking…</span>
-    <span>Prototype · dummy data · no real purchases</span>
-  </footer>
-
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SignalBridge — Supply Chain Control Tower</title>
+    <meta name="description" content="Autonomous supply-chain control tower powered by Google Gemini." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Apply the saved theme before first paint so there is no light/dark flash.
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem("sb-theme") || "light";
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

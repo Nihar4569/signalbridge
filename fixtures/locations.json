@@ -50,5 +50,57 @@
     "aliases": ["Nhava Sheva", "Jawaharlal Nehru Port", "JNPA"],
     "can_transfer_to": [],
     "active": true
+  },
+  {
+    "location_id": "MAA-DC",
+    "gln": null,
+    "name": "Chennai Distribution Centre",
+    "type": "dc",
+    "unlocode": null,
+    "country": "IN",
+    "lat": 13.00,
+    "lon": 80.20,
+    "aliases": ["Chennai DC"],
+    "can_transfer_to": ["WH-MUM"],
+    "active": true
+  },
+  {
+    "location_id": "WH-MUN",
+    "gln": null,
+    "name": "Mundra Distribution Centre",
+    "type": "dc",
+    "unlocode": null,
+    "country": "IN",
+    "lat": 22.82,
+    "lon": 69.72,
+    "aliases": ["Mundra DC"],
+    "can_transfer_to": ["WH-MUM", "WH-DEL"],
+    "active": true
+  },
+  {
+    "location_id": "IN-MAA",
+    "gln": null,
+    "name": "Chennai port",
+    "type": "port",
+    "unlocode": "INMAA",
+    "country": "IN",
+    "lat": 13.08,
+    "lon": 80.29,
+    "aliases": ["Chennai Port"],
+    "can_transfer_to": [],
+    "active": true
+  },
+  {
+    "location_id": "IN-MUN",
+    "gln": null,
+    "name": "Mundra port",
+    "type": "port",
+    "unlocode": "INMUN",
+    "country": "IN",
+    "lat": 22.74,
+    "lon": 69.70,
+    "aliases": ["Mundra Port"],
+    "can_transfer_to": [],
+    "active": true
   }
 ]

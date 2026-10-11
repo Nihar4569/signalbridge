@@ -15,16 +15,30 @@ Built for the **Google Cloud AI Builder Cup** (Retail & Commerce) using
 ## See it work in 2 minutes (no cloud, no key)
 
 ```bash
+# Terminal 1 — backend API
 cd signalbridge
-uv sync --extra dev            # or: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt
-uv run python -m scripts.demo  # or: python -m scripts.demo
+uv sync --extra dev
+uv run uvicorn backend.app.main:app --reload --port 8000
+
+# Terminal 2 — React dashboard
+cd signalbridge/frontend
+npm install
+npm run dev          # http://localhost:5173
 ```
 
-You'll see a port delay turn a healthy order into an **80-unit shortage**, then
-SignalBridge build a governed recovery plan. Run the tests with
-`uv run python -m pytest -q` (7 should pass).
+Open **http://localhost:5173**, then press the **✨ AI Plan** button on a
+threatened order to watch Gemini build and execute a recovery plan.
 
-Full setup (both `uv` and `pip`) → **[docs/start.md](docs/start.md)**.
+Production build (one command, deploys anywhere):
+
+```bash
+cd frontend && npm run build     # -> frontend/dist/
+```
+
+Prefer the terminal? `uv run python -m scripts.demo` runs the whole recovery
+engine with no UI. Tests: `uv run python -m pytest -q` (7 pass).
+
+Full setup → **[docs/start.md](docs/start.md)** and **[docs/frontend_setup.md](docs/frontend_setup.md)**.
 
 ---
 
@@ -61,11 +75,14 @@ and the writes; a human approves anything that costs money.**
 | Doc | What's in it |
 |---|---|
 | [docs/start.md](docs/start.md) | Set up and run (uv **and** pip) |
+| [docs/frontend_setup.md](docs/frontend_setup.md) | Run & deploy the dashboard (Firebase Hosting) |
+| [docs/map_setup.md](docs/map_setup.md) | Map tiles & how to get a map API key (optional) |
 | [docs/simple.md](docs/simple.md) | How the code is wired, traced click-by-click |
 | [docs/calculation.md](docs/calculation.md) | The math, with worked examples |
 | [docs/architecture.md](docs/architecture.md) | The big picture + diagrams |
 | [docs/agents.md](docs/agents.md) | What each AI agent does, in plain words |
 | [docs/schema.md](docs/schema.md) | The database model |
+| [docs/after_plan_approval.md](docs/after_plan_approval.md) | What auto-happens after approval (PO + emails) |
 | [docs/external_api.md](docs/external_api.md) | The real free APIs (weather + news) |
 | [docs/scheduler.md](docs/scheduler.md) | How to run the monitor on a timer |
 | [docs/manual_work.md](docs/manual_work.md) | Human-only steps (Firebase, keys, deploy) |

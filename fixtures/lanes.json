@@ -1,0 +1,51 @@
+[
+  {
+    "lane_id": "ROUTE-ET-MUM",
+    "name": "Addis Ababa to Mumbai",
+    "points": [
+      { "name": "Addis Ababa", "lat": 9.03, "lon": 38.75, "kind": "origin" },
+      { "name": "Djibouti port", "lat": 11.6, "lon": 43.15, "kind": "port" },
+      { "name": "Gulf of Aden", "lat": 12.5, "lon": 45.5, "kind": "sea" },
+      { "name": "Arabian Sea", "lat": 15.5, "lon": 58.0, "kind": "sea" },
+      { "name": "Nhava Sheva", "lat": 18.95, "lon": 72.94, "kind": "port" },
+      { "name": "Mumbai DC", "lat": 19.08, "lon": 72.88, "kind": "destination" }
+    ]
+  },
+  {
+    "lane_id": "ROUTE-CN-MAA",
+    "name": "Shanghai to Chennai",
+    "points": [
+      { "name": "Shanghai", "lat": 31.23, "lon": 121.47, "kind": "origin" },
+      { "name": "South China Sea", "lat": 10.0, "lon": 114.0, "kind": "sea" },
+      { "name": "Singapore", "lat": 1.29, "lon": 103.85, "kind": "port" },
+      { "name": "Bay of Bengal", "lat": 8.0, "lon": 90.0, "kind": "sea" },
+      { "name": "Chennai port", "lat": 13.08, "lon": 80.29, "kind": "port" },
+      { "name": "Chennai DC", "lat": 13.0, "lon": 80.2, "kind": "destination" }
+    ]
+  },
+  {
+    "lane_id": "ROUTE-NL-MUN",
+    "name": "Rotterdam to Mundra",
+    "points": [
+      { "name": "Rotterdam", "lat": 51.95, "lon": 4.14, "kind": "origin" },
+      { "name": "Bay of Biscay", "lat": 45.0, "lon": -6.0, "kind": "sea" },
+      { "name": "Gibraltar", "lat": 36.0, "lon": -5.6, "kind": "sea" },
+      { "name": "Mediterranean Sea", "lat": 34.0, "lon": 18.0, "kind": "sea" },
+      { "name": "Suez Canal", "lat": 29.9, "lon": 32.55, "kind": "port" },
+      { "name": "Red Sea", "lat": 20.0, "lon": 38.0, "kind": "sea" },
+      { "name": "Arabian Sea", "lat": 17.0, "lon": 62.0, "kind": "sea" },
+      { "name": "Mundra port", "lat": 22.74, "lon": 69.7, "kind": "destination" }
+    ]
+  },
+  {
+    "lane_id": "ROUTE-SG-DEL",
+    "name": "Singapore to Delhi",
+    "points": [
+      { "name": "Singapore", "lat": 1.29, "lon": 103.85, "kind": "origin" },
+      { "name": "Bay of Bengal", "lat": 12.0, "lon": 92.0, "kind": "sea" },
+      { "name": "Kolkata", "lat": 22.57, "lon": 88.36, "kind": "port" },
+      { "name": "Kanpur", "lat": 26.45, "lon": 80.33, "kind": "city" },
+      { "name": "Delhi DC", "lat": 28.61, "lon": 77.21, "kind": "destination" }
+    ]
+  }
+]

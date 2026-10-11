@@ -25,6 +25,29 @@ def _risk_level(max_precip_mm: float, max_gust_kmh: float, worst_code: int) -> s
     return "low"
 
 
+def _summarise(hourly: dict) -> dict:
+    """Reduce an Open-Meteo hourly block to the worst values + a risk level."""
+    precip = [x for x in hourly.get("precipitation", []) if x is not None]
+    gusts = [x for x in hourly.get("wind_gusts_10m", []) if x is not None]
+    codes = [x for x in hourly.get("weather_code", []) if x is not None]
+
+    max_precip = max(precip) if precip else 0.0
+    max_gust = max(gusts) if gusts else 0.0
+    worst_code = max(codes) if codes else 0
+
+    return {
+        "ok": True,
+        "source": "open-meteo",
+        "max_precip_mm": round(max_precip, 1),
+        "max_wind_gust_kmh": round(max_gust, 1),
+        "worst_weather_code": worst_code,
+        "risk": _risk_level(max_precip, max_gust, worst_code),
+    }
+
+
+_HOURLY = "precipitation,wind_speed_10m,wind_gusts_10m,weather_code"
+
+
 def get_weather_risk(lat: float, lon: float, forecast_days: int = 3) -> dict:
     """Return a weather-risk summary for one point (filtered by lat/lon + time)."""
     try:
@@ -33,7 +56,7 @@ def get_weather_risk(lat: float, lon: float, forecast_days: int = 3) -> dict:
             params={
                 "latitude": lat,
                 "longitude": lon,
-                "hourly": "precipitation,wind_speed_10m,wind_gusts_10m,weather_code",
+                "hourly": _HOURLY,
                 "forecast_days": forecast_days,
                 "timezone": "UTC",
             },
@@ -41,23 +64,34 @@ def get_weather_risk(lat: float, lon: float, forecast_days: int = 3) -> dict:
             timeout=config.HTTP_TIMEOUT,
         )
         response.raise_for_status()
-        hourly = response.json().get("hourly", {})
-
-        precip = [x for x in hourly.get("precipitation", []) if x is not None]
-        gusts = [x for x in hourly.get("wind_gusts_10m", []) if x is not None]
-        codes = [x for x in hourly.get("weather_code", []) if x is not None]
-
-        max_precip = max(precip) if precip else 0.0
-        max_gust = max(gusts) if gusts else 0.0
-        worst_code = max(codes) if codes else 0
-
-        return {
-            "ok": True,
-            "source": "open-meteo",
-            "max_precip_mm": round(max_precip, 1),
-            "max_wind_gust_kmh": round(max_gust, 1),
-            "worst_weather_code": worst_code,
-            "risk": _risk_level(max_precip, max_gust, worst_code),
-        }
+        return _summarise(response.json().get("hourly", {}))
     except Exception as exc:  # network / bad response — never crash the caller
         return {"ok": False, "source": "open-meteo", "risk": "unknown", "error": type(exc).__name__}
+
+
+def get_weather_risk_many(coords: list[tuple[float, float]], forecast_days: int = 3) -> list[dict]:
+    """Weather risk for many points in ONE request (Open-Meteo accepts
+    comma-separated coordinates and returns a list in the same order)."""
+    if not coords:
+        return []
+    try:
+        response = requests.get(
+            config.OPEN_METEO_URL,
+            params={
+                "latitude": ",".join(f"{lat:.4f}" for lat, _ in coords),
+                "longitude": ",".join(f"{lon:.4f}" for _, lon in coords),
+                "hourly": _HOURLY,
+                "forecast_days": forecast_days,
+            },
+            headers={"User-Agent": config.HTTP_USER_AGENT},
+            timeout=config.HTTP_TIMEOUT,
+        )
+        response.raise_for_status()
+        data = response.json()
+        items = data if isinstance(data, list) else [data]
+        if len(items) != len(coords):
+            raise ValueError("point count mismatch")
+        return [_summarise(item.get("hourly", {})) for item in items]
+    except Exception as exc:
+        failed = {"ok": False, "source": "open-meteo", "risk": "unknown", "error": type(exc).__name__}
+        return [dict(failed) for _ in coords]

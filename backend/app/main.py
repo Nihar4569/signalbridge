@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import health, incidents, plans, signals
+from .routers import assistant, dashboard, fulfillments, health, incidents, plans, signals
 
 app = FastAPI(
     title="SignalBridge API",
@@ -22,6 +22,9 @@ app.include_router(health.router)
 app.include_router(incidents.router)
 app.include_router(plans.router)
 app.include_router(signals.router)
+app.include_router(dashboard.router)
+app.include_router(fulfillments.router)
+app.include_router(assistant.router)
 
 
 @app.get("/")

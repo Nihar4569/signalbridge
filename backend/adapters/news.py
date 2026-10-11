@@ -21,6 +21,7 @@ def search_disruptions(
     *,
     timespan: str | None = None,
     max_records: int | None = None,
+    timeout: float | None = None,
 ) -> dict:
     """Search recent news for disruptions mentioning a location.
 
@@ -44,7 +45,7 @@ def search_disruptions(
                 "sort": "datedesc",
             },
             headers={"User-Agent": config.HTTP_USER_AGENT},
-            timeout=config.HTTP_TIMEOUT,
+            timeout=timeout or config.HTTP_TIMEOUT,
         )
 
         # GDELT asks for ~1 request per 5 seconds; it returns 429 if you go faster.

@@ -28,5 +28,45 @@
     "outgoing_qty": 0,
     "updated_at": "2026-10-10T08:00:00Z",
     "version": 1
+  },
+  {
+    "sku": "VACCINE-10ML",
+    "location_id": "WH-MUN",
+    "on_hand_qty": 50,
+    "reserved_qty": 0,
+    "incoming_qty": 300,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "VACCINE-10ML",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 40,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "TV-55-OLED",
+    "location_id": "MAA-DC",
+    "on_hand_qty": 100,
+    "reserved_qty": 0,
+    "incoming_qty": 200,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "MILK-1L",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 200,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-10T08:00:00Z",
+    "version": 1
   }
 ]

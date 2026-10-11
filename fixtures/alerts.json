@@ -1,0 +1,32 @@
+[
+  {
+    "alert_id": "ALERT-1",
+    "type": "disruption",
+    "severity": "high",
+    "lat": 18.95,
+    "lon": 72.94,
+    "title": "Port suspension — Nhava Sheva",
+    "detail": "Terminal operations suspended; vessels held offshore.",
+    "lane_id": "ROUTE-ET-MUM"
+  },
+  {
+    "alert_id": "ALERT-2",
+    "type": "weather",
+    "severity": "high",
+    "lat": 15.5,
+    "lon": 58.0,
+    "title": "Severe storm — Arabian Sea",
+    "detail": "High winds and swell on the approach lane.",
+    "lane_id": "ROUTE-ET-MUM"
+  },
+  {
+    "alert_id": "ALERT-3",
+    "type": "weather",
+    "severity": "medium",
+    "lat": 20.0,
+    "lon": 38.0,
+    "title": "Rough seas — Red Sea",
+    "detail": "Storm front slowing transits toward Suez.",
+    "lane_id": "ROUTE-NL-MUN"
+  }
+]

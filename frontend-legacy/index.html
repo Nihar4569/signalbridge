@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalBridge — Supply Chain Control Tower</title>
+
+  <!-- Leaflet map library (free, no API key needed) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="pulse-dot"></span>
+      <div>
+        <h1>SignalBridge</h1>
+        <p class="sub">Autonomous Supply-Chain Control Tower</p>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="live-pill"><span class="live-dot"></span> LIVE</span>
+      <span id="clock" class="clock">--:--:--</span>
+      <span id="api-status" class="api-status">API…</span>
+    </div>
+  </header>
+
+  <!-- ===== KPI row ===== -->
+  <section class="kpis" id="kpis">
+    <div class="kpi"><div class="kpi-val" id="kpi-shipments">—</div><div class="kpi-label">Shipments tracked</div></div>
+    <div class="kpi good"><div class="kpi-val" id="kpi-ontime">—</div><div class="kpi-label">On time</div></div>
+    <div class="kpi warn"><div class="kpi-val" id="kpi-atrisk">—</div><div class="kpi-label">At risk</div></div>
+    <div class="kpi bad"><div class="kpi-val" id="kpi-orders">—</div><div class="kpi-label">Orders threatened</div></div>
+    <div class="kpi"><div class="kpi-val" id="kpi-revenue">—</div><div class="kpi-label">Revenue at risk</div></div>
+    <div class="kpi"><div class="kpi-val" id="kpi-alerts">—</div><div class="kpi-label">Active alerts</div></div>
+  </section>
+
+  <!-- ===== Main: map + side ===== -->
+  <main class="layout">
+    <!-- Map -->
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2>Live route map</h2>
+        <div class="legend">
+          <span><i class="sw green"></i>On time</span>
+          <span><i class="sw amber"></i>At risk</span>
+          <span><i class="sw red"></i>Delayed</span>
+          <span><i class="sw alert"></i>Alert</span>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="ticker"><span class="ticker-label">ALERTS</span><div id="ticker-text">Loading live alerts…</div></div>
+    </section>
+
+    <!-- Side: incidents + plan -->
+    <section class="side">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Threatened orders</h2>
+          <button id="refresh-btn" class="btn ghost">↻ Scan</button>
+        </div>
+        <p class="hint" id="incidents-hint">Loading…</p>
+        <ul id="incidents-list" class="list"></ul>
+      </div>
+
+      <div class="panel" id="plan-panel">
+        <div class="panel-head"><h2>Recovery plan</h2></div>
+        <p class="hint" id="plan-hint">Select a threatened order to see its AI recovery plan.</p>
+        <div id="plan-body" class="hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Features ===== -->
+  <section class="panel features">
+    <div class="panel-head"><h2>Capabilities</h2><span class="hint">green = live in this prototype · amber = on the roadmap</span></div>
+    <div class="feature-grid" id="feature-grid"></div>
+  </section>
+
+  <footer class="foot">
+    <span>SignalBridge · AI Builder Cup prototype · dummy data, no real purchases</span>
+    <span>Google ADK · Gemini · Open-Meteo · GDELT · Leaflet</span>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
