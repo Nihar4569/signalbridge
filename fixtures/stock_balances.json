@@ -1,72 +1,42 @@
 [
   {
-    "sku": "JACKET-BLUE-M",
-    "location_id": "WH-MUM",
-    "on_hand_qty": 120,
-    "reserved_qty": 0,
-    "incoming_qty": 500,
-    "outgoing_qty": 0,
-    "updated_at": "2026-10-10T08:00:00Z",
-    "version": 1
-  },
-  {
-    "sku": "JACKET-BLUE-M",
+    "incoming_qty": 0,
     "location_id": "DS-PUN-01",
     "on_hand_qty": 20,
-    "reserved_qty": 0,
-    "incoming_qty": 0,
     "outgoing_qty": 0,
+    "reserved_qty": 0,
+    "sku": "JACKET-BLUE-M",
     "updated_at": "2026-10-10T08:00:00Z",
     "version": 1
   },
   {
-    "sku": "JACKET-BLUE-M",
+    "incoming_qty": 0,
     "location_id": "WH-DEL",
     "on_hand_qty": 15,
+    "outgoing_qty": 0,
     "reserved_qty": 15,
-    "incoming_qty": 0,
-    "outgoing_qty": 0,
+    "sku": "JACKET-BLUE-M",
     "updated_at": "2026-10-10T08:00:00Z",
     "version": 1
   },
   {
-    "sku": "VACCINE-10ML",
-    "location_id": "WH-MUN",
-    "on_hand_qty": 50,
-    "reserved_qty": 0,
-    "incoming_qty": 300,
+    "incoming_qty": 500,
+    "location_id": "WH-MUM",
+    "on_hand_qty": 120,
     "outgoing_qty": 0,
+    "reserved_qty": 0,
+    "sku": "JACKET-BLUE-M",
     "updated_at": "2026-10-10T08:00:00Z",
     "version": 1
   },
   {
-    "sku": "VACCINE-10ML",
-    "location_id": "WH-DEL",
-    "on_hand_qty": 40,
-    "reserved_qty": 0,
-    "incoming_qty": 0,
+    "incoming_qty": 400,
+    "location_id": "WH-ZLO",
+    "on_hand_qty": 20,
     "outgoing_qty": 0,
-    "updated_at": "2026-10-10T08:00:00Z",
-    "version": 1
-  },
-  {
-    "sku": "TV-55-OLED",
-    "location_id": "MAA-DC",
-    "on_hand_qty": 100,
     "reserved_qty": 0,
-    "incoming_qty": 200,
-    "outgoing_qty": 0,
-    "updated_at": "2026-10-10T08:00:00Z",
-    "version": 1
-  },
-  {
-    "sku": "MILK-1L",
-    "location_id": "WH-DEL",
-    "on_hand_qty": 200,
-    "reserved_qty": 0,
-    "incoming_qty": 0,
-    "outgoing_qty": 0,
-    "updated_at": "2026-10-10T08:00:00Z",
+    "sku": "JACKET-NAVY-M",
+    "updated_at": "2026-10-10T20:00:00Z",
     "version": 1
   }
 ]

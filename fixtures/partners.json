@@ -1,68 +1,27 @@
 [
   {
     "partner_id": "CUST-ACME",
-    "name": "Acme Retail Pvt Ltd",
-    "roles": ["customer"],
+    "active": true,
     "gln": null,
+    "name": "Acme Retail Pvt Ltd",
+    "roles": [
+      "customer"
+    ],
     "service_level": {
+      "sla_hours": 48,
       "tier": "vip",
-      "otif_target_pct": 98,
       "penalty_per_late_order_minor": 5000000,
-      "sla_hours": 48
-    },
-    "active": true
+      "otif_target_pct": 98.0
+    }
   },
   {
     "partner_id": "SUP-A",
+    "active": true,
+    "gln": null,
     "name": "Demo Supplier A",
-    "roles": ["supplier"],
-    "gln": null,
-    "email": "orders@supplier-a.demo",
-    "service_level": null,
-    "active": true
-  },
-  {
-    "partner_id": "SUP-B",
-    "name": "Demo Supplier B",
-    "roles": ["supplier"],
-    "gln": null,
-    "email": "orders@supplier-b.demo",
-    "service_level": null,
-    "active": true
-  },
-  {
-    "partner_id": "SUP-C",
-    "name": "Demo Supplier C",
-    "roles": ["supplier"],
-    "gln": null,
-    "email": "orders@supplier-c.demo",
-    "service_level": null,
-    "active": true
-  },
-  {
-    "partner_id": "CUST-MEDICORP",
-    "name": "MediCorp Hospitals",
-    "roles": ["customer"],
-    "gln": null,
-    "service_level": {
-      "tier": "vip",
-      "otif_target_pct": 99,
-      "penalty_per_late_order_minor": 5000000,
-      "sla_hours": 24
-    },
-    "active": true
-  },
-  {
-    "partner_id": "CUST-FRESHMART",
-    "name": "FreshMart Stores",
-    "roles": ["customer"],
-    "gln": null,
-    "service_level": {
-      "tier": "standard",
-      "otif_target_pct": 95,
-      "penalty_per_late_order_minor": 0,
-      "sla_hours": 72
-    },
-    "active": true
+    "roles": [
+      "supplier"
+    ],
+    "service_level": null
   }
 ]

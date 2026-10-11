@@ -1,0 +1,16 @@
+[
+  {
+    "line_id": "LINE-001",
+    "order_id": "ORDER-001",
+    "customer_id": "CUST-ACME",
+    "sku": "JACKET-BLUE-M",
+    "location_id": "WH-MUM",
+    "quantity": 200,
+    "due_at": "2026-10-16T12:00:00Z",
+    "status": "open",
+    "on_hand_allocated_qty": 0,
+    "recovery_coverage_qty": 0,
+    "priority_score": null,
+    "version": 1
+  }
+]

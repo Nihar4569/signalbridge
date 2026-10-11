@@ -1,106 +1,119 @@
 [
   {
-    "location_id": "WH-MUM",
-    "gln": null,
-    "name": "Mumbai Distribution Centre",
-    "type": "dc",
-    "unlocode": "INBOM",
-    "country": "IN",
-    "lat": 19.08,
-    "lon": 72.88,
-    "aliases": ["Mumbai DC"],
-    "can_transfer_to": ["DS-PUN-01", "WH-DEL"],
-    "active": true
-  },
-  {
     "location_id": "DS-PUN-01",
-    "gln": null,
-    "name": "Pune dark store 01",
-    "type": "dark_store",
-    "unlocode": null,
+    "active": true,
+    "aliases": [
+      "Pune DS"
+    ],
+    "can_transfer_to": [
+      "WH-MUM"
+    ],
     "country": "IN",
+    "gln": null,
     "lat": 18.52,
     "lon": 73.86,
-    "aliases": ["Pune DS"],
-    "can_transfer_to": ["WH-MUM"],
-    "active": true
+    "name": "Pune dark store 01",
+    "type": "dark_store",
+    "unlocode": null
   },
   {
-    "location_id": "WH-DEL",
+    "location_id": "EP-SIMON-1011",
+    "active": true,
+    "aliases": [
+      "Hurricane Simon track"
+    ],
+    "can_transfer_to": [],
+    "country": null,
     "gln": null,
-    "name": "Delhi Distribution Centre",
-    "type": "dc",
-    "unlocode": null,
-    "country": "IN",
-    "lat": 28.61,
-    "lon": 77.21,
-    "aliases": ["Delhi DC"],
-    "can_transfer_to": ["WH-MUM"],
-    "active": true
+    "lat": 18.5,
+    "lon": -104.9,
+    "name": "Eastern Pacific approach to Manzanillo",
+    "type": "sea_waypoint",
+    "unlocode": null
   },
   {
     "location_id": "IN-JNPA",
-    "gln": null,
-    "name": "Nhava Sheva port",
-    "type": "port",
-    "unlocode": "INNSA",
+    "active": true,
+    "aliases": [
+      "Nhava Sheva",
+      "Jawaharlal Nehru Port",
+      "JNPA"
+    ],
+    "can_transfer_to": [],
     "country": "IN",
+    "gln": null,
     "lat": 18.95,
     "lon": 72.94,
-    "aliases": ["Nhava Sheva", "Jawaharlal Nehru Port", "JNPA"],
-    "can_transfer_to": [],
-    "active": true
-  },
-  {
-    "location_id": "MAA-DC",
-    "gln": null,
-    "name": "Chennai Distribution Centre",
-    "type": "dc",
-    "unlocode": null,
-    "country": "IN",
-    "lat": 13.00,
-    "lon": 80.20,
-    "aliases": ["Chennai DC"],
-    "can_transfer_to": ["WH-MUM"],
-    "active": true
-  },
-  {
-    "location_id": "WH-MUN",
-    "gln": null,
-    "name": "Mundra Distribution Centre",
-    "type": "dc",
-    "unlocode": null,
-    "country": "IN",
-    "lat": 22.82,
-    "lon": 69.72,
-    "aliases": ["Mundra DC"],
-    "can_transfer_to": ["WH-MUM", "WH-DEL"],
-    "active": true
-  },
-  {
-    "location_id": "IN-MAA",
-    "gln": null,
-    "name": "Chennai port",
+    "name": "Nhava Sheva port",
     "type": "port",
-    "unlocode": "INMAA",
-    "country": "IN",
-    "lat": 13.08,
-    "lon": 80.29,
-    "aliases": ["Chennai Port"],
-    "can_transfer_to": [],
-    "active": true
+    "unlocode": "INNSA"
   },
   {
-    "location_id": "IN-MUN",
+    "location_id": "MX-ZLO",
+    "active": true,
+    "aliases": [
+      "Manzanillo",
+      "Jalisco coast"
+    ],
+    "can_transfer_to": [
+      "WH-ZLO"
+    ],
+    "country": "MX",
     "gln": null,
-    "name": "Mundra port",
+    "lat": 19.054,
+    "lon": -104.315,
+    "name": "Manzanillo port",
     "type": "port",
-    "unlocode": "INMUN",
+    "unlocode": "MXZLO"
+  },
+  {
+    "location_id": "WH-DEL",
+    "active": true,
+    "aliases": [
+      "Delhi DC"
+    ],
+    "can_transfer_to": [
+      "WH-MUM"
+    ],
     "country": "IN",
-    "lat": 22.74,
-    "lon": 69.70,
-    "aliases": ["Mundra Port"],
+    "gln": null,
+    "lat": 28.61,
+    "lon": 77.21,
+    "name": "Delhi Distribution Centre",
+    "type": "dc",
+    "unlocode": null
+  },
+  {
+    "location_id": "WH-MUM",
+    "active": true,
+    "aliases": [
+      "Mumbai DC"
+    ],
+    "can_transfer_to": [
+      "DS-PUN-01",
+      "WH-DEL"
+    ],
+    "country": "IN",
+    "gln": null,
+    "lat": 19.08,
+    "lon": 72.88,
+    "name": "Mumbai Distribution Centre",
+    "type": "dc",
+    "unlocode": "INBOM"
+  },
+  {
+    "location_id": "WH-ZLO",
+    "active": true,
+    "aliases": [
+      "Manzanillo DC"
+    ],
     "can_transfer_to": [],
-    "active": true
+    "country": "MX",
+    "gln": null,
+    "lat": 19.102,
+    "lon": -104.342,
+    "name": "Manzanillo distribution centre",
+    "type": "dc",
+    "unlocode": null
   }
 ]

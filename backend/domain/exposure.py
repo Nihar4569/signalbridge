@@ -22,6 +22,23 @@ def parse_ts(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
+def is_disrupted(shipments: list[dict], sku: str, location_id: str) -> bool:
+    """True only when triage has set risk_zone to "risk" from a live signal.
+
+    A seeded delay_state such as "assumed_delayed" does not count. The
+    shortage appears after a weather or news match, and it clears when
+    that match is gone.
+    """
+    for shipment in shipments:
+        if shipment.get("destination_location_id") != location_id:
+            continue
+        if not any(item.get("sku") == sku for item in shipment.get("items", [])):
+            continue
+        if shipment.get("risk_zone") == "risk":
+            return True
+    return False
+
+
 def demand_by(deadline: datetime, sku: str, location_id: str, order_lines: list[dict]) -> int:
     """Total open order units for this SKU/location due on or before the deadline."""
     total = 0
@@ -73,7 +90,7 @@ def assess_exposure(
     on_hand_qty: int,
     shipments: list[dict],
     order_lines: list[dict],
-    scenario: str = "disrupted",
+    scenario: str = "baseline",
 ) -> dict:
     """Return the shortage picture for one SKU at one location.
 

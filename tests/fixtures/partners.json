@@ -1,0 +1,23 @@
+[
+  {
+    "partner_id": "CUST-ACME",
+    "name": "Acme Retail Pvt Ltd",
+    "roles": ["customer"],
+    "gln": null,
+    "service_level": {
+      "tier": "vip",
+      "otif_target_pct": 98,
+      "penalty_per_late_order_minor": 5000000,
+      "sla_hours": 48
+    },
+    "active": true
+  },
+  {
+    "partner_id": "SUP-A",
+    "name": "Demo Supplier A",
+    "roles": ["supplier"],
+    "gln": null,
+    "service_level": null,
+    "active": true
+  }
+]

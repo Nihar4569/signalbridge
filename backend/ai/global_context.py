@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from ..adapters import news as news_adapter
 from ..adapters import weather as weather_adapter
 from ..domain import fulfillment as fulfillment_mod
+from ..domain import network as network_mod
 from ..domain import planner as planner_mod
 
 WEATHER_TTL_SECONDS = 600
@@ -59,6 +60,8 @@ def news_targets(store, question: str, limit: int = MAX_NEWS_PLACES) -> list[str
     otherwise the ports where disruptions are happening right now."""
     q = (question or "").lower()
     found: list[str] = []
+    locations = {loc["location_id"]: loc for loc in store.list("locations")}
+    lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
 
     def add(term: str | None) -> None:
         if term and term.lower() not in {t.lower() for t in found}:
@@ -67,34 +70,32 @@ def news_targets(store, question: str, limit: int = MAX_NEWS_PLACES) -> list[str
     def mentioned(*terms: str | None) -> bool:
         return any(t and re.search(rf"\b{re.escape(t.lower())}\b", q) for t in terms)
 
-    for loc in store.list("locations"):
+    for loc in locations.values():
         name = loc.get("name", "")
         aliases = loc.get("aliases") or []
         search = aliases[0] if loc.get("type") == "port" and aliases else (_first_word(name) or name)
         if mentioned(name, *aliases, _first_word(name)):
             add(search)
 
-    for lane in store.list("lanes"):
-        for point in lane.get("points", []):
-            if point.get("kind") == "destination":
-                continue  # destinations are our own DCs, already covered above
+    for lane in lanes.values():
+        for point in network_mod.lane_points(lane, locations):
+            if point["kind"] in ("destination", "dc", "dark_store"):
+                continue  # our own sites, already covered above
             if mentioned(point.get("name"), _first_word(point.get("name"))):
                 add(point["name"])
 
     if not found:
-        locations = {loc["location_id"]: loc for loc in store.list("locations")}
         for event in store.list("events"):
             loc = locations.get((event.get("where") or {}).get("location_id"))
             if loc:
                 add((loc.get("aliases") or [loc.get("name")])[0])
-        lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
         troubled = sorted(
-            (s for s in store.list("shipments") if s.get("health") in _HEALTH_ORDER),
-            key=lambda s: _HEALTH_ORDER[s["health"]],
+            (s for s in store.list("shipments") if network_mod.shipment_health(s) in _HEALTH_ORDER),
+            key=lambda s: _HEALTH_ORDER[network_mod.shipment_health(s)],
         )
         for shipment in troubled:
-            for point in lanes.get(shipment.get("lane_id"), {}).get("points", []):
-                if point.get("kind") == "port":
+            for point in network_mod.lane_points(lanes.get(shipment.get("lane_id")), locations):
+                if point["kind"] == "port":
                     add(point["name"])
 
     return found[:limit]
@@ -105,7 +106,10 @@ def news_targets(store, question: str, limit: int = MAX_NEWS_PLACES) -> list[str
 def _weather_points(store) -> list[dict]:
     """Every location we own plus every sea/port waypoint on a shipping lane."""
     shipments = store.list("shipments")
-    lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
+    locations = {loc["location_id"]: loc for loc in store.list("locations")}
+    lane_paths = {
+        lane["lane_id"]: network_mod.lane_points(lane, locations) for lane in store.list("lanes")
+    }
     points: list[dict] = []
     seen: set[tuple] = set()
 
@@ -119,11 +123,11 @@ def _weather_points(store) -> list[dict]:
         points.append({"place": name, "kind": kind, "lat": lat, "lon": lon})
 
     # Lane waypoints first: that's where storms actually hit shipments.
-    for lane in lanes.values():
-        for point in lane.get("points", []):
-            if point.get("kind") in ("sea", "port", "origin"):
-                add(point.get("name"), point.get("kind"), point.get("lat"), point.get("lon"))
-    for loc in store.list("locations"):
+    for path in lane_paths.values():
+        for point in path:
+            if point["kind"] != "destination":
+                add(point["name"], point["kind"], point["lat"], point["lon"])
+    for loc in locations.values():
         add(loc.get("name"), loc.get("type"), loc.get("lat"), loc.get("lon"))
 
     points = points[:MAX_WEATHER_POINTS]
@@ -133,7 +137,7 @@ def _weather_points(store) -> list[dict]:
             for s in shipments
             if any(
                 abs(p["lat"] - point["lat"]) < 0.6 and abs(p["lon"] - point["lon"]) < 0.6
-                for p in lanes.get(s.get("lane_id"), {}).get("points", [])
+                for p in lane_paths.get(s.get("lane_id"), [])
             )
         ]
     return points
@@ -239,10 +243,12 @@ def build_global_context(store, question: str, *, live: bool = True) -> tuple[di
     orders = store.list("order_lines")
     balances = store.list("stock_balances")
     offers = store.list("supplier_offers")
-    alerts = store.list("alerts")
+    alerts = network_mod.active_alerts(store)
     events = store.list("events")
 
     loc_name = lambda lid: (locations.get(lid) or {}).get("name", lid)  # noqa: E731
+    health = {s.get("shipment_id"): network_mod.shipment_health(s) for s in shipments}
+    lane_paths = {lid: network_mod.lane_points(lane, locations) for lid, lane in lanes.items()}
 
     # Recovery plans for every open SKU/location that is short.
     plans, seen = [], set()
@@ -272,9 +278,9 @@ def build_global_context(store, question: str, *, live: bool = True) -> tuple[di
         "as_of": datetime.now(timezone.utc).isoformat(timespec="minutes"),
         "summary": {
             "shipments_tracked": len(shipments),
-            "shipments_on_time": sum(1 for s in shipments if s.get("health") == "on_time"),
-            "shipments_at_risk": sum(1 for s in shipments if s.get("health") == "at_risk"),
-            "shipments_delayed": sum(1 for s in shipments if s.get("health") == "delayed"),
+            "shipments_on_time": list(health.values()).count("on_time"),
+            "shipments_at_risk": list(health.values()).count("at_risk"),
+            "shipments_delayed": list(health.values()).count("delayed"),
             "orders_threatened": len(plans),
             "revenue_at_risk_minor": sum(p.get("revenue_protected_minor") or 0 for p in plans),
             "penalties_at_risk_minor": sum(p.get("penalty_avoided_minor") or 0 for p in plans),
@@ -285,15 +291,15 @@ def build_global_context(store, question: str, *, live: bool = True) -> tuple[di
             {
                 "shipment_id": s.get("shipment_id"),
                 "route": (lanes.get(s.get("lane_id")) or {}).get("name"),
-                "waypoints": [p.get("name") for p in (lanes.get(s.get("lane_id")) or {}).get("points", [])],
+                "waypoints": [p["name"] for p in lane_paths.get(s.get("lane_id"), [])],
                 "items": [
                     {"sku": i.get("sku"), "product": (products.get(i.get("sku")) or {}).get("name"), "qty": i.get("quantity")}
                     for i in s.get("items", [])
                 ],
                 "destination": loc_name(s.get("destination_location_id")),
                 "carrier": s.get("carrier_id"),
-                "health": s.get("health"),
-                "progress_pct": round((s.get("progress") or 0) * 100),
+                "health": health.get(s.get("shipment_id")),
+                "why_at_risk": s.get("risk_reason"),
                 "eta_originally": s.get("expected_arrival_at"),
                 "eta_now_assumed": s.get("assumed_arrival_at") or s.get("expected_arrival_at"),
                 "delay_state": s.get("delay_state"),
@@ -428,6 +434,7 @@ def build_global_context(store, question: str, *, live: bool = True) -> tuple[di
         "money": "Fields ending in _rupees are already-formatted rupee amounts.",
         "data": "Internal records come from SignalBridge's database. live_weather and live_news "
                 "were fetched from public APIs for this question.",
-        "health": "on_time / at_risk / delayed is the shipment's tracked health.",
+        "health": "on_time / at_risk / delayed comes from SignalBridge's Gemini triage of live "
+                  "weather and news; why_at_risk is that triage's reason.",
     }
     return context, sources, articles

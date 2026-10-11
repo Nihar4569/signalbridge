@@ -1,62 +1,34 @@
 [
   {
     "sku": "JACKET-BLUE-M",
+    "category": "apparel",
+    "currency": "INR",
     "gtin": null,
     "name": "Blue winter jacket - Medium",
-    "category": "apparel",
-    "uom": "EA",
+    "perishable": false,
+    "shelf_life_days": null,
+    "substitute_skus": [
+      "JACKET-BLUE-L"
+    ],
+    "temp_range_c": null,
     "unit_cost_minor": 120000,
     "unit_price_minor": 249900,
+    "uom": "EA",
+    "version": 1
+  },
+  {
+    "sku": "JACKET-NAVY-M",
+    "category": "apparel",
     "currency": "INR",
-    "substitute_skus": ["JACKET-BLUE-L"],
+    "gtin": null,
+    "name": "Navy jacket - Medium",
     "perishable": false,
     "shelf_life_days": null,
+    "substitute_skus": [],
     "temp_range_c": null,
-    "version": 1
-  },
-  {
-    "sku": "TV-55-OLED",
-    "gtin": null,
-    "name": "55-inch OLED television",
-    "category": "electronics",
+    "unit_cost_minor": 120000,
+    "unit_price_minor": 249900,
     "uom": "EA",
-    "unit_cost_minor": 6000000,
-    "unit_price_minor": 7499900,
-    "currency": "INR",
-    "substitute_skus": [],
-    "perishable": false,
-    "shelf_life_days": null,
-    "temp_range_c": null,
-    "version": 1
-  },
-  {
-    "sku": "VACCINE-10ML",
-    "gtin": null,
-    "name": "Cold-chain vaccine vial (10ml)",
-    "category": "pharma",
-    "uom": "EA",
-    "unit_cost_minor": 150000,
-    "unit_price_minor": 250000,
-    "currency": "INR",
-    "substitute_skus": [],
-    "perishable": true,
-    "shelf_life_days": 30,
-    "temp_range_c": "2-8",
-    "version": 1
-  },
-  {
-    "sku": "MILK-1L",
-    "gtin": null,
-    "name": "Fresh milk 1 litre",
-    "category": "grocery",
-    "uom": "EA",
-    "unit_cost_minor": 4000,
-    "unit_price_minor": 6000,
-    "currency": "INR",
-    "substitute_skus": [],
-    "perishable": true,
-    "shelf_life_days": 7,
-    "temp_range_c": "2-6",
     "version": 1
   }
 ]

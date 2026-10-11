@@ -1,11 +1,13 @@
-"""Tiny Gemini helper — same REST call style as script/api_test.py.
+"""Gemini calls. Gemini explains and judges; Python does every calculation.
 
-Two jobs:
-  1. explain_plan()    — a short summary of a recovery plan.
-  2. answer_question() — answer a user's question with the FULL plan as context.
+  - judge_shipment_risk(): triage. Reads weather + news with the shipments and
+    decides which shipments could really be delayed.
+  - explain_plan():        a short summary of an already-calculated plan.
+  - answer_question():     Q&A about one plan, with the full plan as context.
+  - answer_global():       the Ask Gemini panel, with all app data as context.
 
-If there is no API key, or the call fails for any reason, we quietly fall back to
-a safe local answer. The app must never break because of the AI.
+If there is no API key, or every model fails, we fall back to a safe local
+answer. The app must never break because of the AI.
 """
 from __future__ import annotations
 
@@ -15,8 +17,11 @@ import time
 import requests
 
 from ..core import config
+from ..core.logging import get_logger
 from . import context as context_mod
 from .money import humanize_money, rupees_text
+
+log = get_logger("gemini")
 
 _ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -24,7 +29,7 @@ _ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:gen
 _cooldown: dict[str, float] = {}
 
 
-def _call(prompt: str, fallback: str, timeout: int = 30) -> dict:
+def _call(prompt: str, fallback: str, timeout: int = 30, json_mode: bool = False) -> dict:
     """Ask Gemini, trying each configured model until one answers.
 
     A model that is rate-limited (429) or missing (404) is skipped and put on a
@@ -33,6 +38,10 @@ def _call(prompt: str, fallback: str, timeout: int = 30) -> dict:
     """
     if not config.GOOGLE_API_KEY:
         return {"text": fallback, "source": "fallback (no API key)"}
+
+    body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
+    if json_mode:
+        body["generationConfig"] = {"temperature": 0, "responseMimeType": "application/json"}
 
     now = time.time()
     tried: list[str] = []
@@ -49,7 +58,7 @@ def _call(prompt: str, fallback: str, timeout: int = 30) -> dict:
                     "Content-Type": "application/json",
                     "X-goog-api-key": config.GOOGLE_API_KEY,
                 },
-                json={"contents": [{"parts": [{"text": prompt}]}]},
+                json=body,
                 timeout=timeout,
             )
         except requests.Timeout:
@@ -119,6 +128,56 @@ def _build_qa_prompt(payload: dict, question: str) -> str:
         f"=== QUESTION ===\n{question}\n\n"
         "Answer:"
     )
+
+
+def judge_shipment_risk(
+    *,
+    shipments: list[dict],
+    signals: list[dict],
+    locations: list[dict],
+    products: list[dict],
+) -> list[dict] | None:
+    """Ask Gemini which in-transit shipments these signals could delay.
+
+    Returns a list of {shipment_id, risk, reason}, or None when Gemini did
+    not answer (no key, HTTP error, or unreadable JSON). The caller must
+    not invent a risk decision in that case.
+    """
+    active = [s for s in shipments if s.get("status") in ("in_transit", "planned")]
+    if not active or not config.GOOGLE_API_KEY:
+        return None
+
+    by_id = {loc["location_id"]: loc for loc in locations}
+    names = {p["sku"]: p.get("name") for p in products}
+    brief = {
+        "shipments": [_shipment_brief(s, by_id, names) for s in active],
+        "weather": [_weather_brief(s, by_id) for s in signals if s.get("source") == "open-meteo"],
+        "news": [_news_brief(s, by_id) for s in signals if s.get("source") != "open-meteo"][:20],
+        "places": [
+            {"location_id": loc["location_id"], "name": loc.get("name"), "type": loc.get("type")}
+            for loc in locations
+        ],
+    }
+    prompt = (
+        "You are the triage analyst for a retailer's inbound shipments.\n"
+        "You receive live weather readings and news articles, plus the shipments "
+        "currently on the water. Decide, for each shipment, whether there is a "
+        "real possibility that this weather or news will delay it.\n"
+        "Reason about the situation. A place name appearing in a headline is not "
+        "enough, and a 'low' weather reading is not a delay. A storm, flood, "
+        "strike, closure, congestion, or similar event can be a risk when it "
+        "could affect the destination, a port the shipment uses, or the sea "
+        "route named by its lane.\n"
+        "Do not calculate quantities, money, or a recovery plan.\n"
+        "Reply with JSON only, one object per shipment you were given, using "
+        "only those shipment_id values:\n"
+        '{"shipments":[{"shipment_id":"...","risk":true,"reason":"one sentence"}]}\n\n'
+        f"{json.dumps(brief, default=str)}"
+    )
+    text = _generate(prompt, json_mode=True)
+    if text is None:
+        return None
+    return _parse_judgments(text, {s["shipment_id"] for s in active})
 
 
 def explain_plan(plan: dict) -> dict:
@@ -212,3 +271,85 @@ def _build_prompt(plan: dict) -> str:
         f"Verdict: {margin.get('verdict')}\n"
         f"Needs approval from: {approval.get('tier')}\n"
     )
+
+
+def _shipment_brief(shipment: dict, locations: dict, product_names: dict) -> dict:
+    dest_id = shipment.get("destination_location_id")
+    dest = locations.get(dest_id) or {}
+    return {
+        "shipment_id": shipment.get("shipment_id"),
+        "lane_id": shipment.get("lane_id"),
+        "destination": dest.get("name") or dest_id,
+        "destination_type": dest.get("type"),
+        "expected_arrival_at": shipment.get("expected_arrival_at"),
+        "items": [
+            {
+                "sku": item.get("sku"),
+                "name": product_names.get(item.get("sku")),
+                "quantity": item.get("quantity"),
+            }
+            for item in shipment.get("items") or []
+        ],
+    }
+
+
+def _weather_brief(signal: dict, locations: dict) -> dict:
+    payload = signal.get("payload") or {}
+    loc = locations.get(payload.get("location_id")) or {}
+    return {
+        "place": loc.get("name") or payload.get("location_id"),
+        "place_type": loc.get("type"),
+        "risk": payload.get("risk"),
+        "max_wind_gust_kmh": payload.get("max_wind_gust_kmh"),
+        "max_precip_mm": payload.get("max_precip_mm"),
+    }
+
+
+def _news_brief(signal: dict, locations: dict) -> dict:
+    payload = signal.get("payload") or {}
+    loc = locations.get(payload.get("location_id")) or {}
+    return {
+        "place_searched": loc.get("name") or payload.get("location_id"),
+        "title": signal.get("title"),
+        "url": signal.get("source_url"),
+    }
+
+
+def _generate(prompt: str, *, json_mode: bool) -> str | None:
+    """Raw Gemini text, or None when no model answered (caller must not guess)."""
+    result = _call(prompt, fallback="", timeout=60, json_mode=json_mode)
+    if not result["source"].startswith("gemini"):
+        log.warning("Gemini did not answer: %s", result["source"])
+        return None
+    log.info("Gemini answered with %s", result["source"])
+    return result["text"]
+
+
+def _parse_judgments(text: str, allowed_ids: set[str]) -> list[dict] | None:
+    raw = text.strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[-1]
+        if raw.endswith("```"):
+            raw = raw[:-3]
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    rows = data.get("shipments") if isinstance(data, dict) else None
+    if not isinstance(rows, list):
+        return None
+    judgments = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        shipment_id = row.get("shipment_id")
+        if shipment_id not in allowed_ids:
+            continue
+        judgments.append(
+            {
+                "shipment_id": shipment_id,
+                "risk": row.get("risk") is True,
+                "reason": row.get("reason") or "",
+            }
+        )
+    return judgments

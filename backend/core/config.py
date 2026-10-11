@@ -25,8 +25,8 @@ TENANT_ID = os.getenv("TENANT_ID", "buildx-demo")
 # --- gemini / agent ---
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
-# We try these models in order. If one is rate-limited (429) or unavailable we
-# fall through to the next, so a single exhausted quota never breaks the app.
+# We try these models in order. If one is rate-limited (429), overloaded (503) or
+# retired (404) we fall through to the next, so one bad model never breaks the app.
 # Override with a comma-separated list in GEMINI_MODELS.
 GEMINI_MODELS = [
     m.strip()
@@ -46,6 +46,9 @@ GEMINI_COOLDOWN_SECONDS = int(os.getenv("GEMINI_COOLDOWN_SECONDS", "900"))
 # --- google cloud ---
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 FIRESTORE_EMULATOR_HOST = os.getenv("FIRESTORE_EMULATOR_HOST", "")
+
+# Weather + news scan while the API process is running. 0 turns the loop off.
+SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "120"))
 
 # --- external APIs (free, no key needed) ---
 HTTP_TIMEOUT = 15  # seconds, for any outbound API call

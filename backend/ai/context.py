@@ -7,6 +7,8 @@ all of it from the store so Gemini can answer grounded in real facts.
 """
 from __future__ import annotations
 
+from ..domain import network as network_mod
+
 
 def build_qa_context(store, plan: dict) -> dict:
     """Return a rich, self-describing context dict for one recovery plan."""
@@ -55,7 +57,8 @@ def build_qa_context(store, plan: dict) -> dict:
             "originally_expected_at": shipment.get("expected_arrival_at"),
             "now_assumed_to_arrive_at": shipment.get("assumed_arrival_at"),
             "delay_state": shipment.get("delay_state"),
-            "health": shipment.get("health"),
+            "health": network_mod.shipment_health(shipment),
+            "why_at_risk": shipment.get("risk_reason"),
         })
 
     # --- the disruption signals themselves ---

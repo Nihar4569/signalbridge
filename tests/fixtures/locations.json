@@ -1,0 +1,54 @@
+[
+  {
+    "location_id": "WH-MUM",
+    "gln": null,
+    "name": "Mumbai Distribution Centre",
+    "type": "dc",
+    "unlocode": "INBOM",
+    "country": "IN",
+    "lat": 19.08,
+    "lon": 72.88,
+    "aliases": ["Mumbai DC"],
+    "can_transfer_to": ["DS-PUN-01", "WH-DEL"],
+    "active": true
+  },
+  {
+    "location_id": "DS-PUN-01",
+    "gln": null,
+    "name": "Pune dark store 01",
+    "type": "dark_store",
+    "unlocode": null,
+    "country": "IN",
+    "lat": 18.52,
+    "lon": 73.86,
+    "aliases": ["Pune DS"],
+    "can_transfer_to": ["WH-MUM"],
+    "active": true
+  },
+  {
+    "location_id": "WH-DEL",
+    "gln": null,
+    "name": "Delhi Distribution Centre",
+    "type": "dc",
+    "unlocode": null,
+    "country": "IN",
+    "lat": 28.61,
+    "lon": 77.21,
+    "aliases": ["Delhi DC"],
+    "can_transfer_to": ["WH-MUM"],
+    "active": true
+  },
+  {
+    "location_id": "IN-JNPA",
+    "gln": null,
+    "name": "Nhava Sheva port",
+    "type": "port",
+    "unlocode": "INNSA",
+    "country": "IN",
+    "lat": 18.95,
+    "lon": 72.94,
+    "aliases": ["Nhava Sheva", "Jawaharlal Nehru Port", "JNPA"],
+    "can_transfer_to": [],
+    "active": true
+  }
+]

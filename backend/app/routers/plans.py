@@ -57,7 +57,7 @@ def approve_plan(sku: str, location_id: str, store=Depends(store_dep)) -> dict:
     if plan.get("selected_offer_id") is None:
         return {"status": plan.get("status", "no_feasible_option"), "plan": plan}
 
-    receipt = reservations_mod.reserve(plan=plan, supplier=SupplierSimulator())
+    receipt = reservations_mod.reserve(plan=plan, supplier=SupplierSimulator(), store=store)
 
     fulfillment = fulfillment_mod.build_fulfillment(store, plan, receipt)
     sender = EmailSender()

@@ -17,3 +17,20 @@ def active_shipment_locations() -> list[str]:
         if s.get("status") == "in_transit"
     }
     return sorted(locations)
+
+
+def signal_scan_location_ids() -> list[str]:
+    """Locations the monitor should ask weather and news about.
+
+    In-transit destinations, plus active ports. The port is where a delay
+    usually starts; the warehouse is where the shipment is headed.
+    """
+    locations = get_store().list("locations")
+    ids = set(active_shipment_locations())
+    for loc in locations:
+        # Ports, plus sample points along a lane. A hurricane sits on the
+        # sample point; the port may still be outside the worst winds.
+        if loc.get("type") in ("port", "sea_waypoint") and loc.get("active", True):
+            ids.add(loc["location_id"])
+    known = {loc["location_id"] for loc in locations}
+    return sorted(ids & known)
