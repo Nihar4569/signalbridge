@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..core import config
 from ..worker.main import signal_scan_loop
-from .routers import assistant, dashboard, fulfillments, health, incidents, plans, signals
+from .routers import assistant, dashboard, fulfillments, health, incidents, plans, scan, signals
 
 
 @asynccontextmanager
@@ -49,6 +49,7 @@ app.include_router(signals.router)
 app.include_router(dashboard.router)
 app.include_router(fulfillments.router)
 app.include_router(assistant.router)
+app.include_router(scan.router)
 
 
 @app.get("/")

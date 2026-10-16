@@ -32,6 +32,8 @@ export const api = {
   approve: (sku, loc) => post(`/plans/${sku}/${loc}/approve`),
   signals: (loc) => get(`/signals/${loc}`),
   fulfillments: () => get("/fulfillments"),
+  triggerScan: () => post("/scan"),
+  scanStatus: () => get("/scan/status"),
 };
 
 // ---- formatting helpers -----------------------------------------------------

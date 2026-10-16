@@ -1,0 +1,21 @@
+digraph Approval {
+  graph [rankdir=TB, bgcolor="#f8fafc", pad="0.4", nodesep="0.4", ranksep="0.45", fontname="Arial", fontsize=22, labelloc=t, label="SignalBridge — CURRENT approval LLD\nWhat happens after Approve & execute"];
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#cbd5e1", fontname="Arial", fontsize=15, margin="0.18,0.12"];
+  edge [color="#64748b", fontname="Arial", fontsize=12, arrowsize=0.7];
+  click [label="1. AiPlanModal.approve()\nPOST /plans/{sku}/{location}/approve", fillcolor="#dbeafe"];
+  rebuild [label="2. plans.approve_plan()\nRebuild current plan from store", fillcolor="#dbeafe"];
+  gate [label="3. Check selected_offer_id\nNo user, tier or reviewed-version check", fillcolor="#ffedd5"];
+  reserve [label="4. reservations.reserve()\nRead operation / process cache\nCall supplier.hold(total recovered_qty)", fillcolor="#ffedd5"];
+  simulator [label="SupplierSimulator.hold()\nRandom receipt; no capacity mutation"];
+  persist [label="5. Cache success, then upsert\noperations and plans documents", fillcolor="#fef3c7"];
+  build [label="6. fulfillment.build_fulfillment()\nTransfer / PO / order-update DESCRIPTIONS"];
+  email [label="7. EmailSender.send()\nSimulated by default; SMTP optional"];
+  memory [label="8. save_fulfillment()\nMemory deduplication AFTER sends\nTimeline includes coverage done", fillcolor="#fef3c7"];
+  response [label="9. Return approved response\nUI displays green completion", fillcolor="#dcfce7"];
+  missing [label="NOT IMPLEMENTED IN THIS FLOW\nCorrect internal vs supplier holds\nStock/coverage mutation and transaction\nRead-back, expiry and restart-safe history", fillcolor="#fee2e2", color="#f87171"];
+  click -> rebuild -> gate -> reserve;
+  reserve -> simulator [label="hold"];
+  simulator -> persist [label="receipt"];
+  persist -> build -> email -> memory -> response;
+  response -> missing [style=dashed, color="#ef4444", label="success claim exceeds stored state"];
+}

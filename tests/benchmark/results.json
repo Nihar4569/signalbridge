@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-10-16T13:25:45+00:00",
+  "environment": {
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "python": "3.11.14",
+    "data_source": "local fixtures (Firestore snapshot)"
+  },
+  "scale": {
+    "locations": 24,
+    "lanes": 6,
+    "products": 6,
+    "partners": 23,
+    "shipments": 6,
+    "order_lines": 10,
+    "stock_balances": 17,
+    "supplier_offers": 20,
+    "signals": 12,
+    "at_risk_order_pairs": 6,
+    "supplier_options_evaluated": 20
+  },
+  "latency": {
+    "assess_exposure": {
+      "runs": 2000,
+      "avg_ms": 0.0029,
+      "p50_ms": 0.0027,
+      "p95_ms": 0.003,
+      "min_ms": 0.0025,
+      "max_ms": 0.0817,
+      "ops_per_sec": 342353
+    },
+    "route_approval": {
+      "runs": 2000,
+      "avg_ms": 0.0003,
+      "p50_ms": 0.0003,
+      "p95_ms": 0.0003,
+      "min_ms": 0.0002,
+      "max_ms": 0.0049,
+      "ops_per_sec": 3943225
+    },
+    "build_recovery_plan": {
+      "runs": 400,
+      "avg_ms": 0.0895,
+      "p50_ms": 0.0855,
+      "p95_ms": 0.1106,
+      "min_ms": 0.0746,
+      "max_ms": 0.2316,
+      "ops_per_sec": 11178
+    },
+    "dashboard_overview": {
+      "runs": 100,
+      "avg_ms": 0.831,
+      "p50_ms": 0.7858,
+      "p95_ms": 1.0479,
+      "min_ms": 0.7378,
+      "max_ms": 1.2878,
+      "ops_per_sec": 1203
+    },
+    "dashboard_map": {
+      "runs": 100,
+      "avg_ms": 0.2975,
+      "p50_ms": 0.2856,
+      "p95_ms": 0.3611,
+      "min_ms": 0.2736,
+      "max_ms": 0.4135,
+      "ops_per_sec": 3362
+    },
+    "incidents": {
+      "runs": 100,
+      "avg_ms": 0.0412,
+      "p50_ms": 0.0407,
+      "p95_ms": 0.0431,
+      "min_ms": 0.04,
+      "max_ms": 0.049,
+      "ops_per_sec": 24299
+    }
+  },
+  "correctness": {
+    "plans_checked": 6,
+    "checks": {
+      "money_integrity": 6,
+      "cheapest_feasible_chosen": 6,
+      "every_option_has_reason": 6,
+      "chokepoint_rule": 6
+    },
+    "violations": [],
+    "all_passed": true
+  },
+  "resilience": {
+    "news_fallback_to_google": true,
+    "gemini_model_chain_fallback": true,
+    "gemini_graceful_without_key": true,
+    "all_passed": true
+  },
+  "gemini_live": {
+    "skipped": "Gemini did not answer (quota or network)"
+  }
+}

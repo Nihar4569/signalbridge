@@ -7,7 +7,9 @@ You can also run one pass by hand:
 from __future__ import annotations
 
 import asyncio
+import threading
 import time
+from datetime import datetime, timezone
 
 from ..adapters import news as news_adapter
 from ..adapters import weather as weather_adapter
@@ -21,6 +23,78 @@ from ..domain import triage as triage_mod
 from .route_monitor import signal_scan_location_ids
 
 log = get_logger("worker")
+
+
+# --- on-demand scan (frontend-triggered; no cron / Cloud Scheduler needed) ----
+# The frontend calls POST /scan on page load and refresh. We run the weather +
+# news scan in a background thread (never blocking the page) and throttle it so
+# repeated refreshes don't hammer the free APIs or the Gemini quota.
+_scan_lock = threading.Lock()
+_scan_state: dict = {
+    "running": False,
+    "started_at": None,
+    "finished_at": None,
+    "last_summary": None,
+    "last_error": None,
+}
+
+
+def _iso(epoch: float | None) -> str | None:
+    if epoch is None:
+        return None
+    return datetime.fromtimestamp(epoch, timezone.utc).isoformat(timespec="seconds")
+
+
+def scan_status() -> dict:
+    """JSON-friendly view of the scan state for the frontend."""
+    finished = _scan_state["finished_at"]
+    return {
+        "running": _scan_state["running"],
+        "last_started_at": _iso(_scan_state["started_at"]),
+        "last_finished_at": _iso(finished),
+        "seconds_since_last_scan": round(time.time() - finished) if finished else None,
+        "last_summary": _scan_state["last_summary"],
+        "last_error": _scan_state["last_error"],
+    }
+
+
+def trigger_scan(*, min_interval: int | None = None, background: bool = True, scan_fn=None) -> dict:
+    """Start a weather+news scan unless one is running or ran recently.
+
+    Returns immediately. `min_interval` (seconds) throttles repeated triggers so
+    page refreshes don't start a new scan every time.
+    """
+    if min_interval is None:
+        min_interval = config.SCAN_MIN_INTERVAL_SECONDS
+    scan_fn = scan_fn or scan_route_signals
+    now = time.time()
+    with _scan_lock:
+        if _scan_state["running"]:
+            return {"status": "running", **scan_status()}
+        finished = _scan_state["finished_at"]
+        if finished is not None and (now - finished) < min_interval:
+            return {"status": "fresh", **scan_status()}
+        _scan_state.update(running=True, started_at=now, last_error=None)
+
+    if background:
+        threading.Thread(target=_run_scan, args=(scan_fn,), name="signal-scan", daemon=True).start()
+    else:
+        _run_scan(scan_fn)
+    return {"status": "started", **scan_status()}
+
+
+def _run_scan(scan_fn) -> None:
+    try:
+        results = scan_fn()
+        _scan_state["last_summary"] = {
+            "locations_scanned": len(results),
+            "news_found": sum(r.get("news_count", 0) for r in results),
+        }
+    except Exception as exc:  # a failed scan must never crash the server
+        log.exception("On-demand scan failed")
+        _scan_state["last_error"] = type(exc).__name__
+    finally:
+        _scan_state.update(running=False, finished_at=time.time())
 
 
 def scan_route_signals(store=None) -> list[dict]:
@@ -105,7 +179,9 @@ async def signal_scan_loop(stop: asyncio.Event) -> None:
     while not stop.is_set():
         started = time.monotonic()
         try:
-            await asyncio.to_thread(scan_route_signals)
+            # Go through the same guarded entry point as the frontend trigger,
+            # so the loop and page-load scans never run on top of each other.
+            trigger_scan(min_interval=0)
         except Exception:
             log.exception("Signal scan failed")
         if stop.is_set():

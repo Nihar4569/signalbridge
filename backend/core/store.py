@@ -60,12 +60,16 @@ class LocalStore:
     def __init__(self, fixtures_dir: Path | None = None) -> None:
         self.dir = Path(fixtures_dir or config.FIXTURES_DIR)
         self._memory: dict[str, dict[str, dict]] = {}
+        self._file_cache: dict[str, list[dict]] = {}
 
     def _load_file(self, collection: str) -> list[dict]:
+        cached = self._file_cache.get(collection)
+        if cached is not None:
+            return cached
         path = self.dir / f"{collection}.json"
-        if not path.exists():
-            return []
-        return json.loads(path.read_text(encoding="utf-8"))
+        docs = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+        self._file_cache[collection] = docs
+        return docs
 
     def list(self, collection: str) -> list[dict]:
         from backend.models import doc_id_for

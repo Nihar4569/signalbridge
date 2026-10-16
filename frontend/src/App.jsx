@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
 import GeminiPanel from "./components/GeminiPanel.jsx";
@@ -8,12 +8,16 @@ import Incidents from "./pages/Incidents.jsx";
 import Recoveries from "./pages/Recoveries.jsx";
 import Signals from "./pages/Signals.jsx";
 import Capabilities from "./pages/Capabilities.jsx";
+import { api } from "./api.js";
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [geminiOpen, setGeminiOpen] = useState(false);
   const toggle = () => setCollapsed((c) => !c);
   const closeGemini = useCallback(() => setGeminiOpen(false), []);
+
+  // Fetch fresh live weather + news whenever the app loads (no cron needed).
+  useEffect(() => { api.triggerScan().catch(() => {}); }, []);
 
   return (
     <div className={"app" + (collapsed ? " collapsed" : "")}>

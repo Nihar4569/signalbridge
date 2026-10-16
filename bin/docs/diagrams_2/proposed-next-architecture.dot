@@ -1,0 +1,18 @@
+digraph Proposed {
+  graph [rankdir=TB, bgcolor="#f8fafc", pad="0.4", nodesep="0.4", ranksep="0.5", fontname="Arial", fontsize=22, labelloc=t, label="SignalBridge — PROPOSED next architecture\nRecommendation, not current implementation"];
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#cbd5e1", fontname="Arial", fontsize=15, margin="0.18,0.12"];
+  edge [color="#64748b", fontname="Arial", fontsize=12, arrowsize=0.7];
+  source [label="Permitted sources + owned replay\nSource ID, time, rights and revision"];
+  scheduler [label="Cloud Scheduler → private worker\nBounded acquisition; durable jobs", fillcolor="#dbeafe"];
+  ai [label="Gemini typed event interpretation\nActive / cancelled / partial / unknown\nEvidence, place, operation and time", fillcolor="#e0e7ff"];
+  validate [label="Deterministic applicability checks\nAllowed IDs, evidence spans, remaining leg\nTime overlap; unknown means review", fillcolor="#ccfbf1"];
+  plan [label="Existing planner, strengthened\nAll deadlines, internal donor protection\nCurrent quotes + do-nothing alternatives", fillcolor="#ccfbf1"];
+  review [label="Dashboard decision record\nEvidence → impact → options\nFirebase identity and approval tier", fillcolor="#dbeafe"];
+  db [label="Firestore transaction + outbox\nVersioned plan, immutable operation\nDemand claims across plan revisions", fillcolor="#f1f5f9"];
+  worker [label="Cloud Tasks action worker\nRecheck authorization and approval\nCorrect internal + supplier quantities", fillcolor="#dbeafe"];
+  hold [label="Owned persistent supplier / inventory\nAtomic holds; no overselling\nExpiry / cancellation release claims", fillcolor="#ccfbf1"];
+  verify [label="Authoritative read-back\nVerified planned coverage + receipt\nRetry / restart returns same operation", fillcolor="#dcfce7"];
+  source -> scheduler -> ai -> validate -> plan -> review -> db -> worker -> hold -> verify;
+  verify -> db [label="verified state"];
+  verify -> review [label="status and evidence", style=dashed];
+}
