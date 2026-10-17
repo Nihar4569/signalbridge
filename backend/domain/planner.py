@@ -189,8 +189,11 @@ def build_plan(store, *, sku: str, location_id: str, as_of=None) -> dict:
         available = int(offer["available_qty"])
         feasible = in_time and enough and not expired and not crosses and remainder > 0
         # Show an illustrative contribution + cost for EVERY offer (not only the
-        # chosen one), so the comparison in the UI is transparent.
-        offer_qty = remainder if feasible else min(available, remainder)
+        # chosen one) so the UI comparison is transparent. When internal stock
+        # already covers the shortage (remainder 0), show what the offer could
+        # have supplied against the full shortage instead of a blank 0.
+        need = remainder if remainder > 0 else shortage
+        offer_qty = remainder if feasible else min(available, need)
         offer_cost = (
             offer_qty * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
             if offer_qty > 0
@@ -207,7 +210,7 @@ def build_plan(store, *, sku: str, location_id: str, as_of=None) -> dict:
         elif available < remainder:
             reason = f"Only {available} units available; {remainder} needed."
         else:
-            reason = "No units needed."
+            reason = "Not needed — internal stock covers the shortage."
         options.append(
             {
                 "offer_id": offer["offer_id"],
