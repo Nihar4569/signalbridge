@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -105,6 +106,19 @@ class LocalStore:
         coll = self._memory.get(collection)
         if coll and doc_id in coll:
             del coll[doc_id]
+
+
+class SnapshotStore(LocalStore):
+    """A private, disposable snapshot. Missing collections never fall back to disk."""
+
+    backend_name = "snapshot"
+
+    def __init__(self, collections: dict[str, list[dict]]) -> None:
+        super().__init__()
+        self._file_cache = deepcopy(collections)
+
+    def _load_file(self, collection: str) -> list[dict]:
+        return self._file_cache.get(collection, [])
 
 
 class FirestoreStore:

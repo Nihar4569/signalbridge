@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 
 from ...domain import network as network_mod
 from ...domain import planner as planner_mod
+from ...domain import reservations as reservations_mod
 from ..deps import store_dep
 
 router = APIRouter(tags=["dashboard"])
@@ -14,13 +15,14 @@ HEALTH_COLORS = {"on_time": "green", "at_risk": "amber", "delayed": "red"}
 
 def _incident_plans(store) -> list[dict]:
     """Build a plan for every unique open SKU/location and keep the short ones."""
+    recovered = reservations_mod.recovered_pairs(store)
     seen: set[tuple[str, str]] = set()
     plans: list[dict] = []
     for line in store.list("order_lines"):
         if line.get("status") != "open":
             continue
         key = (line["sku"], line["location_id"])
-        if key in seen:
+        if key in seen or key in recovered:
             continue
         seen.add(key)
         plan = planner_mod.build_plan(store, sku=key[0], location_id=key[1])

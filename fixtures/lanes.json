@@ -411,5 +411,29 @@
         "location_id": "IN-JNPA"
       }
     ]
+  },
+  {
+    "lane_id": "LANE-DOM-BLR-MUM",
+    "name": "Bengaluru hub → Mumbai DC (road)",
+    "origin_location_id": "LOC-BLR-HUB",
+    "destination_location_id": "WH-MUM",
+    "legs": [],
+    "points": []
+  },
+  {
+    "lane_id": "LANE-DOM-NAG-DEL",
+    "name": "Nagpur hub → Delhi DC (rail)",
+    "origin_location_id": "LOC-NAG-HUB",
+    "destination_location_id": "WH-DEL",
+    "legs": [],
+    "points": []
+  },
+  {
+    "lane_id": "LANE-DOM-KOL-DEL",
+    "name": "Kolkata hub → Delhi DC (road)",
+    "origin_location_id": "LOC-KOL-HUB",
+    "destination_location_id": "WH-DEL",
+    "legs": [],
+    "points": []
   }
 ]

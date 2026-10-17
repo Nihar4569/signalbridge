@@ -23,18 +23,18 @@ def parse_ts(ts: str) -> datetime:
 
 
 def is_disrupted(shipments: list[dict], sku: str, location_id: str) -> bool:
-    """True only when triage has set risk_zone to "risk" from a live signal.
+    """True when triage flagged "risk" from a live signal, or a shipment on this
+    SKU/location is confirmed delayed.
 
-    A seeded delay_state such as "assumed_delayed" does not count. The
-    shortage appears after a weather or news match, and it clears when
-    that match is gone.
+    A seeded "assumed_delayed" guess does not count — only a confirmed delay or a
+    live weather/news match does, so the shortage clears when the cause does.
     """
     for shipment in shipments:
         if shipment.get("destination_location_id") != location_id:
             continue
         if not any(item.get("sku") == sku for item in shipment.get("items", [])):
             continue
-        if shipment.get("risk_zone") == "risk":
+        if shipment.get("risk_zone") == "risk" or shipment.get("delay_state") == "confirmed_delayed":
             return True
     return False
 

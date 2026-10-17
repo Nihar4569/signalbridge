@@ -155,6 +155,7 @@ class Shipment(_Model):
     # docs/productiongrade.md §2.6).
     risk_zone: Literal["safe", "risk"] = "safe"
     risk_reason: str | None = None
+    risk_assessment: dict[str, Any] | None = None
     version: int = 1
 
 
@@ -276,6 +277,7 @@ class Plan(_Model):
     selected_option_rank: int | None = None
     selected_offer_id: str | None = None
     internal_used_qty: int = 0
+    supplier_qty: int = 0
     recovered_qty: int = 0
     margin_check: dict[str, Any] = Field(default_factory=dict)
     surplus_forecast: dict[str, Any] = Field(default_factory=dict)

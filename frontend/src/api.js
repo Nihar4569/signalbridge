@@ -1,8 +1,10 @@
 // All backend calls live here.
 // The API base can be overridden at deploy time (see docs/frontend_setup.md):
 //   VITE_API_BASE=https://your-cloud-run-url  npm run build
+// An explicit empty string (VITE_API_BASE="") means same-origin — the API and
+// dashboard are one service in production, so calls are relative.
 export const API_BASE =
-  import.meta.env.VITE_API_BASE || window.SIGNALBRIDGE_API || "http://localhost:8000";
+  import.meta.env.VITE_API_BASE ?? (window.SIGNALBRIDGE_API || "http://localhost:8000");
 
 async function get(path) {
   const res = await fetch(API_BASE + path);
@@ -16,7 +18,10 @@ async function post(path, body) {
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(typeof error.detail === "string" ? error.detail : `${res.status} ${res.statusText}`);
+  }
   return res.json();
 }
 
@@ -27,6 +32,9 @@ export const api = {
   incidents: () => get("/incidents"),
   plan: (sku, loc) => get(`/plans/${sku}/${loc}`),
   explain: (sku, loc) => get(`/plans/${sku}/${loc}/explain`),
+  brief: (sku, loc) => get(`/plans/${sku}/${loc}/brief`),
+  decisionCases: () => get("/decision-demo/cases"),
+  runDecisionCase: (caseId, mode) => post(`/decision-demo/cases/${encodeURIComponent(caseId)}/run`, { mode }),
   ask: (sku, loc, question) => post(`/plans/${sku}/${loc}/ask`, { question }),
   askAll: (question, history) => post("/assistant/ask", { question, history }),
   approve: (sku, loc) => post(`/plans/${sku}/${loc}/approve`),

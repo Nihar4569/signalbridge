@@ -158,6 +158,7 @@ def scan_route_signals(store=None) -> list[dict]:
     )
     if judgments is None:
         log.warning("Triage skipped. Gemini did not answer, so risk flags were left unchanged.")
+        triage_mod.mark_assessment_unavailable(store)
         return results
     log.info("Triage source=gemini model=%s", config.GEMINI_MODEL)
     for row in triage_mod.run_triage(store, judgments=judgments):
