@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 
 from ...domain import exposure as exposure_mod
 from ...domain import planner as planner_mod
+from ...domain import reservations as reservations_mod
 from ..deps import store_dep
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
@@ -16,6 +17,7 @@ def list_incidents(store=Depends(store_dep)) -> dict:
     order_lines = store.list("order_lines")
     shipments = store.list("shipments")
     balances = store.list("stock_balances")
+    recovered = reservations_mod.recovered_pairs(store)
 
     incidents = []
     seen = set()
@@ -24,6 +26,8 @@ def list_incidents(store=Depends(store_dep)) -> dict:
         if key in seen or line.get("status") != "open":
             continue
         seen.add(key)
+        if key in recovered:  # already approved — lives in Recoveries now
+            continue
         sku, location_id = key
         deadline = planner_mod._earliest_deadline(order_lines, sku, location_id)
         on_hand = next(

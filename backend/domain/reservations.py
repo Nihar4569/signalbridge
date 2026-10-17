@@ -92,3 +92,18 @@ def reserve(*, plan: dict, supplier: Any, store: Any | None = None) -> dict:
         store.upsert("plans", plan_id, plan_doc)
 
     return result
+
+
+def recovered_pairs(store: Any | None) -> set[tuple[str, str]]:
+    """(sku, location_id) pairs that already have an approved recovery plan.
+
+    Once a recovery is approved the order is being handled, so it must drop out
+    of the threatened list and live in Recoveries instead.
+    """
+    if store is None:
+        return set()
+    pairs: set[tuple[str, str]] = set()
+    for plan in store.list("plans"):
+        if plan.get("status") == "approved" and plan.get("sku") and plan.get("location_id"):
+            pairs.add((plan["sku"], plan["location_id"]))
+    return pairs
