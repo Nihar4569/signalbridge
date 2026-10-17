@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T07:06:54+00:00",
+  "generated_at": "2026-10-17T07:11:14+00:00",
   "environment": {
     "platform": "macOS-27.0.1-arm64-arm-64bit",
     "python": "3.11.14",
@@ -21,57 +21,57 @@
   "latency": {
     "assess_exposure": {
       "runs": 2000,
-      "avg_ms": 0.0027,
+      "avg_ms": 0.0028,
       "p50_ms": 0.0027,
-      "p95_ms": 0.0029,
+      "p95_ms": 0.0033,
       "min_ms": 0.0025,
-      "max_ms": 0.035,
-      "ops_per_sec": 366391
+      "max_ms": 0.0247,
+      "ops_per_sec": 356423
     },
     "route_approval": {
       "runs": 2000,
-      "avg_ms": 0.0002,
+      "avg_ms": 0.0003,
       "p50_ms": 0.0002,
       "p95_ms": 0.0003,
       "min_ms": 0.0002,
-      "max_ms": 0.0007,
-      "ops_per_sec": 4181721
+      "max_ms": 0.0099,
+      "ops_per_sec": 3989516
     },
     "build_recovery_plan": {
       "runs": 400,
-      "avg_ms": 0.086,
-      "p50_ms": 0.0835,
-      "p95_ms": 0.0996,
-      "min_ms": 0.0742,
-      "max_ms": 0.172,
-      "ops_per_sec": 11632
+      "avg_ms": 0.0868,
+      "p50_ms": 0.084,
+      "p95_ms": 0.105,
+      "min_ms": 0.0747,
+      "max_ms": 0.1613,
+      "ops_per_sec": 11523
     },
     "dashboard_overview": {
       "runs": 100,
-      "avg_ms": 0.8147,
-      "p50_ms": 0.7527,
-      "p95_ms": 1.3823,
-      "min_ms": 0.7256,
-      "max_ms": 1.6816,
-      "ops_per_sec": 1227
+      "avg_ms": 0.8366,
+      "p50_ms": 0.7593,
+      "p95_ms": 1.3279,
+      "min_ms": 0.7326,
+      "max_ms": 1.659,
+      "ops_per_sec": 1195
     },
     "dashboard_map": {
       "runs": 100,
-      "avg_ms": 0.3052,
-      "p50_ms": 0.2856,
-      "p95_ms": 0.3713,
-      "min_ms": 0.2723,
-      "max_ms": 1.3531,
-      "ops_per_sec": 3277
+      "avg_ms": 0.2914,
+      "p50_ms": 0.2841,
+      "p95_ms": 0.347,
+      "min_ms": 0.2752,
+      "max_ms": 0.4287,
+      "ops_per_sec": 3432
     },
     "incidents": {
       "runs": 100,
-      "avg_ms": 0.0432,
-      "p50_ms": 0.04,
-      "p95_ms": 0.0549,
-      "min_ms": 0.0393,
-      "max_ms": 0.0949,
-      "ops_per_sec": 23132
+      "avg_ms": 0.0417,
+      "p50_ms": 0.0405,
+      "p95_ms": 0.0492,
+      "min_ms": 0.04,
+      "max_ms": 0.0523,
+      "ops_per_sec": 23956
     }
   },
   "correctness": {

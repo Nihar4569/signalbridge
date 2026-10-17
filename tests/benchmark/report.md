@@ -1,11 +1,11 @@
 # SignalBridge — Prototype Performance Report
 
-_Generated 2026-10-17T07:06:54+00:00 · macOS-27.0.1-arm64-arm-64bit · Python 3.11.14_
+_Generated 2026-10-17T07:11:14+00:00 · macOS-27.0.1-arm64-arm-64bit · Python 3.11.14_
 
 ## Executive summary
 
-- **Full AI recovery plan** (shortage → internal stock → supplier choice → margin → approval): **0.09 ms** average (11,632 plans/sec).
-- **Dashboard assembly** (`/overview`): **0.81 ms**.
+- **Full AI recovery plan** (shortage → internal stock → supplier choice → margin → approval): **0.09 ms** average (11,523 plans/sec).
+- **Dashboard assembly** (`/overview`): **0.84 ms**.
 - **Correctness:** **100% — all invariants held** across 6 recovery plans (money, feasibility, chokepoint rule). Money is never produced by the AI.
 - **Resilience:** **all fallbacks passed** (news GDELT→Google News, Gemini model chain, no-key graceful).
 - **Scale:** 6 shipments on 6 real trade lanes, 20 supplier offers, 12 live signals.
@@ -32,12 +32,12 @@ Measured in-process on local fixtures (a snapshot of the Firestore tenant), to i
 
 | Operation | avg | p50 | p95 | min | max | ops/sec |
 |---|---|---|---|---|---|---|
-| `assess_exposure` | 0.003 ms | 0.003 ms | 0.003 ms | 0.003 ms | 0.035 ms | 366,391 |
-| `route_approval` | 0.000 ms | 0.000 ms | 0.000 ms | 0.000 ms | 0.001 ms | 4,181,721 |
-| `build_recovery_plan` | 0.086 ms | 0.084 ms | 0.100 ms | 0.074 ms | 0.172 ms | 11,632 |
-| `dashboard_overview` | 0.815 ms | 0.753 ms | 1.382 ms | 0.726 ms | 1.682 ms | 1,227 |
-| `dashboard_map` | 0.305 ms | 0.286 ms | 0.371 ms | 0.272 ms | 1.353 ms | 3,277 |
-| `incidents` | 0.043 ms | 0.040 ms | 0.055 ms | 0.039 ms | 0.095 ms | 23,132 |
+| `assess_exposure` | 0.003 ms | 0.003 ms | 0.003 ms | 0.003 ms | 0.025 ms | 356,423 |
+| `route_approval` | 0.000 ms | 0.000 ms | 0.000 ms | 0.000 ms | 0.010 ms | 3,989,516 |
+| `build_recovery_plan` | 0.087 ms | 0.084 ms | 0.105 ms | 0.075 ms | 0.161 ms | 11,523 |
+| `dashboard_overview` | 0.837 ms | 0.759 ms | 1.328 ms | 0.733 ms | 1.659 ms | 1,195 |
+| `dashboard_map` | 0.291 ms | 0.284 ms | 0.347 ms | 0.275 ms | 0.429 ms | 3,432 |
+| `incidents` | 0.042 ms | 0.041 ms | 0.049 ms | 0.040 ms | 0.052 ms | 23,956 |
 
 ## 3. Correctness — invariants re-checked on every plan
 

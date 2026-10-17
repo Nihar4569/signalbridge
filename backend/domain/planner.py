@@ -66,14 +66,20 @@ def _disrupted_chokepoints(shipments, lanes, locations, signals) -> dict[str, st
     return found
 
 
-def _penalty_at_risk(order_lines, partners, sku, location_id) -> int:
-    """Sum of late-delivery penalties for affected VIP/SLA customers."""
+def _penalty_at_risk(order_lines, partners, sku, location_id, deadline) -> int:
+    """Late-delivery penalties for the orders this shortage actually threatens.
+
+    Only lines due on or before the deadline count — the same filter used for
+    demand. A line due later is not late yet, so its penalty is not at risk.
+    """
     partner_by_id = {p["partner_id"]: p for p in partners}
     penalty = 0
     for line in order_lines:
         if line.get("sku") != sku or line.get("location_id") != location_id:
             continue
         if line.get("status") != "open":
+            continue
+        if exposure_mod.parse_ts(line["due_at"]) > deadline:
             continue
         partner = partner_by_id.get(line.get("customer_id"), {})
         service = partner.get("service_level") or {}
@@ -206,7 +212,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     recovered_qty = internal_used + (remainder if chosen else 0)
 
     # Step 4: margin.
-    penalty = _penalty_at_risk(order_lines, partners, sku, location_id)
+    penalty = _penalty_at_risk(order_lines, partners, sku, location_id, deadline)
     margin = margin_mod.assess_margin(
         shortage_qty=shortage,
         unit_price_minor=int(product.get("unit_price_minor", 0)),
