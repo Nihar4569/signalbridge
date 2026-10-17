@@ -1,65 +1,89 @@
-# SignalBridge — Prototype Performance Report
+# SignalBridge measured offline benchmark
 
-_Generated 2026-10-17T07:11:14+00:00 · macOS-27.0.1-arm64-arm-64bit · Python 3.11.14_
+Measured at 2026-10-17T18:18:46.225592+00:00. Fixed scenario clock: 2026-10-17T09:00:00+00:00.
 
-## Executive summary
+## Scope
 
-- **Full AI recovery plan** (shortage → internal stock → supplier choice → margin → approval): **0.09 ms** average (11,523 plans/sec).
-- **Dashboard assembly** (`/overview`): **0.84 ms**.
-- **Correctness:** **100% — all invariants held** across 6 recovery plans (money, feasibility, chokepoint rule). Money is never produced by the AI.
-- **Resilience:** **all fallbacks passed** (news GDELT→Google News, Gemini model chain, no-key graceful).
-- **Scale:** 6 shipments on 6 real trade lanes, 20 supplier offers, 12 live signals.
+Actual local execution measurements on bundled sample records, with a separate controlled disruption scenario. These are not live customer outcomes, cloud API latencies, AI accuracy scores or production capacity measurements.
 
-## 1. Scale (bundled real-data snapshot)
+Outbound network connections are blocked by default. No Firestore writes, reservations, purchases or emails occur. Fallbacks use mocked HTTP responses.
 
-| Entity | Count |
-|---|---|
-| locations | 24 |
-| lanes | 6 |
-| products | 6 |
-| partners | 23 |
-| shipments | 6 |
-| order lines | 10 |
-| stock balances | 17 |
-| supplier offers | 20 |
-| signals | 12 |
-| at risk order pairs | 6 |
-| supplier options evaluated | 20 |
+## Dataset
 
-## 2. Latency
+| Record type | Count |
+|---|---:|
+| locations | 27 |
+| lanes | 9 |
+| products | 10 |
+| partners | 31 |
+| shipments | 15 |
+| order_lines | 20 |
+| stock_balances | 29 |
+| supplier_offers | 36 |
+| signals | 5 |
 
-Measured in-process on local fixtures (a snapshot of the Firestore tenant), to isolate engine speed from network. Each row is many iterations.
+## Independent validation
 
-| Operation | avg | p50 | p95 | min | max | ops/sec |
-|---|---|---|---|---|---|---|
-| `assess_exposure` | 0.003 ms | 0.003 ms | 0.003 ms | 0.003 ms | 0.025 ms | 356,423 |
-| `route_approval` | 0.000 ms | 0.000 ms | 0.000 ms | 0.000 ms | 0.010 ms | 3,989,516 |
-| `build_recovery_plan` | 0.087 ms | 0.084 ms | 0.105 ms | 0.075 ms | 0.161 ms | 11,523 |
-| `dashboard_overview` | 0.837 ms | 0.759 ms | 1.328 ms | 0.733 ms | 1.659 ms | 1,195 |
-| `dashboard_map` | 0.291 ms | 0.284 ms | 0.347 ms | 0.275 ms | 0.429 ms | 3,432 |
-| `incidents` | 0.042 ms | 0.041 ms | 0.049 ms | 0.040 ms | 0.052 ms | 23,956 |
+The reference calculator reads raw orders, stock, routes, signals and offers. It does not call the application calculator or trust its feasibility flags. It validates the current documented sample-data policy, not all operational risks.
 
-## 3. Correctness — invariants re-checked on every plan
+| Scenario | Plans matched | Shortage / covered | Field comparisons |
+|---|---:|---:|---:|
+| stored_snapshot | 11/11 | 4 / 7 | 341/341 |
+| controlled_disruption | 11/11 | 11 / 0 | 593/593 |
 
-Each recovery plan is independently recomputed and verified. The AI explains; deterministic Python computes every number, so these are exact.
+Comparisons include demand, incoming supply, shortage, internal free stock, offer coverage, capacity, delivery deadline, expiry, blocked routes, supplier selection, cost, revenue exposure, penalties, surplus and approval tier. Equal-cost optimal offers are accepted. Reason text is checked for presence only.
 
-| Invariant | Result |
-|---|---|
-| Recovery cost = qty × unit price + shipping (recomputed) | 6/6 |
-| Chosen supplier is the cheapest feasible option | 6/6 |
-| Every option carries a human-readable reason | 6/6 |
-| No feasible offer routes through a disrupted chokepoint | 6/6 |
+## Local latency
 
-**No violations found.**
+Warm in-process calls, sequential execution. Each operation excludes 25 warm-ups. Recovery plans rotate across independently identified shortage cases. p95 uses the nearest-rank method. These numbers exclude network and model latency.
 
-## 4. Resilience (failure injection)
+| Operation | Samples | Mean ms | Median ms | p95 ms |
+|---|---:|---:|---:|---:|
+| assess_exposure | 5000 | 0.0051 | 0.0050 | 0.0053 |
+| build_recovery_plan | 5000 | 0.3445 | 0.3355 | 0.4060 |
+| dashboard_overview_assembly | 250 | 4.0434 | 3.9992 | 4.2637 |
 
-| Scenario | Fallback behaviour | Result |
-|---|---|---|
-| GDELT news API returns HTTP 429 | switches to Google News RSS | PASS |
-| Primary Gemini model over quota (429) | next model in the chain answers | PASS |
-| No Gemini API key configured | returns a safe local summary, never crashes | PASS |
+## Simulated resilience
 
----
+5/5 mocked failure scenarios passed.
 
-_Reproduce: `python tests/benchmark/benchmark.py` (add `--gemini` for section 5)._
+- news_429_to_rss: PASS
+- model_503: PASS
+- key_429: PASS
+- no_keys: PASS
+- all_models_unavailable: PASS
+
+## Benchmark negative controls
+
+16/16 deliberately injected faults detected. This measures sensitivity to these selected faults, not AI accuracy.
+
+Control case: CHOC-GIFT-500 at WH-MUM. Faults target this selected recovery case, not every plan.
+- altered_exposure.shortage_qty: DETECTED
+- altered_exposure.supply_by_deadline: DETECTED
+- altered_internal_used_qty: DETECTED
+- altered_supplier_qty: DETECTED
+- altered_recovered_qty: DETECTED
+- altered_margin_check.recovery_cost_minor: DETECTED
+- altered_margin_check.protected_revenue_minor: DETECTED
+- altered_margin_check.penalty_avoided_minor: DETECTED
+- altered_margin_check.net_benefit_minor: DETECTED
+- altered_surplus_forecast.expected_surplus_qty: DETECTED
+- missing_supplier_choice_and_options: DETECTED
+- wrong_approval_tier: DETECTED
+- ignored_quote_expiry: DETECTED
+- ignored_supplier_capacity: DETECTED
+- ignored_delivery_deadline: DETECTED
+- ignored_blocked_route: DETECTED
+
+## Limitations
+
+- Business records are bundled sample data. Injected disruption notices are synthetic.
+- Arrival delays are scenario assumptions, not Gemini-predicted ETAs.
+- Individual plans do not prove simultaneous recovery feasibility across shared stock.
+- Internal availability excludes reservations but not donor demand or transit time.
+- Margin figures are decision estimates, not realized savings or profit.
+- Offline results do not measure live Gemini, cold starts, concurrent load or uptime.
+
+Overall benchmark status: PASS.
+
+Full comparisons, violations, fixture/code hashes and environment are in results.json.
