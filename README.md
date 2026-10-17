@@ -2,9 +2,9 @@
 
 # SignalBridge
 
-### From disruption signals to evidence-backed retail recovery decisions.
+### Retail supply-chain recovery, grounded in evidence and calculated in code.
 
-**Google Cloud AI Builder Cup 2026 · Team BuildX · Retail & Commerce**
+**Retail & Commerce · Team BuildX · Built with Google Gemini and Google Cloud**
 
 ![Gemini](https://img.shields.io/badge/AI-Google_Gemini-4285F4?style=flat-square)
 ![Cloud Run](https://img.shields.io/badge/Runtime-Cloud_Run-4285F4?style=flat-square)
@@ -19,37 +19,49 @@
 
 ---
 
-## The problem: an alert is not yet a recovery decision
+## The problem
 
-A port closure can look urgent while leaving a retailer's orders fully covered. A cancelled strike can still contain every disruption keyword. And a cheaper backup supplier can sail through the same channel that caused the original delay.
+A delayed shipment matters when it threatens a customer commitment. A disruption alert alone does not tell a retail planner which orders will be short, whether another warehouse can help, or which backup supplier can deliver before the deadline.
 
-Retail planners must connect external reports to shipment routes, customer deadlines, available stock and supplier commitments before deciding whether to act. That information is spread across different records, while an unnecessary emergency purchase can create its own cost and surplus problem.
+Answering those questions means connecting news and weather reports with shipment routes, inventory, order deadlines and supplier offers. Those records describe different parts of the problem, leaving planners to reconstruct the impact before they can choose a response.
 
-**SignalBridge connects the evidence to the customer commitment.** Gemini interprets what a notice means and which shipments it concerns. A deterministic Python engine calculates the resulting shortage, checks internal stock and supplier options, and prepares a recovery proposal for human approval.
+A keyword alert can also be misleading: a cancelled strike still mentions disruption, an unrelated port closure may not affect the shipment, and the cheapest backup offer may cross the same blocked route. Acting too quickly can create unnecessary purchases and surplus. Acting too late can leave customer orders uncovered.
 
-> **Interpret the signal. Calculate the impact. Explain the options. Keep the human in control.**
+## The solution
+
+**SignalBridge connects external disruption evidence to a retail recovery proposal.** Google Gemini interprets the supplied evidence and its relevance to known shipment routes. Deterministic Python functions calculate deadline-based shortages, inspect internal stock, compare supplier offers and assign the approval tier. A planner can review the evidence and calculations before approving the supported recovery workflow.
+
+The aim is to help operations teams protect customer commitments while avoiding unnecessary emergency sourcing. These are intended benefits, not claims of measured customer savings.
+
+### How a recovery decision is built
+
+1. **Collect route-relevant signals.** Fetch weather and disruption news for locations on active routes, retaining source references and timestamps.
+2. **Interpret the evidence with Gemini.** Distinguish active, planned, cancelled and uncertain events, and assess their relevance to supplied shipment records.
+3. **Calculate the customer impact.** Compare stock and incoming supply with demand due by the order deadline, using the declared arrival scenario.
+4. **Prepare a recovery proposal.** Inspect available internal stock first, then select the lowest-cost external offer that can cover the remainder within the modeled constraints.
+5. **Support a controlled decision.** Show source excerpts, supplier rejection reasons, estimated recovery benefit, surplus exposure and the required approval tier. Money-moving actions remain behind an explicit approval step.
 
 ## What a planner can do
 
 | Planner question | SignalBridge's response |
 |---|---|
-| Does this disruption concern our shipment? | A structured Gemini interpretation with route relevance, event status, exact source excerpts and uncertainty. |
+| Does this disruption concern our shipment? | A structured Gemini interpretation with route relevance, event status, exact source excerpts and unresolved information. |
 | Which customer commitment is exposed? | Deadline-based supply, demand and shortage calculations under the stored arrival scenario. |
 | Can we use our own stock first? | Internal on-hand-minus-reserved availability, followed by external sourcing for the remainder. |
 | Why choose this supplier? | A comparison of available quantities, delivery dates, quote expiry, cost and disrupted-route exclusions, including rejection reasons. |
 | Is the proposed recovery worth reviewing? | An estimated recovery-benefit check, a surplus warning and a spend-based approval tier. |
 | Can I inspect or question the recommendation? | An evidence-backed decision brief, a network-wide Gemini assistant and plan-specific questions. |
 
-## Start here: a decision you can reproduce
+## Decision walkthrough
 
-Open the [**Decision walkthrough**](https://signalbridge-b7xrx4k35a-el.a.run.app/#/decision-demo). Both cases use the same synthetic retail records: a 100-unit coffee order, 20 units on hand, 80 inbound units, 20 units at another DC and two backup offers.
+The [**Decision walkthrough**](https://signalbridge-b7xrx4k35a-el.a.run.app/#/decision-demo) shows why the meaning of a notice matters. Both cases use the same synthetic retail records: a 100-unit coffee order, 20 units on hand, 80 inbound units, 20 units at another distribution center and two backup offers.
 
 | Same business records, different notice | Calculated outcome |
 |---|---|
 | **Active channel closure** | Under the declared disrupted-arrival assumption, an **80-unit shortage**. The proposal uses **20 internal units + 60 supplier units**, at an external cost of **₹3,700**. A cheaper sea offer is rejected because it crosses the disrupted passage. |
 | **Strike cancelled before it starts** | The supplied event does not justify delaying the inbound shipment: **no additional shortage and no new purchase proposal**. |
 
-An independent inland shipment is excluded from both notices. This makes the AI contribution visible: the meaning and route relevance of the evidence influence the decision before code calculates the recovery.
+An unrelated inland shipment is excluded from both notices. The evidence interpretation changes which shipment is considered disrupted. Python then calculates the business impact and recovery proposal from the same underlying records.
 
 1. Use **Reference replay** to inspect an authored example without a model call.
 2. Select **Assess with Gemini** to run an actual interpretation of the supplied notice. Inspect the reported model, exact quotes and execution time.
@@ -60,29 +72,40 @@ The walkthrough uses a **fixed scenario clock: 17 October 2026, 09:00 UTC**, and
 
 **These are synthetic decision examples, not measured customer savings or an AI accuracy benchmark.** [Walkthrough details →](docs/decision_walkthrough.md)
 
-## Built with Google: each product has a defined role
+## Google products and their roles
 
-The live service, Firestore connectivity, regional build history and container repository were checked on **17 October 2026**. The table distinguishes deployed infrastructure from optional integrations and planned work.
+Gemini provides evidence interpretation and conversational assistance. Google Cloud provides the application runtime, operational data store and container deployment infrastructure. Optional integrations and planned services are identified separately below.
 
-| Google product | Status | Role in SignalBridge | Implementation / evidence |
+| Google product | Integration status | Role in SignalBridge | Implementation |
 |---|---|---|---|
-| **Gemini API** | **Integrated** | Interprets operational evidence; returns structured shipment assessments; explains plans and answers network-wide and plan-specific questions. | [Gemini integration](backend/ai/gemini.py), [typed output contract](backend/models/decision.py). The live walkthrough exposes the actual model source when an assessment succeeds. |
+| **Gemini API** | **Integrated** | Interprets operational evidence, returns structured shipment assessments, explains plans and answers network-wide or plan-specific questions. | [Gemini integration](backend/ai/gemini.py), [typed output contract](backend/models/decision.py). Successful live walkthrough assessments display their model source. |
 | **Google Cloud Run** | **Deployed** | Hosts the FastAPI API and built React dashboard in one containerized service. | [Live application](https://signalbridge-b7xrx4k35a-el.a.run.app/), [health endpoint](https://signalbridge-b7xrx4k35a-el.a.run.app/health), [application entry point](backend/app/main.py). |
-| **Cloud Firestore** | **Live operational store** | Stores tenant-scoped business records, signals, shipment assessments and reservation operations. Derived plan figures are calculated when needed. | [FirestoreStore](backend/core/store.py). The live health endpoint reported `data_backend: firestore` and a reachable database. |
-| **Cloud Build** | **Used for deployment builds** | Builds the deployable application container. | Successful regional builds were verified in `asia-south1` for the `signalbridge` image. This is build infrastructure, not the AI reasoning layer. |
-| **Artifact Registry** | **Used by the deployed service** | Stores the container image consumed by Cloud Run. | The deployed image points to the `cloud-run-source-deploy` Docker repository in `asia-south1`. |
+| **Cloud Firestore** | **Operational store** | Stores tenant-scoped business records, signals, shipment assessments and reservation operations. Derived plan figures are calculated when needed. | [FirestoreStore](backend/core/store.py), [health endpoint](https://signalbridge-b7xrx4k35a-el.a.run.app/health). Local JSON and private snapshot stores support development and isolated replay. |
+| **Cloud Build** | **Deployment builds** | Builds the application container for deployment to Cloud Run. | The deployment uses regional builds in `asia-south1`. The [multi-stage Dockerfile](Dockerfile) packages the React build and Python API. |
+| **Artifact Registry** | **Deployment image storage** | Stores the container image consumed by Cloud Run. | The deployment uses the regional `cloud-run-source-deploy` Docker repository in `asia-south1`. |
 | **Google Agent Development Kit (ADK)** | **Implemented, optional path** | Provides a runnable tool-using agent for location weather and news checks. | [ADK agent](backend/agent/agent.py), [tools](backend/agent/tools.py). The main web assessment and chat paths call the Gemini REST integration directly; they are not an ADK multi-agent pipeline. |
-| **Firebase Hosting** | **Configured alternative** | Can host the separately built React frontend when deploying it independently of Cloud Run. | [Hosting configuration](firebase.json). The linked live application currently uses Cloud Run; this README does not claim a separate live Hosting deployment. |
+| **Firebase Hosting** | **Configured alternative** | Can host the separately built React frontend when deploying it independently of Cloud Run. | [Hosting configuration](firebase.json). The linked application is hosted on Cloud Run, not a separate Firebase Hosting deployment. |
 | **Google News RSS** | **Implemented news fallback** | Supplies disruption headlines when the primary GDELT provider is unavailable. | [News adapter](backend/adapters/news.py). This is an external information source, not a managed Google Cloud AI service. |
-| **Google Cloud Scheduler** | **Planned — not currently used** | Will trigger the existing scan endpoint on a schedule, without requiring a dashboard visit. | Current behavior and the planned authenticated integration are described below. |
+| **Google Cloud Scheduler** | **Planned** | Trigger the scan endpoint on a schedule, without requiring a dashboard visit. | Requires authenticated integration and unattended-workflow validation before activation. |
 
-Gemini keys can be obtained through [Google AI Studio](https://aistudio.google.com/apikey). The current application uses the **Gemini API key / REST path**, not a claimed Vertex AI or Agent Engine deployment.
+Gemini keys can be configured through [Google AI Studio](https://aistudio.google.com/apikey). The application calls the **Gemini REST API with API keys**. Vertex AI and Agent Engine are not part of the current deployment.
 
-### Cloud Scheduler: current behavior and next step
+## Technical stack
 
-**Cloud Scheduler is not enabled in the current application.** To control demonstration costs and quota consumption, the operational dashboard requests `POST /scan` on page load or refresh. Scans are throttled by `SCAN_MIN_INTERVAL_SECONDS` (default **600 seconds**), so a refresh does not necessarily start a new scan.
+| Layer | Technology | Responsibility |
+|---|---|---|
+| Frontend | React 18, Vite 5, React Router, Leaflet | Control tower, network map, shipments, incidents, recovery proposals and decision walkthrough. |
+| API | Python 3.10+, FastAPI, Uvicorn, Pydantic 2 | Typed requests, evidence validation and endpoints for planning, chat, scanning and approval. |
+| Business logic | Pure Python domain functions | Exposure, internal availability, supplier feasibility, cost calculations, surplus estimates and governance. Money uses integer minor units and quantities use whole integers. |
+| Data | Cloud Firestore, local JSON, in-memory snapshots | Operational persistence, cloud-free development and isolated scenario replay. |
+| External signals | Open-Meteo, GDELT, Google News RSS | Weather forecasts and disruption headlines, with a fallback news provider. |
+| Packaging and tests | Docker, pytest, Ruff | Combined application container, regression tests and code checks. |
 
-An optional in-process loop exists, but `SIGNAL_SCAN_INTERVAL_SECONDS=0` disables it by default. That loop is not Cloud Scheduler. Direct visits to the isolated walkthrough do not trigger the operational page-load scan.
+### Monitoring and quota controls
+
+The operational dashboard requests `POST /scan` on page load or refresh. Scans are throttled by `SCAN_MIN_INTERVAL_SECONDS` (default **600 seconds**) within each API process, so a refresh does not necessarily start another scan. The news adapter caches successful results, and the Gemini integration supports model/key failover with cooldowns after quota failures. These controls reduce repeated requests but do not guarantee a fixed bill or a deployment-wide rate limit.
+
+An optional in-process loop is disabled by default with `SIGNAL_SCAN_INTERVAL_SECONDS=0`. Direct visits to the isolated walkthrough do not trigger the operational page-load scan. **Cloud Scheduler is planned, not active.**
 
 The planned production trigger is:
 
@@ -92,9 +115,9 @@ Google Cloud Scheduler
     → fetch weather/news → validate Gemini assessment → update risk and exposure
 ```
 
-Before enabling it, add and verify service-account/OIDC authorization for the scan endpoint, configure an appropriate cadence, retries and request timeout, and test the workflow with nobody viewing the dashboard. Scheduled, unattended monitoring and any additional automatic alert-delivery policy must be validated before being claimed as live capabilities.
+Enabling this path requires service-account/OIDC authorization for the scan endpoint, an appropriate cadence, retries and request timeout. Unattended monitoring and automatic alert delivery must be tested independently of dashboard visits.
 
-## Architecture: AI interpretation, deterministic decisions
+## Architecture
 
 ```mermaid
 flowchart TB
@@ -114,26 +137,15 @@ flowchart TB
     Gemini -->|"Structured interpretation"| Validate
 ```
 
-The diagram shows the main application path. The optional ADK agent, alternative Firebase Hosting deployment and future Scheduler trigger are described separately so they are not mistaken for active orchestration layers.
+The diagram shows the main web application path. The optional ADK agent, alternative Firebase Hosting configuration and planned Scheduler trigger are separate integrations.
 
-### Where generative AI adds value
+### The AI boundary
 
 Gemini interprets whether the supplied text describes an active, planned, cancelled or uncertain event and explains its relevance to known shipment routes. The global assistant helps a planner explore the network; plan-specific questions help inspect an individual proposal.
 
 The model does **not** calculate the authoritative quantities, prices, recovery cost or approval tier. Those come from Python domain functions. Structured output is checked for complete shipment coverage, valid supplied IDs, exact source quotes, source freshness and route-linked support for affected decisions. Unknown or unavailable assessments do not silently mark an existing risky shipment safe.
 
 These checks validate the output contract and grounding references; they do not prove that every interpretation is factually correct. The UI exposes uncertainty and policy overrides for review.
-
-## Alignment with the judging rubric
-
-The [official judging criteria](https://aibuildercup.com/themes.html) use the following weights. These are the project's evidence points, not a prediction of its score.
-
-| Criterion | Weight | What a judge can inspect |
-|---|---:|---|
-| Technical merit & generative AI | **40%** | Working Gemini interpretation, structured validation, saved evidence references, deterministic calculations, Cloud Run deployment and Firestore integration. |
-| Problem alignment & impact | **25%** | A retail order deadline connected to route disruption, shortage, internal availability and a reviewable recovery cost. The intended value is fewer missed commitments and unnecessary emergency purchases; field impact is not yet measured. |
-| Innovation & creativity | **25%** | An active-versus-cancelled notice comparison, unrelated-route exclusion, internal-stock-first recovery and rejection of a cheaper offer that repeats the original route risk. |
-| User experience & solution design | **10%** | An inspectable evidence-to-decision flow, source timestamps, visible assumptions, supplier rejection reasons, conversational questions and an explicit approval step. |
 
 ## Run locally
 
@@ -158,8 +170,9 @@ Open [the local walkthrough](http://localhost:5173/#/decision-demo). **Reference
 ### Build and test
 
 ```bash
-# Cloud-free regression run
-DATA_BACKEND=local GOOGLE_API_KEY='' GOOGLE_API_KEY_2='' uv run python -m pytest -q
+# Local regression run (dummy key enables mocked model paths, not live Gemini)
+DATA_BACKEND=local GOOGLE_API_KEY=offline-test-key GOOGLE_API_KEY_2='' \
+  SIGNAL_SCAN_INTERVAL_SECONDS=0 uv run python -m pytest -q
 
 # Terminal recovery-engine demonstration
 DATA_BACKEND=local uv run python -m scripts.demo
@@ -169,7 +182,19 @@ cd frontend
 npm run build
 ```
 
-The tests cover domain calculations, evidence validation, active/cancelled examples, incomplete assessments, quote expiry, supplier allocation and snapshot isolation. Mocked tests and reference replays establish reproducible behavior; they do not establish live model accuracy. Individual model response times are execution observations, not an aggregate performance claim.
+The tests cover domain calculations, evidence validation, active/cancelled examples, incomplete assessments, quote expiry, supplier allocation and snapshot isolation. Model integration tests use mocks and the regression command uses a non-secret dummy key. Reference replay also makes no model call.
+
+### Reproducible validation
+
+The [offline benchmark](tests/benchmark/README.md) compares planner results with an independent calculator reading raw records. It covers the stored snapshot and a controlled disruption scenario, mocked failure handling, and deliberately injected faults that test the checker itself. The default benchmark blocks outbound connections and uses private sample-data snapshots.
+
+```bash
+DATA_BACKEND=local GOOGLE_API_KEY='' GOOGLE_API_KEY_2='' \
+  uv run python tests/benchmark/benchmark.py --runs 5000 \
+  --output-dir ../output/benchmark
+```
+
+See the [recorded benchmark report](tests/benchmark/report.md) and [detailed results](tests/benchmark/results.json) for the dataset, run time, comparisons and scope. These are local computation and documented-policy checks, not deployed API latency, live Gemini accuracy, production capacity or measured business outcomes. Use `--gemini` only when intentionally running live assessments and consuming model quota.
 
 The repository also contains a multi-stage `Dockerfile` for the combined Cloud Run service and a `firebase.json` for separate frontend hosting. A Firebase-hosted frontend must be built with `VITE_API_BASE` set to its deployed API URL; the combined container uses a same-origin API base.
 
@@ -182,7 +207,7 @@ The repository also contains a multi-stage `Dockerfile` for the combined Cloud R
 - **Controlled execution:** supplier holds are simulated. Email delivery is simulated by default, with optional SMTP configuration. A generated transfer or purchase order is not proof that goods were bought or delivered.
 - **Persistence and access:** operational records and reservation operations can use Firestore; the current fulfilment timeline is process-local. Production authentication, authorization and execution controls require further hardening.
 
-## Focused next steps
+## Roadmap
 
 1. Enable authenticated Cloud Scheduler-driven monitoring and validate unattended alert delivery.
 2. Measure live Gemini interpretation on a labelled evaluation set, including false alerts, missed disruptions, abstentions and evidence validity.
@@ -215,4 +240,4 @@ docs/                Setup, calculations and implementation notes
 
 ---
 
-**SignalBridge · Clear evidence. Calculated recovery. Human control.**
+**SignalBridge · Retail recovery with traceable evidence and human approval.**
