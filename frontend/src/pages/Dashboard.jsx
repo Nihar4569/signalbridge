@@ -62,7 +62,7 @@ export default function Dashboard({ onToggleSidebar }) {
             <div className="card-head">
               <div>
                 <h3>Live route map</h3>
-                <div className="card-sub">Shipments move in real time · alerts marked on the lane</div>
+                <div className="card-sub">Live positions from departure &amp; ETA · alerts marked on the lane</div>
               </div>
               <div className="legend">
                 <span><i style={{ background: "#34a853" }} />On time</span>

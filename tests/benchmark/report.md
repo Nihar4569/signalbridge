@@ -1,11 +1,11 @@
 # SignalBridge — Prototype Performance Report
 
-_Generated 2026-10-16T13:25:45+00:00 · macOS-27.0.1-arm64-arm-64bit · Python 3.11.14_
+_Generated 2026-10-17T07:06:54+00:00 · macOS-27.0.1-arm64-arm-64bit · Python 3.11.14_
 
 ## Executive summary
 
-- **Full AI recovery plan** (shortage → internal stock → supplier choice → margin → approval): **0.09 ms** average (11,178 plans/sec).
-- **Dashboard assembly** (`/overview`): **0.83 ms**.
+- **Full AI recovery plan** (shortage → internal stock → supplier choice → margin → approval): **0.09 ms** average (11,632 plans/sec).
+- **Dashboard assembly** (`/overview`): **0.81 ms**.
 - **Correctness:** **100% — all invariants held** across 6 recovery plans (money, feasibility, chokepoint rule). Money is never produced by the AI.
 - **Resilience:** **all fallbacks passed** (news GDELT→Google News, Gemini model chain, no-key graceful).
 - **Scale:** 6 shipments on 6 real trade lanes, 20 supplier offers, 12 live signals.
@@ -32,12 +32,12 @@ Measured in-process on local fixtures (a snapshot of the Firestore tenant), to i
 
 | Operation | avg | p50 | p95 | min | max | ops/sec |
 |---|---|---|---|---|---|---|
-| `assess_exposure` | 0.003 ms | 0.003 ms | 0.003 ms | 0.003 ms | 0.082 ms | 342,353 |
-| `route_approval` | 0.000 ms | 0.000 ms | 0.000 ms | 0.000 ms | 0.005 ms | 3,943,225 |
-| `build_recovery_plan` | 0.089 ms | 0.086 ms | 0.111 ms | 0.075 ms | 0.232 ms | 11,178 |
-| `dashboard_overview` | 0.831 ms | 0.786 ms | 1.048 ms | 0.738 ms | 1.288 ms | 1,203 |
-| `dashboard_map` | 0.297 ms | 0.286 ms | 0.361 ms | 0.274 ms | 0.413 ms | 3,362 |
-| `incidents` | 0.041 ms | 0.041 ms | 0.043 ms | 0.040 ms | 0.049 ms | 24,299 |
+| `assess_exposure` | 0.003 ms | 0.003 ms | 0.003 ms | 0.003 ms | 0.035 ms | 366,391 |
+| `route_approval` | 0.000 ms | 0.000 ms | 0.000 ms | 0.000 ms | 0.001 ms | 4,181,721 |
+| `build_recovery_plan` | 0.086 ms | 0.084 ms | 0.100 ms | 0.074 ms | 0.172 ms | 11,632 |
+| `dashboard_overview` | 0.815 ms | 0.753 ms | 1.382 ms | 0.726 ms | 1.682 ms | 1,227 |
+| `dashboard_map` | 0.305 ms | 0.286 ms | 0.371 ms | 0.272 ms | 1.353 ms | 3,277 |
+| `incidents` | 0.043 ms | 0.040 ms | 0.055 ms | 0.039 ms | 0.095 ms | 23,132 |
 
 ## 3. Correctness — invariants re-checked on every plan
 
@@ -59,10 +59,6 @@ Each recovery plan is independently recomputed and verified. The AI explains; de
 | GDELT news API returns HTTP 429 | switches to Google News RSS | PASS |
 | Primary Gemini model over quota (429) | next model in the chain answers | PASS |
 | No Gemini API key configured | returns a safe local summary, never crashes | PASS |
-
-## 5. Live Gemini triage (optional)
-
-_Skipped: Gemini did not answer (quota or network)._
 
 ---
 

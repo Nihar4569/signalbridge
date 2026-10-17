@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-16T13:25:45+00:00",
+  "generated_at": "2026-10-17T07:06:54+00:00",
   "environment": {
     "platform": "macOS-27.0.1-arm64-arm-64bit",
     "python": "3.11.14",
@@ -21,57 +21,57 @@
   "latency": {
     "assess_exposure": {
       "runs": 2000,
-      "avg_ms": 0.0029,
+      "avg_ms": 0.0027,
       "p50_ms": 0.0027,
-      "p95_ms": 0.003,
+      "p95_ms": 0.0029,
       "min_ms": 0.0025,
-      "max_ms": 0.0817,
-      "ops_per_sec": 342353
+      "max_ms": 0.035,
+      "ops_per_sec": 366391
     },
     "route_approval": {
       "runs": 2000,
-      "avg_ms": 0.0003,
-      "p50_ms": 0.0003,
+      "avg_ms": 0.0002,
+      "p50_ms": 0.0002,
       "p95_ms": 0.0003,
       "min_ms": 0.0002,
-      "max_ms": 0.0049,
-      "ops_per_sec": 3943225
+      "max_ms": 0.0007,
+      "ops_per_sec": 4181721
     },
     "build_recovery_plan": {
       "runs": 400,
-      "avg_ms": 0.0895,
-      "p50_ms": 0.0855,
-      "p95_ms": 0.1106,
-      "min_ms": 0.0746,
-      "max_ms": 0.2316,
-      "ops_per_sec": 11178
+      "avg_ms": 0.086,
+      "p50_ms": 0.0835,
+      "p95_ms": 0.0996,
+      "min_ms": 0.0742,
+      "max_ms": 0.172,
+      "ops_per_sec": 11632
     },
     "dashboard_overview": {
       "runs": 100,
-      "avg_ms": 0.831,
-      "p50_ms": 0.7858,
-      "p95_ms": 1.0479,
-      "min_ms": 0.7378,
-      "max_ms": 1.2878,
-      "ops_per_sec": 1203
+      "avg_ms": 0.8147,
+      "p50_ms": 0.7527,
+      "p95_ms": 1.3823,
+      "min_ms": 0.7256,
+      "max_ms": 1.6816,
+      "ops_per_sec": 1227
     },
     "dashboard_map": {
       "runs": 100,
-      "avg_ms": 0.2975,
+      "avg_ms": 0.3052,
       "p50_ms": 0.2856,
-      "p95_ms": 0.3611,
-      "min_ms": 0.2736,
-      "max_ms": 0.4135,
-      "ops_per_sec": 3362
+      "p95_ms": 0.3713,
+      "min_ms": 0.2723,
+      "max_ms": 1.3531,
+      "ops_per_sec": 3277
     },
     "incidents": {
       "runs": 100,
-      "avg_ms": 0.0412,
-      "p50_ms": 0.0407,
-      "p95_ms": 0.0431,
-      "min_ms": 0.04,
-      "max_ms": 0.049,
-      "ops_per_sec": 24299
+      "avg_ms": 0.0432,
+      "p50_ms": 0.04,
+      "p95_ms": 0.0549,
+      "min_ms": 0.0393,
+      "max_ms": 0.0949,
+      "ops_per_sec": 23132
     }
   },
   "correctness": {
@@ -90,8 +90,5 @@
     "gemini_model_chain_fallback": true,
     "gemini_graceful_without_key": true,
     "all_passed": true
-  },
-  "gemini_live": {
-    "skipped": "Gemini did not answer (quota or network)"
   }
 }
