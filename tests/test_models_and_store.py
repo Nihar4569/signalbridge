@@ -64,7 +64,8 @@ def test_reserve_persists_operation_on_store():
         plan=plan, supplier=SupplierSimulator(), store=store
     )
     assert receipt["status"] == "succeeded"
-    assert receipt["qty"] == plan["recovered_qty"]
+    assert receipt["qty"] == plan["recovered_qty"] - plan["internal_used_qty"]
+    assert receipt["recovered_qty"] == plan["recovered_qty"]
 
     ops = store.list("operations")
     assert len(ops) == 1

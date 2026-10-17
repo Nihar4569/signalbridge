@@ -26,8 +26,10 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Open **http://localhost:5173**, then press the **✨ AI Plan** button on a
-threatened order to watch Gemini build and execute a recovery plan.
+Open **http://localhost:5173**, then choose **Decision walkthrough** to compare
+the two reference cases without a key. On a threatened operational order,
+**✨ AI Plan** shows the calculated proposal and its saved evidence. Gemini
+interprets and explains; Python calculates; execution requires human approval.
 
 Production build (one command, deploys anywhere):
 
@@ -36,9 +38,21 @@ cd frontend && npm run build     # -> frontend/dist/
 ```
 
 Prefer the terminal? `uv run python -m scripts.demo` runs the whole recovery
-engine with no UI. Tests: `uv run python -m pytest -q` (7 pass).
+engine with no UI. Tests: `uv run python -m pytest -q`.
 
 Full setup → **[docs/start.md](docs/start.md)** and **[docs/frontend_setup.md](docs/frontend_setup.md)**.
+
+## Follow an evidence-backed decision
+
+Open **Decision walkthrough** in the dashboard sidebar. Compare an active channel
+closure with a cancelled strike using the same synthetic retail case. Reference
+replay works without a key. **Assess with Gemini** runs a real interpretation
+with exact source excerpts, route relevance, calculated shortage and recovery
+cost. Each run uses an isolated snapshot and performs no operational writes.
+
+The recovery modal also shows an evidence-backed brief from the latest saved
+shipment assessment. See **[the walkthrough guide](docs/decision_walkthrough.md)**
+for the data assumptions, AI boundaries and test instructions.
 
 ---
 
@@ -87,6 +101,7 @@ and the writes; a human approves anything that costs money.**
 | [docs/scheduler.md](docs/scheduler.md) | How to run the monitor on a timer |
 | [docs/manual_work.md](docs/manual_work.md) | Human-only steps (Firebase, keys, deploy) |
 | [docs/blueprint.md](docs/blueprint.md) | The full original design |
+| [docs/decision_walkthrough.md](docs/decision_walkthrough.md) | Evidence-backed decisions and an isolated active/cancelled notice demo |
 | [AGENTS.md](AGENTS.md) | Rules for editing this repo (read before coding) |
 | [todo.md](todo.md) | Our shared plan (Vibe_work + manual_work) |
 

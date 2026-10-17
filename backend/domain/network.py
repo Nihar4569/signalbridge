@@ -13,12 +13,12 @@ from ..core import config
 NEWS_ALERT_DAYS = 3
 
 
-def is_disruptive(signal: dict) -> bool:
+def is_disruptive(signal: dict, *, as_of=None) -> bool:
     """High-risk weather, or recent news whose headline names a disruption."""
     payload = signal.get("payload") or {}
     if signal.get("source") == "open-meteo":
         return payload.get("risk") == "high"
-    since = (datetime.now(timezone.utc) - timedelta(days=NEWS_ALERT_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
+    since = ((as_of or datetime.now(timezone.utc)) - timedelta(days=NEWS_ALERT_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
     if (signal.get("published_at") or "") < since:
         return False
     title = (signal.get("title") or "").lower()

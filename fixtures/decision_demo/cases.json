@@ -1,0 +1,69 @@
+{
+  "assessment_at": "2026-10-17T09:00:00Z",
+  "sku": "COFFEE-250G",
+  "location_id": "DC-MUM-DEMO",
+  "collections": {
+    "locations": [
+      {"location_id": "ORIGIN-DEMO", "name": "Demo export terminal", "type": "port", "country": "SG"},
+      {"location_id": "SEA-DEMO", "name": "North Passage (fictional)", "type": "sea_waypoint"},
+      {"location_id": "DC-MUM-DEMO", "name": "Mumbai retail DC (demo)", "type": "dc", "country": "IN"},
+      {"location_id": "DC-PUNE-DEMO", "name": "Pune reserve DC (demo)", "type": "dc", "country": "IN"},
+      {"location_id": "DC-BLR-DEMO", "name": "Bengaluru retail DC (demo)", "type": "dc", "country": "IN"}
+    ],
+    "lanes": [
+      {"lane_id": "LANE-MUM-DEMO", "name": "Demo inbound coffee lane", "origin_location_id": "ORIGIN-DEMO", "destination_location_id": "DC-MUM-DEMO", "points": [{"location_id": "SEA-DEMO", "name": "North Passage (fictional)"}]},
+      {"lane_id": "LANE-BLR-DEMO", "name": "Independent inland lane", "destination_location_id": "DC-BLR-DEMO", "points": []}
+    ],
+    "products": [{"sku": "COFFEE-250G", "name": "Retail coffee 250 g", "unit_price_minor": 10000, "unit_cost_minor": 5000, "currency": "INR"}],
+    "partners": [
+      {"partner_id": "CUSTOMER-DEMO", "name": "Neighbourhood retail stores (demo)", "service_level": {"tier": "priority", "penalty_per_late_order_minor": 0}},
+      {"partner_id": "SUP-DIRECT", "name": "Regional backup supplier (demo)"},
+      {"partner_id": "SUP-SEA", "name": "Overseas supplier (demo)"}
+    ],
+    "shipments": [
+      {"shipment_id": "SHIP-MUM-DEMO", "lane_id": "LANE-MUM-DEMO", "destination_location_id": "DC-MUM-DEMO", "status": "in_transit", "items": [{"sku": "COFFEE-250G", "quantity": 80}], "expected_arrival_at": "2026-10-18T12:00:00Z", "assumed_arrival_at": "2026-10-21T12:00:00Z", "risk_zone": "safe"},
+      {"shipment_id": "SHIP-BLR-DEMO", "lane_id": "LANE-BLR-DEMO", "destination_location_id": "DC-BLR-DEMO", "status": "in_transit", "items": [{"sku": "COFFEE-250G", "quantity": 40}], "expected_arrival_at": "2026-10-18T12:00:00Z", "assumed_arrival_at": "2026-10-21T12:00:00Z", "risk_zone": "safe"}
+    ],
+    "stock_balances": [
+      {"sku": "COFFEE-250G", "location_id": "DC-MUM-DEMO", "on_hand_qty": 20, "reserved_qty": 0},
+      {"sku": "COFFEE-250G", "location_id": "DC-PUNE-DEMO", "on_hand_qty": 20, "reserved_qty": 0}
+    ],
+    "order_lines": [{"line_id": "ORDER-DEMO-1", "order_id": "ORDER-DEMO", "customer_id": "CUSTOMER-DEMO", "sku": "COFFEE-250G", "location_id": "DC-MUM-DEMO", "quantity": 100, "due_at": "2026-10-19T12:00:00Z", "status": "open"}],
+    "supplier_offers": [
+      {"offer_id": "OFFER-DIRECT", "supplier_id": "SUP-DIRECT", "sku": "COFFEE-250G", "deliver_to_location_id": "DC-MUM-DEMO", "available_qty": 90, "unit_price_minor": 6000, "shipping_minor": 10000, "currency": "INR", "delivery_latest": "2026-10-18T18:00:00Z", "expires_at": "2026-10-18T10:00:00Z", "route_location_ids": [], "mode": "road"},
+      {"offer_id": "OFFER-CHEAPER-SEA", "supplier_id": "SUP-SEA", "sku": "COFFEE-250G", "deliver_to_location_id": "DC-MUM-DEMO", "available_qty": 120, "unit_price_minor": 4000, "shipping_minor": 10000, "currency": "INR", "delivery_latest": "2026-10-18T18:00:00Z", "expires_at": "2026-10-18T10:00:00Z", "route_location_ids": ["SEA-DEMO"], "mode": "sea"}
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "active-closure",
+      "title": "Active channel closure",
+      "description": "Transit is suspended during the shipment's expected passage. Review the recovery proposal.",
+      "signal": {
+        "signal_id": "NOTICE-ACTIVE-DEMO", "source": "synthetic-notice", "source_url": null,
+        "title": "North Passage transit suspended",
+        "published_at": "2026-10-17T08:30:00Z", "fetched_at": "2026-10-17T08:35:00Z",
+        "payload": {"location_id": "SEA-DEMO", "event_id": "EVENT-PASSAGE-DEMO", "notice_text": "North Passage authority notice (fictional): transit through North Passage is suspended from 17 October 2026 08:00 UTC until 20 October 2026 18:00 UTC. The planned industrial action is in effect. This notice applies only to North Passage."}
+      },
+      "reference": {"shipments": [
+        {"shipment_id": "SHIP-MUM-DEMO", "status": "affected", "event_status": "active", "reason": "The notice suspends transit on the Mumbai shipment's route. Its stored disrupted-arrival assumption puts the retail deadline at risk.", "evidence": [{"signal_id": "NOTICE-ACTIVE-DEMO", "quote": "transit through North Passage is suspended from 17 October 2026 08:00 UTC until 20 October 2026 18:00 UTC"}], "unresolved_fields": ["Remaining leg timing is not supplied. The arrival delay is a declared scenario assumption."]},
+        {"shipment_id": "SHIP-BLR-DEMO", "status": "unaffected", "event_status": "active", "reason": "The independent inland lane does not use North Passage. This notice does not justify changing that shipment's risk.", "evidence": [{"signal_id": "NOTICE-ACTIVE-DEMO", "quote": "This notice applies only to North Passage."}], "unresolved_fields": []}
+      ]}
+    },
+    {
+      "case_id": "cancelled-strike",
+      "title": "Strike cancelled before it starts",
+      "description": "The same event is called off. A disruption keyword alone should not trigger a purchase.",
+      "signal": {
+        "signal_id": "NOTICE-CANCELLED-DEMO", "source": "synthetic-notice", "source_url": null,
+        "title": "North Passage strike cancelled; transit remains open",
+        "published_at": "2026-10-17T08:30:00Z", "fetched_at": "2026-10-17T08:35:00Z",
+        "payload": {"location_id": "SEA-DEMO", "event_id": "EVENT-PASSAGE-DEMO", "notice_text": "North Passage authority notice (fictional): the planned industrial action has been called off before it began. Transit through North Passage remains open and no suspension is in effect. This cancels the planned North Passage closure only; it makes no statement about other locations."}
+      },
+      "reference": {"shipments": [
+        {"shipment_id": "SHIP-MUM-DEMO", "status": "unaffected", "event_status": "cancelled", "reason": "The planned action was cancelled before starting. The supplied notice leaves the expected inbound shipment available, so it does not justify a recovery purchase.", "evidence": [{"signal_id": "NOTICE-CANCELLED-DEMO", "quote": "the planned industrial action has been called off before it began"}, {"signal_id": "NOTICE-CANCELLED-DEMO", "quote": "Transit through North Passage remains open and no suspension is in effect."}], "unresolved_fields": []},
+        {"shipment_id": "SHIP-BLR-DEMO", "status": "unaffected", "event_status": "cancelled", "reason": "This notice concerns North Passage, which is not on the independent inland lane.", "evidence": [{"signal_id": "NOTICE-CANCELLED-DEMO", "quote": "This cancels the planned North Passage closure only"}], "unresolved_fields": []}
+      ]}
+    }
+  ]
+}

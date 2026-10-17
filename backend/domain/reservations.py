@@ -16,7 +16,7 @@ def make_idempotency_key(plan: dict) -> str:
     """Stable key for plan+offer+quantity so retries map to one reservation."""
     return (
         f"{plan['sku']}:{plan['location_id']}:{plan.get('selected_offer_id')}:"
-        f"{plan.get('recovered_qty')}:v{plan.get('version', 1)}"
+        f"{plan.get('recovered_qty')}:{plan.get('internal_used_qty', 0)}:v{plan.get('version', 1)}"
     )
 
 
@@ -38,21 +38,27 @@ def reserve(*, plan: dict, supplier: Any, store: Any | None = None) -> dict:
         if existing and existing.get("status") == "succeeded":
             return existing.get("receipt") or existing
 
-    if key in _RESERVATIONS:
+    if store is None and key in _RESERVATIONS:
         return _RESERVATIONS[key]
 
-    receipt = supplier.hold(offer_id=plan["selected_offer_id"], qty=plan["recovered_qty"])
+    supplier_qty = plan["recovered_qty"] - plan.get("internal_used_qty", 0)
+    if supplier_qty <= 0 or plan.get("supplier_qty", supplier_qty) != supplier_qty:
+        raise ValueError("Supplier quantity does not match the external recovery allocation.")
+    receipt = supplier.hold(offer_id=plan["selected_offer_id"], qty=supplier_qty)
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     result = {
         "idempotency_key": key,
         "operation_id": op_id,
         "offer_id": plan["selected_offer_id"],
-        "qty": plan["recovered_qty"],
+        "qty": supplier_qty,
+        "recovered_qty": plan["recovered_qty"],
+        "internal_qty": plan.get("internal_used_qty", 0),
         "status": "succeeded",
         **receipt,
     }
 
-    _RESERVATIONS[key] = result
+    if store is None:
+        _RESERVATIONS[key] = result
 
     if store is not None:
         plan_id = plan.get("plan_id") or f"PLAN-{plan['sku']}-{plan['location_id']}"
@@ -64,10 +70,10 @@ def reserve(*, plan: dict, supplier: Any, store: Any | None = None) -> dict:
             "status": "succeeded",
             "attempts": 1,
             "offer_id": plan["selected_offer_id"],
-            "qty": plan["recovered_qty"],
+            "qty": supplier_qty,
             "reservation": {
                 "supplier_ref": receipt.get("supplier_ref"),
-                "qty": plan["recovered_qty"],
+                "qty": supplier_qty,
                 "expires_at": receipt.get("expires_at"),
                 "verified_at": receipt.get("verified_at"),
             },

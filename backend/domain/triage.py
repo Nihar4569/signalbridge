@@ -29,6 +29,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..core import config
+from . import decision as decision_mod
 from . import exposure as exposure_mod
 from . import planner as planner_mod
 
@@ -113,22 +114,30 @@ def _matching_reasons(
     return reasons
 
 
-def _severe_locations(signals: list[dict]) -> dict[str, str]:
+def _severe_locations(signals: list[dict], *, as_of=None, excluded_ids=None) -> dict[str, str]:
     """Places with a confirmed severe disruption right now: {location_id: reason}.
 
     Severe = recent news whose headline names an attack / blockade / closure /
     strike, or a high-risk (gale) weather reading. This is the deterministic
     floor the LLM is not allowed to override.
     """
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=_SEVERE_WITHIN_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
+    now = as_of or decision_mod.utc_now()
+    cutoff = (now - timedelta(days=_SEVERE_WITHIN_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
     out: dict[str, str] = {}
     for signal in signals:
+        if signal.get("signal_id") in (excluded_ids or set()):
+            continue
         payload = signal.get("payload") or {}
         loc_id = payload.get("location_id")
         if not loc_id:
             continue
         if signal.get("source") == "open-meteo":
-            if payload.get("risk") == "high":
+            try:
+                age = now - exposure_mod.parse_ts(signal.get("fetched_at") or "")
+                fresh = timedelta(minutes=-5) <= age <= timedelta(hours=3)
+            except (ValueError, TypeError):
+                fresh = False
+            if fresh and payload.get("risk") == "high":
                 out.setdefault(loc_id, "severe weather (gale) on the route")
         elif (signal.get("published_at") or "") >= cutoff:
             title = (signal.get("title") or "")
@@ -152,6 +161,7 @@ def _zone_for_shipment(
     judgments: list[dict] | None,
     lanes: dict,
     severe: dict[str, str],
+    as_of=None,
 ) -> tuple[str, str | None]:
     """Gemini's judgment wins when the worker passed one — except a confirmed
     severe disruption on the route always flags "risk" (safety net), so the
@@ -160,10 +170,12 @@ def _zone_for_shipment(
     judgments is None only when Gemini did not run. Then the keyword match
     is a fallback so a missing API key does not leave every shipment stale.
     """
+    item = None
     if judgments is not None:
-        for item in judgments:
-            if item.get("shipment_id") != shipment.get("shipment_id"):
+        for candidate in judgments:
+            if candidate.get("shipment_id") != shipment.get("shipment_id"):
                 continue
+            item = candidate
             if item.get("risk") is True:
                 reason = (item.get("reason") or "gemini").strip()
                 return "risk", reason[:240] or "gemini"
@@ -173,11 +185,17 @@ def _zone_for_shipment(
         if reasons:
             return "risk", reasons[0]
 
-    # Deterministic floor: a confirmed attack / closure / gale on the route wins.
+    # A cited cancellation only removes that notice from the floor. Other
+    # independent severe evidence on the route continues to apply.
+    if item and item.get("event_status") == "cancelled":
+        resolved_ids = decision_mod.resolved_notice_ids(item, signals)
+        severe = _severe_locations(signals, as_of=as_of, excluded_ids=resolved_ids)
     for loc_id in _route_location_ids(shipment, lanes):
         if loc_id in severe:
             place = (locations.get(loc_id) or {}).get("name", loc_id)
             return "risk", f"Confirmed disruption on route — {place}: {severe[loc_id]}"[:240]
+    if judgments is not None and (item is None or type(item.get("risk")) is not bool):
+        return shipment.get("risk_zone", "safe"), shipment.get("risk_reason")
     return "safe", None
 
 
@@ -189,6 +207,7 @@ def _apply_shipment_risk(
     lanes: dict,
     severe: dict[str, str],
     judgments: list[dict] | None = None,
+    as_of=None,
 ) -> list[dict]:
     """Write risk_zone on every in-transit shipment. Returns the copies we saved."""
     updated: list[dict] = []
@@ -196,8 +215,22 @@ def _apply_shipment_risk(
         if shipment.get("status") not in _ACTIVE:
             continue
         new_zone, new_reason = _zone_for_shipment(
-            shipment, signals, locations, judgments, lanes, severe
+            shipment, signals, locations, judgments, lanes, severe, as_of=as_of
         )
+        assessment = next((item for item in judgments or [] if item.get("shipment_id") == shipment["shipment_id"]), None)
+        if assessment and "status" in assessment:
+            assessment = {**assessment, "last_attempt_status": assessment["status"]}
+            if assessment.get("risk") is False and new_zone == "risk":
+                assessment["policy_override"] = new_reason
+                assessment["policy_evidence_ids"] = [
+                    signal["signal_id"] for signal in signals
+                    if (signal.get("payload") or {}).get("location_id")
+                    in _route_location_ids(shipment, lanes)
+                    and _severe_locations(
+                        [signal], as_of=as_of,
+                        excluded_ids=decision_mod.resolved_notice_ids(assessment, signals),
+                    )
+                ]
         # "assumed_delayed" was seeded demo data. Drop it so a stored
         # shipment cannot keep pretending a delay after this pass.
         seeded_delay = shipment.get("delay_state") == "assumed_delayed"
@@ -205,6 +238,7 @@ def _apply_shipment_risk(
             shipment.get("risk_zone") == new_zone
             and shipment.get("risk_reason") == new_reason
             and not seeded_delay
+            and (assessment is None or "status" not in assessment or shipment.get("risk_assessment") == assessment)
         )
         if unchanged:
             updated.append(shipment)
@@ -212,6 +246,8 @@ def _apply_shipment_risk(
         saved = dict(shipment)
         saved["risk_zone"] = new_zone
         saved["risk_reason"] = new_reason
+        if assessment and "status" in assessment:
+            saved["risk_assessment"] = assessment
         if seeded_delay:
             saved["delay_state"] = None
         store.upsert("shipments", saved["shipment_id"], saved)
@@ -238,7 +274,24 @@ def _affected_lines(order_lines: list[dict], sku: str, location_id: str, deadlin
     return ids
 
 
-def run_triage(store: Any, judgments: list[dict] | None = None) -> list[dict]:
+def mark_assessment_unavailable(store: Any, *, as_of=None) -> None:
+    """Retain risk flags and evidence, while exposing a failed latest attempt."""
+    attempted_at = (as_of or decision_mod.utc_now()).isoformat()
+    for shipment in store.list("shipments"):
+        if shipment.get("status") not in _ACTIVE:
+            continue
+        previous = shipment.get("risk_assessment") or {
+            "status": "unknown", "event_status": "uncertain", "evidence": [],
+            "reason": "No validated AI interpretation is available. The stored risk flag is unchanged.",
+            "source": "Assessment unavailable",
+        }
+        store.upsert("shipments", shipment["shipment_id"], {
+            **shipment,
+            "risk_assessment": {**previous, "last_attempt_status": "unknown", "last_attempt_at": attempted_at},
+        })
+
+
+def run_triage(store: Any, judgments: list[dict] | None = None, *, as_of=None) -> list[dict]:
     """Set shipment risk, then write one exposure per pair.
 
     Pass `judgments` from Gemini (one row per shipment: risk true/false and
@@ -248,9 +301,10 @@ def run_triage(store: Any, judgments: list[dict] | None = None) -> list[dict]:
     locations = {loc["location_id"]: loc for loc in store.list("locations")}
     lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
     signals = store.list("signals")
-    severe = _severe_locations(signals)
+    severe = _severe_locations(signals, as_of=as_of)
     _apply_shipment_risk(
-        store, store.list("shipments"), signals, locations, lanes, severe, judgments=judgments
+        store, store.list("shipments"), signals, locations, lanes, severe,
+        judgments=judgments, as_of=as_of,
     )
     # Re-read so a shipment we just saved is the one exposure math sees.
     shipments = store.list("shipments")
@@ -258,7 +312,7 @@ def run_triage(store: Any, judgments: list[dict] | None = None) -> list[dict]:
     order_lines = store.list("order_lines")
     stock_balances = store.list("stock_balances")
     products = {p["sku"]: p for p in store.list("products")}
-    now = _now_iso()
+    now = as_of.isoformat() if as_of else _now_iso()
 
     pairs: dict[tuple[str, str], list[dict]] = {}
     for shipment in shipments:

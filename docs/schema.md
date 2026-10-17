@@ -1,5 +1,25 @@
 # schema.md — The database plan
 
+## Implemented decision evidence fields
+
+Shipment records can contain `risk_assessment`: the validated interpretation's
+`status` (affected/unaffected/unknown), `event_status`, `reason`, exact
+`evidence[{signal_id, quote}]` references, `unresolved_fields`, actual `source`,
+`assessed_at`, and latest-attempt status/time. A route policy override records its
+reason and supporting evidence IDs separately. The backend assigns source/time
+metadata. Missing or invalid AI output does not reset an existing shipment flag.
+
+Calculated plan responses also expose `supplier_qty`, the external remainder of
+`recovered_qty - internal_used_qty`. Reservation/operation `qty` and
+`reservation.qty` refer to this supplier quantity, while a receipt additionally
+reports total `recovered_qty` and `internal_qty` for clarity.
+
+The `decision_demo` fixtures use a fixed clock and an ephemeral `SnapshotStore`.
+They are not another Firestore collection and cannot reset operational records.
+See [decision_walkthrough.md](decision_walkthrough.md) for the endpoints and scope.
+
+---
+
 **Decision doc for the SignalBridge prototype database.** Firestore (Native mode), multi-tenant, seeded with synthetic data.
 
 Goal: a schema that is **small enough to build in days**, but shaped the way **real ERP / supply-chain systems** shape theirs — so it doesn't need a rewrite when we grow.

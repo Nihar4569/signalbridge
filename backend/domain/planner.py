@@ -12,6 +12,9 @@ Everything here is deterministic. The AI agent calls this; it does not replace i
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
+from . import decision as decision_mod
 from . import exposure as exposure_mod
 from . import governance as governance_mod
 from . import margin as margin_mod
@@ -47,18 +50,27 @@ def _delayed_units(shipments: list[dict], sku: str, location_id: str) -> int:
     return total
 
 
-def _disrupted_chokepoints(shipments, lanes, locations, signals) -> dict[str, str]:
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
+def _disrupted_chokepoints(shipments, lanes, locations, signals, *, as_of=None) -> dict[str, str]:
     """Chokepoints delaying our shipments right now: {location_id: name}.
 
     A sea waypoint counts when it is on an at-risk shipment's lane AND has a live
     disruptive signal (high-risk weather or a news report) at that place.
     """
     sea = {loc["location_id"]: loc for loc in locations if loc.get("type") == "sea_waypoint"}
-    disrupted = {(s.get("payload") or {}).get("location_id") for s in signals if network_mod.is_disruptive(s)}
     found: dict[str, str] = {}
     for shipment in shipments:
         if shipment.get("risk_zone") != "risk":
             continue
+        resolved = decision_mod.resolved_notice_ids(shipment.get("risk_assessment"), signals)
+        disrupted = {
+            (signal.get("payload") or {}).get("location_id") for signal in signals
+            if signal.get("signal_id") not in resolved
+            and network_mod.is_disruptive(signal, as_of=as_of)
+        }
         for point in (lanes.get(shipment.get("lane_id")) or {}).get("points", []):
             place = point.get("location_id")
             if place in sea and place in disrupted:
@@ -87,13 +99,14 @@ def _penalty_at_risk(order_lines, partners, sku, location_id, deadline) -> int:
     return penalty
 
 
-def build_plan(store, *, sku: str, location_id: str) -> dict:
+def build_plan(store, *, sku: str, location_id: str, as_of=None) -> dict:
     """Produce a complete recovery plan dict for one SKU at one location.
 
     Pure deterministic math — there is no LLM call anywhere in this function.
     Gemini only *explains* the finished plan afterwards (ai/gemini.explain_plan),
     so every quantity, price and approval tier here is exact and reproducible.
     """
+    now = as_of or utc_now()
     products = {p["sku"]: p for p in store.list("products")}
     shipments = store.list("shipments")
     order_lines = store.list("order_lines")
@@ -159,7 +172,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     # Step 3: cheapest feasible supplier offer for the remainder. An offer that
     # sails through a chokepoint that is already delaying our shipments is no rescue.
     lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
-    blocked = _disrupted_chokepoints(shipments, lanes, locations, store.list("signals"))
+    blocked = _disrupted_chokepoints(shipments, lanes, locations, store.list("signals"), as_of=now)
     options: list[dict] = []
     for offer in offers:
         if offer.get("sku") != sku:
@@ -168,9 +181,13 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
             continue
         in_time = exposure_mod.parse_ts(offer["delivery_latest"]) <= deadline
         enough = int(offer["available_qty"]) >= remainder
+        try:
+            expired = bool(offer.get("expires_at")) and exposure_mod.parse_ts(offer["expires_at"]) <= now
+        except (ValueError, TypeError):
+            expired = True
         crosses = [blocked[i] for i in offer.get("route_location_ids") or [] if i in blocked]
         available = int(offer["available_qty"])
-        feasible = in_time and enough and not crosses and remainder > 0
+        feasible = in_time and enough and not expired and not crosses and remainder > 0
         # Show an illustrative contribution + cost for EVERY offer (not only the
         # chosen one), so the comparison in the UI is transparent.
         offer_qty = remainder if feasible else min(available, remainder)
@@ -181,6 +198,8 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         )
         if feasible:
             reason = "Covers the remaining units before the deadline."
+        elif expired:
+            reason = "Quote expired or expiry is invalid. Refresh the offer before approval."
         elif crosses:
             reason = f"Routes through a chokepoint that is delaying our shipments ({', '.join(crosses)})."
         elif not in_time:
@@ -197,6 +216,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
                 "mode": offer.get("mode"),
                 "route": offer.get("route"),
                 "available_qty": available,
+                "expires_at": offer.get("expires_at"),
                 "qty": offer_qty,
                 "cost_minor": offer_cost,
                 "arrives_at": offer["delivery_latest"],
@@ -246,6 +266,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         "baseline_exposure": baseline_exposure,
         "internal_options": internal,
         "internal_used_qty": internal_used,
+        "supplier_qty": remainder if chosen else 0,
         "supplier_options": options,
         "selected_offer_id": chosen["offer_id"] if chosen else None,
         "recovered_qty": recovered_qty,

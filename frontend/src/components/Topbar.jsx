@@ -10,7 +10,7 @@ function agoLabel(seconds) {
   return `live · updated ${mins}m ago`;
 }
 
-export default function Topbar({ title, subtitle, onToggleSidebar, actions, onScanComplete }) {
+export default function Topbar({ title, subtitle, onToggleSidebar, actions, onScanComplete, isolated = false }) {
   const [online, setOnline] = useState(null);
   const [clock, setClock] = useState("");
   const [scan, setScan] = useState(null);
@@ -20,7 +20,8 @@ export default function Topbar({ title, subtitle, onToggleSidebar, actions, onSc
   cbRef.current = onScanComplete;
 
   useEffect(() => {
-    api.health().then(() => setOnline(true)).catch(() => setOnline(false));
+    // The health endpoint pings the operational store. Keep the walkthrough isolated.
+    if (!isolated) api.health().then(() => setOnline(true)).catch(() => setOnline(false));
     const t = setInterval(() => setClock(new Date().toLocaleTimeString()), 1000);
     setClock(new Date().toLocaleTimeString());
 
@@ -37,10 +38,10 @@ export default function Topbar({ title, subtitle, onToggleSidebar, actions, onSc
         /* status is best-effort; ignore errors */
       }
     }
-    poll();
-    const p = setInterval(poll, 8000);
+    if (!isolated) poll();
+    const p = isolated ? null : setInterval(poll, 8000);
     return () => { active = false; clearInterval(t); clearInterval(p); };
-  }, []);
+  }, [isolated]);
 
   return (
     <header className="topbar">
@@ -63,7 +64,7 @@ export default function Topbar({ title, subtitle, onToggleSidebar, actions, onSc
         <IconMoon size={20} className="t-moon" />
       </button>
       <span className="pill clock">{clock}</span>
-      {scan?.running ? (
+      {isolated ? <span className="pill">Isolated scenario</span> : scan?.running ? (
         <span className="pill" style={{ color: "var(--info)" }} title="Fetching live weather & news">
           <span className="dot blink" /> fetching live data…
         </span>

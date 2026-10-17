@@ -11,6 +11,7 @@ const LIVE = [
   { to: "/incidents", label: "Threatened orders", Icon: IconWarning },
   { to: "/recoveries", label: "Recoveries", Icon: IconCheck },
   { to: "/signals", label: "Live signals", Icon: IconSignal },
+  { to: "/decision-demo", label: "Decision walkthrough", Icon: SparkIcon },
   { to: "/capabilities", label: "Capabilities", Icon: IconGrid },
 ];
 

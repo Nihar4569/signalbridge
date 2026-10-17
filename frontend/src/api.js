@@ -16,7 +16,10 @@ async function post(path, body) {
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(typeof error.detail === "string" ? error.detail : `${res.status} ${res.statusText}`);
+  }
   return res.json();
 }
 
@@ -27,6 +30,9 @@ export const api = {
   incidents: () => get("/incidents"),
   plan: (sku, loc) => get(`/plans/${sku}/${loc}`),
   explain: (sku, loc) => get(`/plans/${sku}/${loc}/explain`),
+  brief: (sku, loc) => get(`/plans/${sku}/${loc}/brief`),
+  decisionCases: () => get("/decision-demo/cases"),
+  runDecisionCase: (caseId, mode) => post(`/decision-demo/cases/${encodeURIComponent(caseId)}/run`, { mode }),
   ask: (sku, loc, question) => post(`/plans/${sku}/${loc}/ask`, { question }),
   askAll: (question, history) => post("/assistant/ask", { question, history }),
   approve: (sku, loc) => post(`/plans/${sku}/${loc}/approve`),
