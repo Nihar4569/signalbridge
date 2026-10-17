@@ -25,10 +25,14 @@ from .route_monitor import signal_scan_location_ids
 log = get_logger("worker")
 
 
-# --- on-demand scan (frontend-triggered; no cron / Cloud Scheduler needed) ----
-# The frontend calls POST /scan on page load and refresh. We run the weather +
-# news scan in a background thread (never blocking the page) and throttle it so
-# repeated refreshes don't hammer the free APIs or the Gemini quota.
+# --- on-demand scan (frontend-triggered) -------------------------------------
+# As of now we deliberately do NOT use Google Cloud Scheduler, to keep the demo
+# on the free tier. Instead the frontend calls POST /scan on every page load /
+# refresh, which keeps live weather + news fresh for whoever is viewing the
+# dashboard. In production this exact entry point moves to Cloud Scheduler ->
+# Cloud Run on a fixed cron, so data refreshes even with nobody watching.
+# The scan runs in a background thread (never blocks the page) and is throttled
+# so repeated refreshes don't hammer the free APIs or the Gemini quota.
 _scan_lock = threading.Lock()
 _scan_state: dict = {
     "running": False,

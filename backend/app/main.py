@@ -11,7 +11,13 @@ from .routers import assistant, dashboard, fulfillments, health, incidents, plan
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Scan weather and news on a timer for as long as this process is up."""
+    """Optional in-process scan timer, running while this process is up.
+
+    Off by default (interval 0): to stay on the free tier we trigger scans from
+    the frontend on page load instead (see routers/scan.py). In production this
+    loop — or Google Cloud Scheduler calling POST /scan on a cron — keeps the
+    live weather + news data fresh with no one watching.
+    """
     stop = asyncio.Event()
     task = None
     if config.SIGNAL_SCAN_INTERVAL_SECONDS > 0:

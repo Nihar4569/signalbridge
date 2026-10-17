@@ -16,7 +16,9 @@ export default function App() {
   const toggle = () => setCollapsed((c) => !c);
   const closeGemini = useCallback(() => setGeminiOpen(false), []);
 
-  // Fetch fresh live weather + news whenever the app loads (no cron needed).
+  // Fetch fresh live weather + news whenever the app loads. As of now this
+  // page-load trigger stands in for Google Cloud Scheduler (keeps us on the
+  // free tier); later a Cloud Scheduler cron will call the same /scan endpoint.
   useEffect(() => { api.triggerScan().catch(() => {}); }, []);
 
   return (

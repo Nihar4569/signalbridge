@@ -63,6 +63,8 @@ class LocalStore:
         self._file_cache: dict[str, list[dict]] = {}
 
     def _load_file(self, collection: str) -> list[dict]:
+        # Parse each fixture file once per process (fixtures don't change at
+        # runtime); keeps the dashboard fast when many plans are built in a row.
         cached = self._file_cache.get(collection)
         if cached is not None:
             return cached

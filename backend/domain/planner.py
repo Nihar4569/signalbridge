@@ -82,7 +82,12 @@ def _penalty_at_risk(order_lines, partners, sku, location_id) -> int:
 
 
 def build_plan(store, *, sku: str, location_id: str) -> dict:
-    """Produce a complete recovery plan dict for one SKU at one location."""
+    """Produce a complete recovery plan dict for one SKU at one location.
+
+    Pure deterministic math — there is no LLM call anywhere in this function.
+    Gemini only *explains* the finished plan afterwards (ai/gemini.explain_plan),
+    so every quantity, price and approval tier here is exact and reproducible.
+    """
     products = {p["sku"]: p for p in store.list("products")}
     shipments = store.list("shipments")
     order_lines = store.list("order_lines")

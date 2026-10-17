@@ -3,6 +3,10 @@
 Keeps live weather + news fresh without a cron job or Cloud Scheduler: the
 dashboard pings POST /scan when it loads, and the scan runs in the background
 (throttled, see worker.trigger_scan).
+
+As of now we rely on this page-load trigger to stay on the free tier. Later,
+Google Cloud Scheduler will call this same endpoint on a fixed schedule so the
+data refreshes even when no one is watching the dashboard.
 """
 from fastapi import APIRouter
 
