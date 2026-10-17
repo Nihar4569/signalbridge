@@ -25,6 +25,12 @@ export default function Dashboard({ onToggleSidebar }) {
   }
   useEffect(() => { load(); }, []);
 
+  // Refresh also pulls fresh live weather + news (runs in the background).
+  function refresh() {
+    api.triggerScan().catch(() => {});
+    load();
+  }
+
   const alerts = mapData?.alerts || [];
 
   return (
@@ -33,8 +39,9 @@ export default function Dashboard({ onToggleSidebar }) {
         title="Dashboard"
         subtitle="Live supply-chain overview"
         onToggleSidebar={onToggleSidebar}
+        onScanComplete={load}
         actions={
-          <button className="btn tonal small" onClick={load}>
+          <button className="btn tonal small" onClick={refresh}>
             <IconRefresh size={16} /> Refresh
           </button>
         }
@@ -55,7 +62,7 @@ export default function Dashboard({ onToggleSidebar }) {
             <div className="card-head">
               <div>
                 <h3>Live route map</h3>
-                <div className="card-sub">Shipments move in real time · alerts marked on the lane</div>
+                <div className="card-sub">Live positions from departure &amp; ETA · alerts marked on the lane</div>
               </div>
               <div className="legend">
                 <span><i style={{ background: "#34a853" }} />On time</span>

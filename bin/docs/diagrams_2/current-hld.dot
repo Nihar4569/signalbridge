@@ -1,0 +1,34 @@
+digraph SignalBridge {
+  graph [rankdir=TB, bgcolor="#f8fafc", pad="0.4", nodesep="0.4", ranksep="0.55", fontname="Arial", fontsize=22, labelloc=t, label="SignalBridge — CURRENT high-level design\nCode reviewed 13 October 2026"];
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#cbd5e1", fontname="Arial", fontsize=15, margin="0.18,0.12"];
+  edge [color="#64748b", fontname="Arial", fontsize=12, arrowsize=0.7];
+  ui [label="React dashboard\nReview shortages, plans and receipts", fillcolor="#dbeafe"];
+  api [label="FastAPI application\nReads, plans, assistant and approval", fillcolor="#dbeafe"];
+  monitor [label="Timer INSIDE API process\nFetch signals → judge risk → triage", fillcolor="#e0e7ff"];
+  domain [label="Deterministic planner\nExposure → internal stock → supplier\nEconomics → surplus → approval tier", fillcolor="#ccfbf1"];
+  sources [label="Weather / news adapters\nOpen-Meteo, GDELT, News RSS"];
+  gemini [label="Gemini Developer API\nRisk JSON, explanations and Q&A", fillcolor="#e0e7ff"];
+  store [label="DataStore interface\nDocument reads and upserts"];
+  data [label="Choose one backend\nLocal JSON + memory overlay\nOR tenant-scoped Firestore", fillcolor="#f1f5f9"];
+  approval [label="Approve handler\nRebuilds plan; identity not enforced", fillcolor="#ffedd5", color="#fb923c"];
+  simulator [label="Stateless supplier simulator\nReturns reservation reference"];
+  records [label="Operation / plan documents\nFollow-up descriptions + emails\nFulfillment history in process memory", fillcolor="#fef3c7"];
+  gap [label="MISSING BUSINESS OUTCOME\nNo actual stock hold/decrement\nNo order-coverage update or read-back", fillcolor="#fee2e2", color="#f87171"];
+  adk [label="Optional separate ADK agent\nOne signal agent; not the web pipeline", style="rounded,dashed,filled", fillcolor="#f1f5f9"];
+  ui -> api [label="HTTP"];
+  api -> monitor;
+  api -> domain [label="review plan"];
+  api -> gemini [label="explain / ask"];
+  monitor -> sources;
+  monitor -> gemini [label="risk judgement"];
+  monitor -> store [label="risk and exposure writes"];
+  domain -> store [label="read business records"];
+  store -> data;
+  api -> approval [label="approve"];
+  approval -> simulator;
+  approval -> records;
+  records -> store [label="operations / plans only"];
+  records -> gap [style=dashed, color="#ef4444"];
+  adk -> gemini [style=dashed];
+  adk -> sources [style=dashed];
+}

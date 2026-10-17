@@ -27,8 +27,11 @@ function makeSampler(points) {
   };
 }
 
-// Realistic pace: a full ocean leg takes minutes; a delayed ship barely crawls.
-const SPEED = { on_time: 0.004, at_risk: 0.0018, delayed: 0.0005 };
+// Ships are drawn at their TRUE position, derived from the real departure date
+// and ETA (backend: domain/network.shipment_progress). A real voyage takes
+// weeks, so the dot advances at that same real pace — it must not race across
+// the ocean, or the map would contradict the shipment's own ETA.
+const DAY_SECONDS = 86400;
 
 export default function MapView({ data, height = 460 }) {
   const el = useRef(null);
@@ -85,7 +88,9 @@ export default function MapView({ data, height = 460 }) {
         icon: L.divIcon({ className: "", html: `<div class="ship-dot ${r.color}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] }),
       }).addTo(group).bindPopup(popup);
 
-      fleet.current.push({ marker, samp, t: r.progress, speed: SPEED[r.health] ?? 0.003 });
+      // Fraction of the route covered per second on this voyage.
+      const voyageDays = Math.max(1, (new Date(r.eta) - new Date(r.departed_at || r.eta)) / 86400000);
+      fleet.current.push({ marker, samp, t: r.progress, speed: 1 / (voyageDays * DAY_SECONDS) });
     });
 
     data.locations.forEach((l) => {

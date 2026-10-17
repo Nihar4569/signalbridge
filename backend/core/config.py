@@ -47,8 +47,13 @@ GEMINI_COOLDOWN_SECONDS = int(os.getenv("GEMINI_COOLDOWN_SECONDS", "900"))
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "")
 FIRESTORE_EMULATOR_HOST = os.getenv("FIRESTORE_EMULATOR_HOST", "")
 
-# Weather + news scan while the API process is running. 0 turns the loop off.
-SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "900"))
+# Background scan loop while the API is up. 0 = off (default): the frontend
+# triggers scans on page load instead, so no cron / Cloud Scheduler is needed.
+SIGNAL_SCAN_INTERVAL_SECONDS = int(os.getenv("SIGNAL_SCAN_INTERVAL_SECONDS", "0"))
+
+# Frontend-triggered scans are throttled to at most one per this many seconds,
+# so page refreshes don't hammer the free weather/news APIs or the Gemini quota.
+SCAN_MIN_INTERVAL_SECONDS = int(os.getenv("SCAN_MIN_INTERVAL_SECONDS", "600"))
 
 # --- external APIs (free, no key needed) ---
 HTTP_TIMEOUT = 15  # seconds, for any outbound API call
@@ -95,3 +100,20 @@ GOVERNANCE_TIERS = [
     ("regional_manager", 50_000_000),  # up to  ₹5,00,000
     ("executive", None),               # anything above
 ]
+
+# The default person each tier's approval request goes to. Plain config, no AI.
+# Put real addresses in .env; the titles are what the UI shows.
+APPROVERS = {
+    "local_planner": {
+        "title": "Warehouse Operations Manager",
+        "email": os.getenv("APPROVER_LOCAL_EMAIL") or OPS_EMAIL,
+    },
+    "regional_manager": {
+        "title": "Regional Supply Chain Manager",
+        "email": os.getenv("APPROVER_REGIONAL_EMAIL") or "regional-supply@signalbridge.demo",
+    },
+    "executive": {
+        "title": "Head of Supply Chain",
+        "email": os.getenv("APPROVER_EXECUTIVE_EMAIL") or "head-supply-chain@signalbridge.demo",
+    },
+}

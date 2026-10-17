@@ -66,14 +66,20 @@ def _disrupted_chokepoints(shipments, lanes, locations, signals) -> dict[str, st
     return found
 
 
-def _penalty_at_risk(order_lines, partners, sku, location_id) -> int:
-    """Sum of late-delivery penalties for affected VIP/SLA customers."""
+def _penalty_at_risk(order_lines, partners, sku, location_id, deadline) -> int:
+    """Late-delivery penalties for the orders this shortage actually threatens.
+
+    Only lines due on or before the deadline count — the same filter used for
+    demand. A line due later is not late yet, so its penalty is not at risk.
+    """
     partner_by_id = {p["partner_id"]: p for p in partners}
     penalty = 0
     for line in order_lines:
         if line.get("sku") != sku or line.get("location_id") != location_id:
             continue
         if line.get("status") != "open":
+            continue
+        if exposure_mod.parse_ts(line["due_at"]) > deadline:
             continue
         partner = partner_by_id.get(line.get("customer_id"), {})
         service = partner.get("service_level") or {}
@@ -82,7 +88,12 @@ def _penalty_at_risk(order_lines, partners, sku, location_id) -> int:
 
 
 def build_plan(store, *, sku: str, location_id: str) -> dict:
-    """Produce a complete recovery plan dict for one SKU at one location."""
+    """Produce a complete recovery plan dict for one SKU at one location.
+
+    Pure deterministic math — there is no LLM call anywhere in this function.
+    Gemini only *explains* the finished plan afterwards (ai/gemini.explain_plan),
+    so every quantity, price and approval tier here is exact and reproducible.
+    """
     products = {p["sku"]: p for p in store.list("products")}
     shipments = store.list("shipments")
     order_lines = store.list("order_lines")
@@ -158,10 +169,14 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         in_time = exposure_mod.parse_ts(offer["delivery_latest"]) <= deadline
         enough = int(offer["available_qty"]) >= remainder
         crosses = [blocked[i] for i in offer.get("route_location_ids") or [] if i in blocked]
+        available = int(offer["available_qty"])
         feasible = in_time and enough and not crosses and remainder > 0
-        cost = (
-            remainder * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
-            if feasible
+        # Show an illustrative contribution + cost for EVERY offer (not only the
+        # chosen one), so the comparison in the UI is transparent.
+        offer_qty = remainder if feasible else min(available, remainder)
+        offer_cost = (
+            offer_qty * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
+            if offer_qty > 0
             else None
         )
         if feasible:
@@ -170,8 +185,10 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
             reason = f"Routes through a chokepoint that is delaying our shipments ({', '.join(crosses)})."
         elif not in_time:
             reason = "Arrives after the deadline."
+        elif available < remainder:
+            reason = f"Only {available} units available; {remainder} needed."
         else:
-            reason = "Not enough stock."
+            reason = "No units needed."
         options.append(
             {
                 "offer_id": offer["offer_id"],
@@ -179,8 +196,9 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
                 "ships_from": offer.get("ships_from"),
                 "mode": offer.get("mode"),
                 "route": offer.get("route"),
-                "qty": remainder if feasible else 0,
-                "cost_minor": cost,
+                "available_qty": available,
+                "qty": offer_qty,
+                "cost_minor": offer_cost,
                 "arrives_at": offer["delivery_latest"],
                 "feasible": feasible,
                 "reason": reason,
@@ -194,7 +212,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
     recovered_qty = internal_used + (remainder if chosen else 0)
 
     # Step 4: margin.
-    penalty = _penalty_at_risk(order_lines, partners, sku, location_id)
+    penalty = _penalty_at_risk(order_lines, partners, sku, location_id, deadline)
     margin = margin_mod.assess_margin(
         shortage_qty=shortage,
         unit_price_minor=int(product.get("unit_price_minor", 0)),
@@ -209,7 +227,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         original_still_arriving=True,
     )
 
-    # Step 6: governance.
+    # Step 6: governance (plain rules: cost -> tier -> default approver).
     approval = governance_mod.route_approval(recovery_cost)
 
     narrative = (
@@ -217,7 +235,7 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         f"{deadline.date()}. Used {internal_used} from internal stock; "
         f"{'bought ' + str(remainder) + ' from ' + chosen['offer_id'] if chosen else 'no feasible supplier found for the remainder'}"
         f". Recovery cost ₹{recovery_cost / 100:,.0f}; "
-        f"verdict: {margin['verdict']}. Approval: {approval['tier']}."
+        f"verdict: {margin['verdict']}. Approval: {approval['approver_title']}."
     )
 
     return {

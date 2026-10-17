@@ -543,7 +543,7 @@ tenants/buildx-demo/events/EVT-0007
 | Recovery Agent → `supplier_tool` | `supplier_offers` | — |
 | Recovery Agent → `margin_tool` | `products`, `partners`, `order_lines` | — |
 | Recovery Agent → `surplus_tool` | `shipments`, `order_lines` | — |
-| Governance Agent | `plans` | `plans.approval` |
+| Governance rules (plain code, `domain/governance.py`) | `plans` | `plans.approval` |
 | Approval API | `plans` | `plans.status` |
 | `domain/reservations.py` | `plans`, `operations` | `operations`, `allocations`, `stock_balances`, `stock_movements` |
 

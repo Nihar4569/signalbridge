@@ -190,7 +190,7 @@ signalbridge/
 │   ├── core/       config, data store, logging
 │   ├── domain/     the math & decisions (pure python, tested)  <- start here
 │   ├── adapters/   supplier simulator, news
-│   ├── agent/      the Google ADK agent (triage -> recovery -> governance)
+│   ├── agent/      the Google ADK agent (optional chat: checks live weather and news)
 │   ├── app/        the FastAPI web API
 │   └── worker/     the background monitor
 ├── fixtures/       synthetic demo data (JSON)

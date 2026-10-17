@@ -36,6 +36,9 @@ def test_offer_through_disrupted_chokepoint_is_rejected():
     hz = _option(plan, "OFFER-HZ")
     assert not hz["feasible"] and "Strait of Hormuz" in hz["reason"]
     assert plan["selected_offer_id"] != "OFFER-HZ"
+    # Even though it's rejected, its quantity + cost are still shown (not "—"),
+    # so the UI comparison stays transparent.
+    assert hz["qty"] > 0 and hz["cost_minor"] is not None
 
 
 def test_calm_chokepoint_is_allowed():

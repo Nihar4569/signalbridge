@@ -49,7 +49,7 @@ Full setup → **[docs/start.md](docs/start.md)** and **[docs/frontend_setup.md]
 | **Impact Triage** | Keep only the shipments that will really cause a stockout |
 | **Margin Optimization** | Don't spend ₹100 to save ₹60 |
 | **Internal Balancing** | Use our own DC / dark-store stock before buying outside |
-| **Multi-Tier Governance** | Small fix → local planner; big spend → executive |
+| **Multi-Tier Governance** | Small fix → local planner; big spend → executive (plain rules, a default approver per tier) |
 | **Predictive Surplus** | Warn when the late shipment will cause future overstock |
 
 ---
@@ -58,7 +58,7 @@ Full setup → **[docs/start.md](docs/start.md)** and **[docs/frontend_setup.md]
 
 ```text
 backend/domain/   the math & decisions — pure python, fully tested  <- start here
-backend/agent/    Google ADK agent: triage -> recovery -> governance
+backend/agent/    Google ADK agent (optional chat: checks live weather and news)
 backend/app/      FastAPI web API
 backend/worker/   background monitor
 fixtures/         synthetic demo data (JSON)

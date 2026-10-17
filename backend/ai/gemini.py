@@ -48,6 +48,9 @@ def _call(prompt: str, fallback: str, timeout: int = 30, json_mode: bool = False
     tried: list[str] = []
     quota_hit = False
 
+    # Resilience: walk the model chain (config.GEMINI_MODELS). If one is rate-
+    # limited (429) or retired (404) we cool it down and fall through to the
+    # next, so a single over-quota model never takes the whole app down.
     for model in config.GEMINI_MODELS:
         if _cooldown.get(model, 0) > now:
             continue
@@ -145,6 +148,9 @@ def judge_shipment_risk(
     not answer (no key, HTTP error, or unreadable JSON). The caller must
     not invent a risk decision in that case.
     """
+    # Grounded AI boundary: Gemini only JUDGES here (reads the messy weather +
+    # news and decides what is risky). It never computes quantities or money —
+    # that is deterministic Python in domain/. This is what keeps the AI safe.
     active = [s for s in shipments if s.get("status") in ("in_transit", "planned")]
     if not active or not config.GOOGLE_API_KEY:
         return None
@@ -304,7 +310,7 @@ def _build_prompt(plan: dict) -> str:
         f"Recovery cost: {rupees_text(margin.get('recovery_cost_minor') or 0)}\n"
         f"Revenue protected: {rupees_text(margin.get('protected_revenue_minor') or 0)}\n"
         f"Verdict: {margin.get('verdict')}\n"
-        f"Needs approval from: {approval.get('tier')}\n"
+        f"Needs approval from: {approval.get('approver_title') or approval.get('tier')}\n"
     )
 
 

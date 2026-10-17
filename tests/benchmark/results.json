@@ -1,0 +1,94 @@
+{
+  "generated_at": "2026-10-17T07:11:14+00:00",
+  "environment": {
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "python": "3.11.14",
+    "data_source": "local fixtures (Firestore snapshot)"
+  },
+  "scale": {
+    "locations": 24,
+    "lanes": 6,
+    "products": 6,
+    "partners": 23,
+    "shipments": 6,
+    "order_lines": 10,
+    "stock_balances": 17,
+    "supplier_offers": 20,
+    "signals": 12,
+    "at_risk_order_pairs": 6,
+    "supplier_options_evaluated": 20
+  },
+  "latency": {
+    "assess_exposure": {
+      "runs": 2000,
+      "avg_ms": 0.0028,
+      "p50_ms": 0.0027,
+      "p95_ms": 0.0033,
+      "min_ms": 0.0025,
+      "max_ms": 0.0247,
+      "ops_per_sec": 356423
+    },
+    "route_approval": {
+      "runs": 2000,
+      "avg_ms": 0.0003,
+      "p50_ms": 0.0002,
+      "p95_ms": 0.0003,
+      "min_ms": 0.0002,
+      "max_ms": 0.0099,
+      "ops_per_sec": 3989516
+    },
+    "build_recovery_plan": {
+      "runs": 400,
+      "avg_ms": 0.0868,
+      "p50_ms": 0.084,
+      "p95_ms": 0.105,
+      "min_ms": 0.0747,
+      "max_ms": 0.1613,
+      "ops_per_sec": 11523
+    },
+    "dashboard_overview": {
+      "runs": 100,
+      "avg_ms": 0.8366,
+      "p50_ms": 0.7593,
+      "p95_ms": 1.3279,
+      "min_ms": 0.7326,
+      "max_ms": 1.659,
+      "ops_per_sec": 1195
+    },
+    "dashboard_map": {
+      "runs": 100,
+      "avg_ms": 0.2914,
+      "p50_ms": 0.2841,
+      "p95_ms": 0.347,
+      "min_ms": 0.2752,
+      "max_ms": 0.4287,
+      "ops_per_sec": 3432
+    },
+    "incidents": {
+      "runs": 100,
+      "avg_ms": 0.0417,
+      "p50_ms": 0.0405,
+      "p95_ms": 0.0492,
+      "min_ms": 0.04,
+      "max_ms": 0.0523,
+      "ops_per_sec": 23956
+    }
+  },
+  "correctness": {
+    "plans_checked": 6,
+    "checks": {
+      "money_integrity": 6,
+      "cheapest_feasible_chosen": 6,
+      "every_option_has_reason": 6,
+      "chokepoint_rule": 6
+    },
+    "violations": [],
+    "all_passed": true
+  },
+  "resilience": {
+    "news_fallback_to_google": true,
+    "gemini_model_chain_fallback": true,
+    "gemini_graceful_without_key": true,
+    "all_passed": true
+  }
+}

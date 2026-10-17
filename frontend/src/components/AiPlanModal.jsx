@@ -165,10 +165,10 @@ function PlanView({ plan, ai, sku, loc }) {
           </thead>
           <tbody>
             {(plan.supplier_options || []).map((o) => (
-              <tr key={o.offer_id}>
+              <tr key={o.offer_id} className={o.feasible ? "" : "row-muted"}>
                 <td className="mono">{o.offer_id}</td>
-                <td>{o.qty || "—"}</td>
-                <td>{o.cost_minor ? rupees(o.cost_minor) : "—"}</td>
+                <td>{o.qty ? o.qty.toLocaleString("en-IN") : "—"}</td>
+                <td>{o.cost_minor != null ? rupees(o.cost_minor) : "—"}</td>
                 <td>{day(o.arrives_at)}</td>
                 <td>
                   {o.feasible ? (
@@ -209,7 +209,9 @@ function PlanView({ plan, ai, sku, loc }) {
           <span className="k">Future overstock when the late shipment lands</span>
           <span className="v">{s.expected_surplus_qty} units ({s.suggested_action || "none"})</span>
           <span className="k">Approval required from</span>
-          <span className="v"><span className="chip blue">{ap.tier}</span></span>
+          <span className="v">
+            {ap.approver_title || ap.tier} <span className="chip blue">{(ap.tier || "").replace("_", " ")}</span>
+          </span>
         </div>
       </Section>
 

@@ -22,22 +22,21 @@ Everything below is built from only these three ideas.
 
 ## 2. The one-line big picture
 
-> A shipment is delayed → **3 agents** look at it one after another → they produce **one recovery plan** → a human approves it → the system books the replacement stock.
+> A shipment is delayed → **2 agents** look at it one after another → they produce **one recovery plan** → plain code picks who must approve it → a human approves → the system books the replacement stock.
 
 That's it. Everything else is detail.
 
 ---
 
-## 3. Meet the team (our 3 agents)
+## 3. Meet the team (our 2 agents)
 
-Imagine a small 3-person team sitting in a supply-chain office. A delay report lands on the first person's desk, and it moves down the line.
+Imagine a small 2-person team sitting in a supply-chain office. A delay report lands on the first person's desk, and it moves down the line.
 
 ```mermaid
 flowchart LR
     IN["Delay report<br/>comes in"] --> A1
     A1["1. Triage Agent<br/>'Does this even matter?'"] --> A2
-    A2["2. Recovery Agent<br/>'How do we fix it?'"] --> A3
-    A3["3. Governance Agent<br/>'Who must approve this?'"] --> OUT["Finished plan<br/>shown to human"]
+    A2["2. Recovery Agent<br/>'How do we fix it?'"] --> OUT["Finished plan<br/>(approver picked by plain code)<br/>shown to human"]
 ```
 
 ---
@@ -85,25 +84,21 @@ It presses its buttons in a smart order:
 
 ---
 
-### Agent 3 — Governance Agent 🧑‍⚖️ *"Who is allowed to say yes?"*
+### Who approves? — plain code, not an agent 🧑‍⚖️
 
 **The problem it solves:** A ₹5,000 fix shouldn't wait for the CFO. A ₹50,00,000 fix must **never** be auto-approved.
 
-**Its one job:** Decide which human gets the approval request.
+This is a fixed rule in `backend/domain/governance.py`. No AI is involved, so the answer is the same every time. The planner runs it on every plan, using the recovery cost:
 
-| Plan value | Routed to |
-|---|---|
-| Small | Local planner |
-| Medium | Regional manager |
-| Large | Executive sign-off |
+| Recovery cost | Tier | Default approver |
+|---|---|---|
+| up to ₹50,000 | `local_planner` | Warehouse Operations Manager |
+| up to ₹5,00,000 | `regional_manager` | Regional Supply Chain Manager |
+| above that | `executive` | Head of Supply Chain |
 
-| | |
-|---|---|
-| **Gets** | The finished plan from Agent 2 |
-| **Gives** | The same plan, stamped with `approval_tier` + who must sign |
-| **Then** | Saves it to Firestore → it appears on the dashboard |
+The thresholds and the approvers' titles and emails live in `backend/core/config.py` (`GOVERNANCE_TIERS`, `APPROVERS`). Set real addresses with `APPROVER_LOCAL_EMAIL`, `APPROVER_REGIONAL_EMAIL` and `APPROVER_EXECUTIVE_EMAIL` in `.env`.
 
-> The agent **never approves anything itself**. It only decides *whose inbox it lands in*. A human always presses the final button.
+> Nothing here approves anything. It only decides *whose inbox it lands in*. A human always presses the final button.
 
 ---
 
@@ -113,7 +108,7 @@ The root agent is **not** a fourth thinker. It is just the **conveyor belt**.
 
 In ADK it's a `SequentialAgent`, which means exactly one thing:
 
-> "Run Agent 1. Then give its output to Agent 2. Then give that to Agent 3."
+> "Run Agent 1. Then give its output to Agent 2."
 
 That's the entire job. Simple hand-off, in order.
 
@@ -122,12 +117,11 @@ flowchart TB
     ROOT["root_agent<br/>(SequentialAgent = just the conveyor belt)"]
     ROOT --> S1["Step 1 — Triage Agent"]
     S1 -->|passes its result| S2["Step 2 — Recovery Agent"]
-    S2 -->|passes its result| S3["Step 3 — Governance Agent"]
-    S3 --> SAVE[("Save plan to Firestore")]
+    S2 -->|passes its result| SAVE[("Save plan to Firestore")]
 ```
 
-**Why split into 3 instead of one big agent?** Three reasons:
-1. One agent with 10 jobs gets confused and hallucinates. Three agents with 1 job each stay accurate.
+**Why split into 2 instead of one big agent?** Three reasons:
+1. One agent with 10 jobs gets confused and hallucinates. Two agents with 1 job each stay accurate.
 2. You can test and fix each one separately.
 3. When a judge asks *"what does your AI actually do?"* — you have 3 clear answers.
 
@@ -184,7 +178,7 @@ Follow our jacket example all the way through:
 | 6 | 🛠️ → `supplier_tool` | Supplier A: 90 units, arrives 15 Oct ✅ · Supplier B: only 30 ❌ · Supplier C: arrives 20 Oct ❌ too late |
 | 7 | 🛠️ → `margin_tool` | Cost = ₹1,49,000. Is the order's margin bigger? → ✅ worth it |
 | 8 | 🛠️ → `surplus_tool` | The late 500 will still arrive → ⚠️ flag future overstock |
-| 9 | 🧑‍⚖️ **Governance Agent** | ₹1.49L = medium → route to **Regional Manager** |
+| 9 | 🧑‍⚖️ **Governance rule** (plain code) | ₹1.49L = medium → route to the **Regional Supply Chain Manager** |
 | 10 | 💾 Firestore | Plan saved → appears on dashboard |
 | 11 | 🧑 **Human** | Reads evidence + reason → clicks **Approve** |
 | 12 | 💻 `reservation_tool` | Books 80 units **once**, reads it back to confirm ✅ |
@@ -196,8 +190,8 @@ Steps 3–9 happen with no human at all. The human only appears at step 11, with
 
 ## 8. Confusions cleared up
 
-**"Are the 3 agents 3 separate servers?"**
-No. They are 3 Python objects inside one package, running in one Cloud Run service.
+**"Are the agents separate servers?"**
+No. They are Python objects inside one package, running in one Cloud Run service.
 
 **"Does the agent talk to Firestore directly?"**
 No. It calls a tool, and the tool talks to Firestore. The agent never touches the database.
@@ -215,7 +209,7 @@ Start with `domain/exposure.py` (pure math + a test). No AI needed. Add the agen
 
 ## 9. Thirty-second summary
 
-- **3 agents**, each with **one job**: *is it serious?* → *how do we fix it?* → *who signs off?*
+- **2 agents**, each with **one job**: *is it serious?* → *how do we fix it?* Then a plain-code rule picks *who signs off*.
 - **root_agent** just runs them in order. It doesn't think.
 - **Tools** are plain Python functions; their docstring is what the AI reads.
 - **Gemini reasons and explains. Python calculates and writes. A human approves.**

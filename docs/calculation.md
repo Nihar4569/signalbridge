@@ -153,14 +153,15 @@ Flagging this early lets you plan a markdown or return instead of being surprise
 
 ## 6. Governance — "who has to approve it?"
 
-The approval level depends on how much money the plan spends. Thresholds are in
-paise (`backend/core/config.py`):
+The approval level depends on how much money the plan spends. Thresholds and the
+default approver for each tier are plain config in `backend/core/config.py`
+(no AI decides this):
 
-| Recovery cost | Tier |
-|---|---|
-| ≤ ₹50,000 (`5000000`) | local planner |
-| ≤ ₹5,00,000 (`50000000`) | regional manager |
-| above that | executive |
+| Recovery cost | Tier | Default approver |
+|---|---|---|
+| ≤ ₹50,000 (`5000000`) | local planner | Warehouse Operations Manager |
+| ≤ ₹5,00,000 (`50000000`) | regional manager | Regional Supply Chain Manager |
+| above that | executive | Head of Supply Chain |
 
 Our cost is ₹1,13,000, which is above ₹50,000 but below ₹5,00,000 →
 **regional manager**.
