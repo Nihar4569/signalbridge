@@ -1,182 +1,120 @@
-# calculation.md — The math, explained simply
+# Recovery calculations
 
-Every number SignalBridge shows comes from one of the small formulas below.
-They are all plain arithmetic — no AI, no magic. You can check them by hand.
+Authoritative quantities and money are calculated in Python. Gemini interprets evidence and explains results; it does not supply the planner's financial arithmetic.
 
-Two ground rules used everywhere:
-- **Quantities are whole units** (you can't have 1.5 jackets).
-- **Money is stored in paise** (integer "minor units"), so ₹1,800 is `180000`.
-  We only divide by 100 when we show it on screen.
+The reproducible example below uses [decision_demo/cases.json](../fixtures/decision_demo/cases.json) at its fixed scenario clock, **17 October 2026, 09:00 UTC**. It is synthetic and separate from changing operational fixtures.
 
-We use one running example the whole way: **blue jackets at the Mumbai DC**.
+## 1. Deadline-based exposure
 
----
+The planner uses the earliest open order deadline for one SKU/location pair.
 
-## The setup (our dummy data)
+```text
+supply_by_deadline = destination_on_hand + incoming_arriving_by_deadline
+demand_by_deadline = open_order_quantity_due_by_deadline
+shortage = max(0, demand_by_deadline - supply_by_deadline)
+```
 
-| Thing | Value |
+[Exposure code](../backend/domain/exposure.py) includes planned/in-transit incoming shipments. When the pair is in a disrupted scenario, supplied assumed-arrival values replace expected arrivals where present. The planner selects that scenario when a relevant shipment is marked risk or confirmed delayed.
+
+This is a SKU/location scenario calculation, not a full remaining-leg simulator. Destination exposure uses on-hand directly, without subtracting `reserved_qty`. Do not describe it as complete net available-to-promise allocation.
+
+### Coffee walkthrough
+
+| Input | Value |
 |---|---|
-| On-hand stock at Mumbai (`WH-MUM`) | **120** units |
-| Incoming shipment `SHP-001` | **500** units |
-| …normally arrives | 12 Oct (in time) |
-| …but port is delayed, so now arrives | 19 Oct (too late) |
-| Customer order `LINE-001` | **200** units due **16 Oct** |
-| Spare stock in Pune dark store | **20** units free |
-| Jacket sell price | ₹2,499 (`249900` paise) |
-| Supplier A offer | 90 units @ ₹1,800 + ₹5,000 shipping, arrives 15 Oct |
-| VIP late penalty | ₹50,000 (`5000000` paise) |
+| Demand | 100 units due 19 October 2026, 12:00 UTC |
+| Destination on-hand | 20 units |
+| Inbound shipment | 80 units, expected 18 October |
+| Declared disrupted arrival | 21 October |
+| Internal stock at another DC | 20 on-hand, zero reserved |
 
----
+Baseline supply is 20 + 80 = 100, so shortage is zero. Under the active closure's declared delay scenario, inbound supply misses the deadline: supply is 20 and shortage is **80**.
 
-## 1. Exposure — "how many units short?"
+A validated cancelled-strike interpretation leaves the expected arrival available in this example. Shortage remains zero. This conclusion concerns the supplied notice, not every possible real-world risk.
 
-This is the most important formula. We always measure **against a deadline**.
+## 2. Internal availability
 
-```
-supply  = on_hand + incoming that arrives on/before the deadline
-demand  = open orders due on/before the deadline
-shortage = max(0, demand − supply)
+[Internal balancing](../backend/domain/network_balance.py) searches other active DC/dark-store locations for the SKU:
+
+```text
+free = on_hand - reserved
+internal_used = min(shortage, sum(positive_internal_free))
+external_remainder = shortage - internal_used
 ```
 
-`max(0, …)` just means "a shortage can't be negative" — if we have enough, the
-shortage is 0.
+Options default to largest free quantity first. Distance can be calculated; the main planner does not select a globally optimal transport plan.
 
-### Normal day (nothing wrong)
+In the example: 80 short - 20 internal = **60 units** still needed.
 
-The 500 units arrive 12 Oct, before the 16 Oct deadline, so they **count**:
+On-hand minus reserved does not establish donor surplus after donor demand. Transfer permissions, transit time/cost and coordinated allocation across simultaneous plans are not fully enforced. If internal stock alone covers the shortage, the current planner can still return `no_feasible_option` because approval expects an external offer. Internal-only execution remains planned.
 
-```
-supply  = 120 + 500 = 620
-demand  = 200
-shortage = max(0, 200 − 620) = 0      ✅ no problem
-```
+## 3. Supplier feasibility and selection
 
-### After the port delay
+[The planner](../backend/domain/planner.py) considers offers for the SKU and matching destination (or no destination restriction). A selected offer must:
 
-Now the 500 units arrive 19 Oct — **after** the deadline — so they **don't count**:
+- Cover the entire external remainder with its stated capacity.
+- Have `delivery_latest` on or before the earliest deadline.
+- Have no expired/invalid supplied expiry. An absent expiry is currently allowed.
+- Avoid identified disrupted sea waypoints from at-risk shipment lanes and stored disruptive signals.
 
-```
-supply  = 120 + 0 = 120
-demand  = 200
-shortage = max(0, 200 − 120) = 80     ⚠️ short 80 units
+This is a modeled chokepoint check, not proof that every segment of every supplier route is safe. The planner selects one cheapest feasible offer; it does not combine several partial supplier offers.
+
+```text
+external_cost_minor = external_quantity * unit_price_minor + shipping_minor
 ```
 
-> The delay didn't destroy any stock. It just moved the 500 units from "arrives
-> in time" to "arrives too late". That one change creates the 80-unit shortage.
+The direct coffee offer costs ₹60 per unit plus ₹100 shipping:
 
-*(Code: `backend/domain/exposure.py`)*
-
----
-
-## 2. Internal balancing — "use our own stock first"
-
-Before buying from anyone, check our other warehouses and dark stores for **free**
-stock. Free means not already promised to someone else:
-
-```
-free = on_hand − reserved
+```text
+60 * 6,000 + 10,000 = 370,000 paise = ₹3,700
 ```
 
-Pune dark store has 20 on hand, 0 reserved → **20 free**.
+The cheaper sea offer is rejected in the active-closure case because it crosses the disrupted fictional passage. Quote validity uses the fixed scenario clock in the walkthrough, not the date the browser is opened.
 
-```
-used from internal = min(shortage, internal_free) = min(80, 20) = 20
-remainder to buy    = shortage − used = 80 − 20 = 60
-```
+## 4. Estimated recovery benefit
 
-So we still need **60** units from outside.
+[The benefit check](../backend/domain/margin.py) is:
 
-*(Code: `backend/domain/network_balance.py`)*
-
----
-
-## 3. Supplier choice — "buy the remaining 60 cheaply"
-
-An offer is **usable** only if it has enough stock **and** arrives by the deadline.
-
-| Offer | Stock | Arrives | Enough for 60? | In time (by 16 Oct)? | Usable? |
-|---|---|---|---|---|---|
-| A | 90 | 15 Oct | yes | yes | ✅ |
-| B | 30 | 14 Oct | no (only 30) | yes | ❌ |
-| C | 200 | 20 Oct | yes | no (too late) | ❌ |
-
-Only **A** works. Its cost for 60 units:
-
-```
-cost = (units × unit_price) + shipping
-     = (60 × 180000) + 500000
-     = 10800000 + 500000
-     = 11300000 paise   =  ₹1,13,000
+```text
+revenue_exposed = shortage * product_sell_price
+estimated_benefit = revenue_exposed + potential_penalty - external_recovery_cost
+worth_it = estimated_benefit > 0
 ```
 
-*(Code: `backend/domain/planner.py`)*
+For coffee: 80 * ₹100 + ₹0 - ₹3,700 = **₹4,300 estimated benefit**.
 
----
+This is not profit or contribution margin. It does not subtract all original acquisition, transfer, handling or opportunity costs. In partial-recovery cases it still uses the full shortage in the revenue estimate. Treat the figure as a review aid under the stated policy, not realized savings.
 
-## 4. Margin check — "is the fix worth it?"
+The planner's potential penalty sums configured per-late-order amounts for matching open lines due by the earliest deadline. It is not a legal determination that a penalty is owed.
 
-Don't spend more than you save. We compare the cost against what we protect.
+## 5. Illustrative surplus
 
-```
-protected_revenue = shortage × sell_price = 80 × 249900 = 19992000   (₹1,99,920)
-penalty_avoided   = 5000000                                           (₹50,000)
-net_benefit       = protected_revenue + penalty_avoided − recovery_cost
-                  = 19992000 + 5000000 − 11300000
-                  = 13692000                                          (₹1,36,920)
+[Surplus code](../backend/domain/surplus.py) calculates:
+
+```text
+expected_surplus = min(late_shipment_units, recovered_qty)
 ```
 
-`net_benefit` is positive → **verdict: worth_it** ✅
+It returns zero when the original is not still arriving or recovery is zero. The main planner passes `original_still_arriving=True` and counts units on risk-flagged shipments. The coffee example therefore flags **80 units** and suggests a markdown.
 
-If the cost had been *higher* than what we protect, `net_benefit` would be
-negative and the verdict would be **not_worth_it** (don't do it).
+This is a heuristic warning, not a demand forecast, predicted delivery confirmation or automatic markdown action.
 
-*(Code: `backend/domain/margin.py`)*
+## 6. Governance
 
----
+[Governance](../backend/domain/governance.py) maps external recovery cost to configured tiers:
 
-## 5. Surplus forecast — "will we be overstocked later?"
-
-We bought replacements. But the delayed shipment of 500 is **still coming** — it
-just arrives late. When it lands, some of it is now extra:
-
-```
-expected_surplus = min(late_shipment_units, units_we_recovered)
-                 = min(500, 80)
-                 = 80 units of likely overstock  → suggest a markdown
-```
-
-Flagging this early lets you plan a markdown or return instead of being surprised.
-
-*(Code: `backend/domain/surplus.py`)*
-
----
-
-## 6. Governance — "who has to approve it?"
-
-The approval level depends on how much money the plan spends. Thresholds and the
-default approver for each tier are plain config in `backend/core/config.py`
-(no AI decides this):
-
-| Recovery cost | Tier | Default approver |
+| Cost | Tier | Intended approver |
 |---|---|---|
-| ≤ ₹50,000 (`5000000`) | local planner | Warehouse Operations Manager |
-| ≤ ₹5,00,000 (`50000000`) | regional manager | Regional Supply Chain Manager |
-| above that | executive | Head of Supply Chain |
+| Up to ₹50,000 | local_planner | Warehouse Operations Manager |
+| Above ₹50,000 through ₹5,00,000 | regional_manager | Regional Supply Chain Manager |
+| Above ₹5,00,000 | executive | Head of Supply Chain |
 
-Our cost is ₹1,13,000, which is above ₹50,000 but below ₹5,00,000 →
-**regional manager**.
+The coffee proposal maps to the local tier. The API checks for a selected supplier and positive benefit on approval, but does not verify the caller's identity/role. See [approval](after_plan_approval.md).
 
-*(Code: `backend/domain/governance.py`)*
+## Reproduce and interpret
 
----
+Use **Reference replay** at `/#/decision-demo` for the fixed example. It passes an authored interpretation through validation, triage and planning without a model call. Live Gemini mode uses the same case but its actual interpretation must be inspected.
 
-## The whole example on one line
+`DATA_BACKEND=local python -m scripts.demo` instead reads the current operational jacket records. Its outcome can be no action needed and is not guaranteed to match any older jacket example.
 
-```
-80 short  →  20 from our own stock  →  buy 60 from Supplier A for ₹1,13,000
-          →  worth it (protects ₹1,99,920 + ₹50,000 penalty)
-          →  warn: 80 units future surplus (markdown)
-          →  needs regional-manager approval
-```
-
-Run `python -m scripts.demo` and you'll see these exact numbers printed.
+See the [offline benchmark](../tests/benchmark/README.md) for independent checks of the declared sample-data policy. Passing those checks does not remove the modeling limitations above.

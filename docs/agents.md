@@ -1,215 +1,69 @@
-# details.md — What each agent does, in simple words
+# Gemini and the optional ADK agent
 
-This file explains the **"How the agent is wired (ADK)"** part of [blueprint.md](blueprint.md) in the simplest possible way.
+## Where AI contributes
 
-If that diagram felt confusing, read this file first. No prior ADK knowledge needed.
+A notice saying a strike was cancelled can contain the same words as an active disruption. Gemini interprets the supplied meaning and explains its relevance to known shipment routes. Python then calculates the order impact and recovery proposal.
 
----
-
-## 1. Three words you must know first
-
-Everything below is built from only these three ideas.
-
-| Word | Think of it as | In our project |
+| Path | AI responsibility | Code responsibility |
 |---|---|---|
-| **Agent** | An **employee** who can think and decide | A Gemini-powered worker with one specific job |
-| **Tool** | A **button the employee is allowed to press** | A normal Python function (e.g. "calculate shortage") |
-| **ADK** | The **office manager** that makes employees work in order | Google's Agent Development Kit — the library that runs our agents |
+| Signal scan | One interpretation for every supplied active shipment. | Validate the batch, apply policy, save assessments and calculate exposures. |
+| Plan explanation | Explain the already-calculated proposal. | Calculate shortage, suppliers, money, surplus and approval tier. |
+| Per-plan questions | Answer from assembled plan/business context. | Supply authoritative records and computed financial context. |
+| Global assistant | Explain the network and answer questions from supplied context. | Assemble business records and any external context used by that request. |
+| Decision walkthrough | Interpret a supplied synthetic notice in live mode. | Isolate the snapshot, validate the result and calculate the outcome. |
 
-> An agent **cannot** do anything by itself. It can only *think* and *press the buttons (tools) we gave it*. That is the whole safety model.
+The main application uses [direct Gemini REST calls](../backend/ai/gemini.py). There are no sequential triage/recovery/governance ADK agents in that workflow.
 
----
+## Structured shipment interpretation
 
-## 2. The one-line big picture
+The [strict output models](../backend/models/decision.py) define:
 
-> A shipment is delayed → **2 agents** look at it one after another → they produce **one recovery plan** → plain code picks who must approve it → a human approves → the system books the replacement stock.
+- `shipment_id`
+- `status`: affected, unaffected or unknown
+- `event_status`: active, planned, cancelled, none or uncertain
+- `reason`
+- `evidence[]`: supplied signal IDs and exact excerpts
+- `unresolved_fields[]`
 
-That's it. Everything else is detail.
+The request sends a portable JSON schema subset through `generationConfig.responseFormat.text`. Full Python validation still checks types, constraints and fields. The parser rejects missing, duplicate or unknown shipment IDs, unsupported references, non-exact excerpts, stale cited evidence and affected decisions without route-linked support. Unknown decisions require unresolved information.
 
----
+These checks validate structure and references, not universal factual correctness. The model can still misunderstand a valid excerpt.
 
-## 3. Meet the team (our 2 agents)
+## Applying assessments safely
 
-Imagine a small 2-person team sitting in a supply-chain office. A delay report lands on the first person's desk, and it moves down the line.
+A valid affected interpretation can flag a shipment at risk. Unknown output does not silently clear a previous risk flag. An unavailable batch records a failed latest attempt while preserving the earlier assessment.
 
-```mermaid
-flowchart LR
-    IN["Delay report<br/>comes in"] --> A1
-    A1["1. Triage Agent<br/>'Does this even matter?'"] --> A2
-    A2["2. Recovery Agent<br/>'How do we fix it?'"] --> OUT["Finished plan<br/>(approver picked by plain code)<br/>shown to human"]
+A deterministic severe-route policy can retain risk despite an unaffected interpretation. A validated cancellation can exclude its cited notice, but does not suppress an independent attack or other severe source. This is a bounded policy, not a complete event-revision system. The UI distinguishes policy overrides from the model's interpretation.
+
+Current evidence windows are three hours for weather and 72 hours for news/notices, with a five-minute future-time tolerance. Gemini receives up to six current evidence records per location. Full remaining-leg timing is not modeled.
+
+## Resilience and quota use
+
+The REST helper tries configured models and keys within a shared nominal timeout budget. Unavailable, quota-limited or retired paths can fall through to another configured path. Successful responses identify the actual model. Cooldowns are process-local.
+
+Explanations/chat can return labelled local fallback text. Shipment interpretation returns unavailable rather than inventing an assessment. Live decision walkthrough mode never substitutes its authored reference answer after a model failure.
+
+A fallback is not successful AI inference, and loading animations are not execution traces. Live accuracy requires a labelled semantic evaluation; mocked tests do not establish it.
+
+## The optional ADK path
+
+[agent.py](../backend/agent/agent.py) creates one `LlmAgent`, `signal_agent`, also exported as `root_agent`. Only these tools are registered:
+
+- `weather_risk_tool(location_id)`
+- `news_scan_tool(location_id)`
+
+Other wrappers exist in [tools.py](../backend/agent/tools.py), but their existence does not mean the agent invokes them. The web assistant and monitor do not call this ADK object.
+
+To run it separately after [setup](start.md):
+
+```bash
+uv run adk run backend/agent
 ```
 
----
+It needs `GOOGLE_API_KEY` and network/model quota. Ask about weather or disruption news near a known location. It is not an approval or financial execution agent.
 
-### Agent 1 — Triage Agent 🔍 *"Does this even matter?"*
+## Rules for future AI integrations
 
-**The problem it solves:** Every day there are *thousands* of delays, storms, strikes and port notices. 99% of them do not hurt us. A human cannot read all of them.
+Keep domain calculations in Python. Validate supplied IDs and treat external text as untrusted data. Add read-only tools only when a real use case needs them. Keep approval separate from model output, and test missing/conflicting evidence and unavailable-model behavior.
 
-**Its one job:** Throw away the noise. Keep only the delays that will cause a **real stockout** or a **penalty**.
-
-| | |
-|---|---|
-| **Gets** | Raw news / port notices + our list of active shipments |
-| **Does** | Reads the messy text, pulls out *what happened, where, when*, then checks: does this actually touch one of our shipments? |
-| **Gives** | A short list: "These 2 shipments are genuinely in danger." |
-| **Tool it presses** | `exposure_tool` → tells it how many units we are actually short |
-| **Why Gemini is needed** | News is written in free, messy human language. Normal code cannot read *"operations at the terminal remain suspended until further notice."* Gemini can. |
-
-**Example:** 50 news items come in. 49 are irrelevant (wrong port, old incident, different country). Agent 1 passes **1** forward.
-
----
-
-### Agent 2 — Recovery Agent 🛠️ *"How do we fix it?"*
-
-**The problem it solves:** Knowing you'll be short 80 jackets is useless. You need the *best* way to get 80 jackets.
-
-**Its one job:** Build the actual rescue plan — and make sure the cure isn't worse than the disease.
-
-It presses its buttons in a smart order:
-
-| Step | Tool it presses | The question it answers |
-|---|---|---|
-| 1 | `network_balance_tool` | "Do **we** already have these units in another warehouse or dark store?" *(free — always check first)* |
-| 2 | `supplier_tool` | "If not, who can sell them to us, how many, by when, at what price?" |
-| 3 | `margin_tool` | "Does this fix cost more than the profit we're saving?" *(if yes → reject it)* |
-| 4 | `surplus_tool` | "When the late shipment finally arrives, will we be stuck with extra stock?" |
-
-| | |
-|---|---|
-| **Gets** | The shortlist from Agent 1 |
-| **Gives** | One recommended option + the rejected ones + a plain-English reason for each |
-| **Why Gemini is needed** | There are many valid options. Gemini **compares trade-offs and writes the explanation** a manager can actually read. |
-
-> ⚠️ Important: Gemini **does not calculate the money**. It asks the tool, and the tool does the math in normal Python. Gemini only *chooses and explains*.
-
----
-
-### Who approves? — plain code, not an agent 🧑‍⚖️
-
-**The problem it solves:** A ₹5,000 fix shouldn't wait for the CFO. A ₹50,00,000 fix must **never** be auto-approved.
-
-This is a fixed rule in `backend/domain/governance.py`. No AI is involved, so the answer is the same every time. The planner runs it on every plan, using the recovery cost:
-
-| Recovery cost | Tier | Default approver |
-|---|---|---|
-| up to ₹50,000 | `local_planner` | Warehouse Operations Manager |
-| up to ₹5,00,000 | `regional_manager` | Regional Supply Chain Manager |
-| above that | `executive` | Head of Supply Chain |
-
-The thresholds and the approvers' titles and emails live in `backend/core/config.py` (`GOVERNANCE_TIERS`, `APPROVERS`). Set real addresses with `APPROVER_LOCAL_EMAIL`, `APPROVER_REGIONAL_EMAIL` and `APPROVER_EXECUTIVE_EMAIL` in `.env`.
-
-> Nothing here approves anything. It only decides *whose inbox it lands in*. A human always presses the final button.
-
----
-
-## 4. So what is the "root agent"?
-
-The root agent is **not** a fourth thinker. It is just the **conveyor belt**.
-
-In ADK it's a `SequentialAgent`, which means exactly one thing:
-
-> "Run Agent 1. Then give its output to Agent 2."
-
-That's the entire job. Simple hand-off, in order.
-
-```mermaid
-flowchart TB
-    ROOT["root_agent<br/>(SequentialAgent = just the conveyor belt)"]
-    ROOT --> S1["Step 1 — Triage Agent"]
-    S1 -->|passes its result| S2["Step 2 — Recovery Agent"]
-    S2 -->|passes its result| SAVE[("Save plan to Firestore")]
-```
-
-**Why split into 2 instead of one big agent?** Three reasons:
-1. One agent with 10 jobs gets confused and hallucinates. Two agents with 1 job each stay accurate.
-2. You can test and fix each one separately.
-3. When a judge asks *"what does your AI actually do?"* — you have 3 clear answers.
-
----
-
-## 5. What is a "tool", really?
-
-This is the part people usually get stuck on. A tool is **just a normal Python function**. Nothing magic.
-
-```python
-def exposure_tool(sku: str, warehouse_id: str, due_date: str) -> dict:
-    """Returns how many units we will be short of for this SKU by the due date."""
-    return calculate_exposure(sku, warehouse_id, due_date)   # plain math in domain/
-```
-
-Two things make it usable by an agent:
-- **Type hints** (`sku: str`) → so the agent knows what to pass in.
-- **The docstring** → ADK shows this line to Gemini, and Gemini reads it to decide *"ah, this is the function I need right now."*
-
-So the docstring is not a comment for humans. **It is the instruction the AI reads.** Write it clearly.
-
----
-
-## 6. The golden rule: who does what
-
-This is the single most important idea in our whole design.
-
-| Job | Who does it | Why |
-|---|---|---|
-| Read messy news text | 🤖 **Gemini** | Only AI can understand free-form human language |
-| Decide if it's relevant | 🤖 **Gemini** | Needs judgement |
-| Compare options & explain | 🤖 **Gemini** | Needs reasoning + writing |
-| **Calculate numbers** | 💻 **Normal Python** (`domain/`) | Must be 100% correct, every single time |
-| **Write to the database** | 💻 **Normal Python** (`domain/`) | Must be safe and happen exactly once |
-| **Final approval** | 🧑 **Human** | Money is involved |
-
-> **Say this in your demo:** *"Gemini decides and explains. Deterministic code does the math and the writes. A human approves the money."*
->
-> Judges love this, because an AI that invents stock numbers is a broken product.
-
----
-
-## 7. One full story, with real numbers
-
-Follow our jacket example all the way through:
-
-| # | Who | What happens |
-|---|---|---|
-| 1 | ⏰ Cloud Scheduler | Wakes the worker up (every 30 min) |
-| 2 | 👷 Worker | Reads active shipments, fetches news, starts the root agent |
-| 3 | 🔍 **Triage Agent** | Reads a port suspension notice → it hits shipment `SHP-001` (500 jackets) |
-| 4 | 🔍 → `exposure_tool` | We have 120, we owe 200 by 16 Oct → **short 80 units** ✅ real problem |
-| 5 | 🛠️ **Recovery Agent** → `network_balance_tool` | Any of our own warehouses have spare? → No |
-| 6 | 🛠️ → `supplier_tool` | Supplier A: 90 units, arrives 15 Oct ✅ · Supplier B: only 30 ❌ · Supplier C: arrives 20 Oct ❌ too late |
-| 7 | 🛠️ → `margin_tool` | Cost = ₹1,49,000. Is the order's margin bigger? → ✅ worth it |
-| 8 | 🛠️ → `surplus_tool` | The late 500 will still arrive → ⚠️ flag future overstock |
-| 9 | 🧑‍⚖️ **Governance rule** (plain code) | ₹1.49L = medium → route to the **Regional Supply Chain Manager** |
-| 10 | 💾 Firestore | Plan saved → appears on dashboard |
-| 11 | 🧑 **Human** | Reads evidence + reason → clicks **Approve** |
-| 12 | 💻 `reservation_tool` | Books 80 units **once**, reads it back to confirm ✅ |
-| 13 | 📊 Dashboard | "80 units secured. Order protected." |
-
-Steps 3–9 happen with no human at all. The human only appears at step 11, with everything already explained.
-
----
-
-## 8. Confusions cleared up
-
-**"Are the agents separate servers?"**
-No. They are Python objects inside one package, running in one Cloud Run service.
-
-**"Does the agent talk to Firestore directly?"**
-No. It calls a tool, and the tool talks to Firestore. The agent never touches the database.
-
-**"Can the AI buy stock on its own?"**
-No. Agents only *propose*. Booking happens after a human clicks approve, in `domain/reservations.py`.
-
-**"What if Gemini makes something up?"**
-It can only act through our tools, and tools reject bad input. It cannot invent a supplier, a price, or a quantity — those come from the database.
-
-**"Where do I start coding?"**
-Start with `domain/exposure.py` (pure math + a test). No AI needed. Add the agent once the math is proven correct.
-
----
-
-## 9. Thirty-second summary
-
-- **2 agents**, each with **one job**: *is it serious?* → *how do we fix it?* Then a plain-code rule picks *who signs off*.
-- **root_agent** just runs them in order. It doesn't think.
-- **Tools** are plain Python functions; their docstring is what the AI reads.
-- **Gemini reasons and explains. Python calculates and writes. A human approves.**
+See [roadmap](roadmap.md) for live evaluation and optional assistant-tool integration.

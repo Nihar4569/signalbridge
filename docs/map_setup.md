@@ -1,105 +1,58 @@
-# map_setup.md — The map tiles (and the "API KEY REQUIRED" message)
+# Map configuration and meaning
 
-## Why you saw "API KEY REQUIRED"
+The current frontend uses Leaflet with OpenStreetMap raster tiles. It does not use Google Maps and needs no map API key for its default provider.
 
-The map background is made of **tiles** served by a map provider. The first
-version used **CARTO** dark tiles, and CARTO now requires a free account + API
-key — so without one, their tiles show a **"API KEY REQUIRED"** watermark.
+## What the map represents
 
-## The fix (already applied): free, no key
+Routes, locations and alerts come from `GET /map`. Shipment progress is derived from stored departure/arrival dates and animated along a schematic polyline. It is not live GPS, AIS or carrier telemetry. A displayed arrival can be a stored scenario assumption, not a verified carrier prediction.
 
-The dashboard now uses **OpenStreetMap** tiles by default, with a dark CSS filter
-so they match the theme. These need **no API key and no signup** — the watermark
-is gone and it works out of the box, including when deployed.
+Colors reflect the application's shipment-health policy. A recovery/covered indication is not independent proof that stock was purchased or delivered.
 
-So **you don't need to do anything.** The map just works.
+## Current tile configuration
 
-> OpenStreetMap asks that you keep usage reasonable (it's donated infrastructure).
-> For a prototype/demo this is fine. For a high-traffic production app, use one of
-> the keyed providers below.
+[MapView.jsx](../frontend/src/components/MapView.jsx) reads `window.SIGNALBRIDGE_TILES`, falling back to:
 
----
+```javascript
+{
+  url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: "© OpenStreetMap contributors",
+  className: "sb-dark-tiles"
+}
+```
 
-## Want a nicer / branded dark map? Get a free key
+This documents the checked-in URL, not a recommendation that its subdomain pattern is the latest provider preference. OpenStreetMap currently recommends the canonical `https://tile.openstreetmap.org/{z}/{x}/{y}.png` URL. A future source/configuration update can adopt it deliberately.
 
-All of these have a **free tier**. Pick one, get a key, paste it into
-`frontend/config.js`. **MapTiler is the easiest.**
+## Overriding tiles
 
-### Option A — MapTiler (recommended, easiest)
+There is no current `frontend/config.js`. That file belongs to `frontend-legacy/`.
 
-1. Go to <https://www.maptiler.com/> and click **Sign up** (free).
-2. Verify your email and log in.
-3. Open **Account → API keys** (or the "Keys" tab).
-4. Copy your **API key** (a short string).
-5. Pick a dark style URL. A good one is `dataviz-dark`. Your tile URL is:
-   ```
-   https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=YOUR_KEY
-   ```
-6. In `frontend/config.js`, uncomment the block and paste it:
-   ```js
-   window.SIGNALBRIDGE_TILES = {
-     url: "https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=YOUR_KEY",
-     attribution: "© MapTiler © OpenStreetMap contributors"
-   };
-   ```
-7. Refresh the page. Done — no dark filter needed (the style is already dark).
+To intentionally configure another provider, define the global before the module script in `frontend/index.html`, or implement a deliberate configuration mechanism. Example shape:
 
-Free tier: ~100,000 tile loads/month, which is plenty for a demo.
+```html
+<script>
+  window.SIGNALBRIDGE_TILES = {
+    url: "https://YOUR-PROVIDER/{z}/{x}/{y}.png?key=YOUR-PUBLIC-MAP-KEY",
+    attribution: "YOUR-PROVIDER-ATTRIBUTION"
+  };
+</script>
+```
 
-### Option B — CARTO (the one that showed the watermark)
+Omitting `className` avoids applying the default tile filter to an already-styled basemap. Rebuild/redeploy after changing the source. The sample is an integration instruction, not a provider already enabled.
 
-1. Go to <https://carto.com/> → **Sign up** (free trial / developer).
-2. In the dashboard, create an **API Access Token / key**.
-3. Use their basemap style URL with your token (see their "Basemaps" docs). It
-   looks like:
-   ```
-   https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?...token...
-   ```
-4. Put it in `config.js` as in Option A.
+Browser map tokens are public and must be restricted appropriately. Never reuse a private Gemini or service-account credential in frontend configuration.
 
-### Option C — Stadia Maps (Alidade Smooth Dark)
+## Provider policy
 
-1. Go to <https://stadiamaps.com/> → **Sign up** (free).
-2. Create a **property** and an **API key**; add `localhost` and your deploy
-   domain to the allowed domains.
-3. Tile URL:
-   ```
-   https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key=YOUR_KEY
-   ```
-4. Put it in `config.js`.
+OpenStreetMap public tiles are donated infrastructure with usage conditions, attribution and caching requirements, not a guaranteed production SLA. Do not bulk-download or prefetch them indiscriminately. Review the [official tile policy](https://operations.osmfoundation.org/policies/tiles/) before scaling usage.
 
-### Option D — Google Maps (most setup, needs billing)
+Other providers have their own licences, quotas and key restrictions. No provider-specific free-tier allowance is guaranteed here.
 
-Google Maps tiles need a **Google Cloud project with billing enabled** and the
-**Map Tiles API**, and Leaflet isn't the native fit (Google has its own JS SDK).
-Only go here if you specifically want Google branding. Steps:
-1. In [Google Cloud Console](https://console.cloud.google.com/), create/select a
-   project and **enable billing**.
-2. Enable the **Map Tiles API** (and/or Maps JavaScript API).
-3. **APIs & Services → Credentials → Create credentials → API key**.
-4. Restrict the key (HTTP referrers = your domains).
-5. Integrate per Google's Map Tiles docs. (For this prototype, MapTiler is far
-   simpler and looks just as good.)
+## Troubleshooting
 
----
+- Confirm that `GET /map` succeeds and contains route points.
+- Inspect tile requests and provider policy/errors separately from API errors.
+- Keep attribution visible.
+- Missing coordinates or route points can omit a marker/route.
+- A moving marker does not validate a real shipment's location.
 
-## How to apply a key (summary)
-
-1. Get a key from one provider above.
-2. Open `frontend/config.js`.
-3. Uncomment the `window.SIGNALBRIDGE_TILES = { ... }` block and paste your tile
-   URL + attribution. Omit `className` (premium dark styles don't need the
-   filter).
-4. Refresh (local) or redeploy (Firebase Hosting).
-
-To go back to the free default, just comment the block out again.
-
----
-
-## Keep keys safe
-
-- Map keys are **public** (they ship in the browser) — that's normal for map
-  tiles. Protect them with **domain/referrer restrictions** in the provider's
-  dashboard so others can't reuse them.
-- Do **not** reuse your Gemini or Google Cloud keys for maps. Use a separate,
-  restricted map key.
+Google Maps or carrier-based positions remain optional future integrations, not current project usage.

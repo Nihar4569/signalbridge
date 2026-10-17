@@ -1,49 +1,64 @@
-# Evidence-backed decisions and the judge walkthrough
+# Evidence-backed decision walkthrough
 
-Open **Decision walkthrough** in the sidebar, or `/#/decision-demo` on the deployed frontend.
+The walkthrough compares an active channel closure with a cancelled strike using the same synthetic retail records. It makes the relationship between evidence interpretation and calculated recovery explicit.
 
-The walkthrough compares two synthetic notices with the same retail order, stock and supplier offers. A suspension creates an 80-unit shortage under the declared delay assumption. The calculated proposal uses 20 internal units and 60 units from a backup supplier for an external cost of ₹3,700. A cheaper sea offer crosses the affected channel and is rejected. The cancelled-strike notice creates no additional shortage or purchase proposal. An unrelated inland shipment remains excluded.
+Open `/#/decision-demo` in the frontend, or choose **Decision walkthrough** in the sidebar. For local development, use [http://localhost:3000/#/decision-demo](http://localhost:3000/#/decision-demo).
 
-## Reference replay and live Gemini
+## Fixed case and expected reference outcomes
 
-- **Reference replay** uses an authored interpretation. It makes no model call and is labelled accordingly. The response still passes the same evidence validator, triage and planner as the live mode.
-- **Assess with Gemini** sends the supplied synthetic notice and route IDs to the configured Gemini model. It validates the actual response and displays its real model source and elapsed time.
-- Missing keys, quota errors, malformed output or incomplete results produce an unavailable/review state. Live mode never substitutes the reference answer.
-- Every run creates a new `SnapshotStore`. It never reads or resets the operational Firestore tenant, creates a hold, sends an email or executes a purchase. Visiting the walkthrough directly also skips the operational page-load scan.
+[Fixture](../fixtures/decision_demo/cases.json): 100 coffee units due, 20 on-hand, 80 inbound, 20 internal units elsewhere and two supplier offers. Scenario clock: **17 October 2026, 09:00 UTC**.
 
-The scenario clock is fixed at **17 October 2026, 09:00 UTC**. Source age, quote expiry, demand and disrupted-arrival calculations use that same clock, so the example remains reproducible during judging. Actual execution time is displayed separately. All places, notices and retailer records in this example are synthetic.
+| Notice | Reference result |
+|---|---|
+| Active channel closure | 80-unit shortage under the declared delayed-arrival assumption. Use 20 internal units and 60 supplier units for ₹3,700 external cost. Reject the cheaper offer crossing the disrupted passage. |
+| Strike cancelled before starting | Zero shortage under the expected arrival. No additional recovery purchase proposal. |
 
-## Operational decision brief
+The independent inland shipment is unrelated to the fictional passage in both examples. All notices, places and business records here are synthetic.
 
-The recovery modal reads `GET /plans/{sku}/{location_id}/brief`. This joins the saved shipment interpretation, exact evidence excerpts, source publication/fetch times and deterministic plan fields. The response includes the plan from the same materialized read snapshot and assessment clock, so the brief's figures match the displayed plan. It does not initiate another model call or change risk state.
+## Reference replay versus live Gemini
 
-On each successful scan, the worker stores a validated `risk_assessment` with each shipment. An older flag without this metadata appears as unverified, and its related signals are marked context rather than model citations. A failed latest attempt preserves the previous risk and evidence while exposing the failed attempt. A changed or stale source requires review.
+- **Reference replay** uses an authored interpretation with no model call. It still exercises the evidence validator, triage policy and deterministic planner.
+- **Assess with Gemini** sends the supplied notice and route records to the configured model. It displays actual source/model metadata when successful.
+- Missing keys, quota errors or invalid/incomplete output produce unavailable/review states. Live mode never silently substitutes the reference answer.
+- A model's valid response is not guaranteed to agree with the authored expectation. Inspect evidence, uncertainty and policy overrides.
 
-## Validation and decision boundaries
+Every run creates a private `SnapshotStore`. It does not read/reset the operational Firestore tenant, reserve stock, send email or execute a purchase. Visiting this frontend route directly skips the operational page-load scan.
 
-Gemini returns one typed interpretation for every active shipment: affected, unaffected or unknown, event status, reason, supplied evidence IDs, exact quotes and unresolved fields. Python rejects missing/duplicate/unknown shipment IDs, unsupported evidence, invented quotes, invalid statuses and affected decisions with no route-linked evidence. Unknown results do not clear an existing risk.
+The fixed scenario clock controls source age, offer validity and planning assumptions. Actual execution timestamp/duration are separate. The displayed duration covers the walkthrough request's work, not isolated model inference only.
 
-The request uses the Gemini REST API's `generationConfig.responseFormat.text` schema contract with the `APPLICATION_JSON` MIME enum. It sends a portable schema subset because configured models reject some Pydantic constraints. Full strict validation, field limits and quote/ID checks still run in Python. The entire model fallback chain shares one time budget. See the [official API reference](https://ai.google.dev/api/generate-content#TextResponseFormat).
+## API contract
 
-The existing severe-route safety rule remains in place. A validated cancellation can exclude its cited notice from that rule, while an independent attack/closure continues to flag risk. The interface shows policy overrides separately from Gemini's interpretation.
+| Endpoint | Purpose |
+|---|---|
+| `GET /decision-demo/cases` | Case catalogue, fixed clock, synthetic flag and whether a Gemini key is configured. |
+| `POST /decision-demo/cases/{case_id}/run` | Run with `{"mode":"reference"}` or `{"mode":"gemini"}`. |
 
-Python calculates all quantities and money. Supplier holds use only the external remainder. Quote validity is checked at the assessment time. Approval rejects a plan whose configured recovery-benefit check fails. The UI labels revenue exposure and estimated recovery benefit rather than claiming realized profit.
+Configured keys do not establish available quota or successful model access.
 
-## Scope
+[The route](../backend/app/routers/decision_demo.py) returns assessment state, plan, brief, shipment assessments, mode, scenario clock and actual execution metadata.
 
-Arrival delay comes from an explicit scenario assumption, not an AI-predicted ETA. Internal availability remains on-hand minus reservations, with transfer cost/time and donor demand requiring review. The walkthrough is read-only and intentionally has no approval action. Operational supplier execution remains simulated through the existing adapter.
+## Operational evidence brief
 
-These changes reuse the existing React, FastAPI, Gemini, domain and store layers. They add no managed services, databases or agent framework migration.
+`GET /plans/{sku}/{location_id}/brief` joins saved shipment assessments, exact source excerpts, timestamps and a plan calculated from the same materialized input snapshot/clock. It does not initiate a model call or alter risk.
 
-## Run and test
+The recovery modal loads that brief and its embedded plan. Its separate explanation request can rebuild from a different read time, so it is not a version-locked explanation/approval transaction.
 
-```bash
-uv run python -m pytest -q
-uv run python -m scripts.demo
-cd frontend
-npm run build
-```
+Older shipment flags without evidence metadata appear unverified. Failed latest attempts preserve earlier evidence/risk while exposing failure. Stale or changed sources request review.
 
-`tests/test_decision.py` covers the evidence contract, active/cancelled outcomes, an unrelated route, independent conflicting disruption, private replay isolation, expiry, external reservation quantities and unavailable-AI handling. Mocked tests establish integration behavior, not live model accuracy.
+## Interpretation checks and policy
 
-For a live smoke check, start the usual API with its existing Gemini key, open the walkthrough and run both notices using **Assess with Gemini**. Record the actual model/status and inspect the quotes before using the result in a demo. No new key is needed for reference mode.
+Python requires complete, unique supplied shipment IDs, strict output types, known evidence IDs, exact excerpts, current cited evidence and route-linked support for affected decisions. Unknown results do not clear existing risk.
+
+The REST request uses a portable `generationConfig.responseFormat.text` schema with the `APPLICATION_JSON` enum. Python applies full validation independently of the portable subset. See [implementation](../backend/ai/gemini.py) and [output models](../backend/models/decision.py).
+
+A deterministic severe-route floor can override an unaffected result. A cited validated cancellation excludes only supported notices, not an independent attack/closure. This bounded rule is not a complete event-revision/timing model.
+
+## Scope and validation
+
+The delay is an explicit stored assumption, not an AI-predicted ETA. Internal availability is on-hand minus reserved; donor demand, transfer time/cost and full shared-stock allocation require further work. Supplier approval elsewhere in the application remains simulated.
+
+[tests/test_decision.py](../tests/test_decision.py) covers the evidence contract, active/cancelled outcomes, unrelated routes, conflicting severe evidence, snapshot isolation, expiry, supplier-only quantities and unavailable-AI handling.
+
+Use the [documented offline test command](start.md). Reference tests do not establish live model accuracy. Only select live Gemini mode when intentionally using available model quota.
+
+See [calculations](calculation.md) and [roadmap](roadmap.md).
