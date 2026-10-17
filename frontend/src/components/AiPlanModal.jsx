@@ -165,10 +165,10 @@ function PlanView({ plan, ai, sku, loc }) {
           </thead>
           <tbody>
             {(plan.supplier_options || []).map((o) => (
-              <tr key={o.offer_id}>
+              <tr key={o.offer_id} className={o.feasible ? "" : "row-muted"}>
                 <td className="mono">{o.offer_id}</td>
-                <td>{o.qty || "—"}</td>
-                <td>{o.cost_minor ? rupees(o.cost_minor) : "—"}</td>
+                <td>{o.qty ? o.qty.toLocaleString("en-IN") : "—"}</td>
+                <td>{o.cost_minor != null ? rupees(o.cost_minor) : "—"}</td>
                 <td>{day(o.arrives_at)}</td>
                 <td>
                   {o.feasible ? (

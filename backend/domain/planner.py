@@ -163,10 +163,14 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
         in_time = exposure_mod.parse_ts(offer["delivery_latest"]) <= deadline
         enough = int(offer["available_qty"]) >= remainder
         crosses = [blocked[i] for i in offer.get("route_location_ids") or [] if i in blocked]
+        available = int(offer["available_qty"])
         feasible = in_time and enough and not crosses and remainder > 0
-        cost = (
-            remainder * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
-            if feasible
+        # Show an illustrative contribution + cost for EVERY offer (not only the
+        # chosen one), so the comparison in the UI is transparent.
+        offer_qty = remainder if feasible else min(available, remainder)
+        offer_cost = (
+            offer_qty * int(offer["unit_price_minor"]) + int(offer["shipping_minor"])
+            if offer_qty > 0
             else None
         )
         if feasible:
@@ -175,8 +179,10 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
             reason = f"Routes through a chokepoint that is delaying our shipments ({', '.join(crosses)})."
         elif not in_time:
             reason = "Arrives after the deadline."
+        elif available < remainder:
+            reason = f"Only {available} units available; {remainder} needed."
         else:
-            reason = "Not enough stock."
+            reason = "No units needed."
         options.append(
             {
                 "offer_id": offer["offer_id"],
@@ -184,8 +190,9 @@ def build_plan(store, *, sku: str, location_id: str) -> dict:
                 "ships_from": offer.get("ships_from"),
                 "mode": offer.get("mode"),
                 "route": offer.get("route"),
-                "qty": remainder if feasible else 0,
-                "cost_minor": cost,
+                "available_qty": available,
+                "qty": offer_qty,
+                "cost_minor": offer_cost,
                 "arrives_at": offer["delivery_latest"],
                 "feasible": feasible,
                 "reason": reason,

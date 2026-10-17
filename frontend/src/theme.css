@@ -402,6 +402,8 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; color: var(--foreground-strong); f
 .table td { padding: 12px; border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover td { background: color-mix(in srgb, var(--foreground) 4%, transparent); }
+/* Rejected supplier options: show their numbers, but dimmed so the chosen row stands out. */
+.table tr.row-muted td:not(:last-child) { color: var(--subtle); }
 .mono { font-family: var(--mono); font-size: 12.5px; }
 
 /* ============================ dialog ============================ */

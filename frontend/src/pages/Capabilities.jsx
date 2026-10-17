@@ -10,10 +10,11 @@ const FEATURES = [
   ["🌦️", "Live Weather & News", "Open-Meteo and GDELT, filtered by location, feeding the agent real-world signals.", true],
   ["✨", "Gemini Recovery Plans", "Gemini explains every plan in plain English, grounded in deterministic calculations.", true],
   ["📧", "Automated Fulfilment", "On approval: reserves stock, raises the PO and transfer, and emails every party.", true],
+  ["🔥", "Cloud Firestore", "All shipments, stock, orders, recovery plans and live signals persisted in Google Firestore.", true],
   ["⭐", "Customer Priority (VIP)", "Allocate scarce replacement stock to VIP accounts and strict-SLA contracts first.", false],
   ["🧾", "Penalty & Insurance", "Bundle GPS logs, delay notices and costs, then auto-draft the penalty or insurance claim.", false],
   ["🥬", "Perishables Rescue", "Reroute at-risk fresh food or medicine to a nearby discounter or charity before it spoils.", false],
-  ["🔥", "Firestore & Auth", "Cloud persistence, user roles and a complete, queryable audit trail.", false],
+  ["🔐", "Auth & Audit Trail", "User roles and a complete, queryable audit trail of every approval.", false],
   ["📱", "Mobile Alerts", "Push notifications so planners can approve a recovery from their phone.", false],
 ];
 

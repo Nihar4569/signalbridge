@@ -25,7 +25,7 @@ signal matches — a pre-seeded delay_state by itself does not.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..core import config
@@ -33,6 +33,14 @@ from . import exposure as exposure_mod
 from . import planner as planner_mod
 
 _ACTIVE = ("in_transit", "planned")
+
+# A confirmed, severe disruption on a shipment's route always flags it at risk,
+# even if Gemini judged it safe. Mild words (congestion, delayed) are excluded.
+_SEVERE_KEYWORDS = (
+    "attack", "attacked", "blockade", "blocked", "closed", "closure",
+    "suspended", "strike", "missile", "drone", "seized", "shutdown",
+)
+_SEVERE_WITHIN_DAYS = 3
 
 
 def exposure_id(sku: str, location_id: str) -> str:
@@ -105,13 +113,49 @@ def _matching_reasons(
     return reasons
 
 
+def _severe_locations(signals: list[dict]) -> dict[str, str]:
+    """Places with a confirmed severe disruption right now: {location_id: reason}.
+
+    Severe = recent news whose headline names an attack / blockade / closure /
+    strike, or a high-risk (gale) weather reading. This is the deterministic
+    floor the LLM is not allowed to override.
+    """
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=_SEVERE_WITHIN_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")
+    out: dict[str, str] = {}
+    for signal in signals:
+        payload = signal.get("payload") or {}
+        loc_id = payload.get("location_id")
+        if not loc_id:
+            continue
+        if signal.get("source") == "open-meteo":
+            if payload.get("risk") == "high":
+                out.setdefault(loc_id, "severe weather (gale) on the route")
+        elif (signal.get("published_at") or "") >= cutoff:
+            title = (signal.get("title") or "")
+            if any(word in title.lower() for word in _SEVERE_KEYWORDS):
+                out[loc_id] = title[:200]
+    return out
+
+
+def _route_location_ids(shipment: dict, lanes: dict) -> set[str]:
+    """Every place a shipment passes: its lane's waypoints plus its destination."""
+    lane = lanes.get(shipment.get("lane_id")) or {}
+    ids = {p.get("location_id") for p in lane.get("points", []) if p.get("location_id")}
+    ids.add(shipment.get("destination_location_id"))
+    return ids
+
+
 def _zone_for_shipment(
     shipment: dict,
     signals: list[dict],
     locations: dict,
     judgments: list[dict] | None,
+    lanes: dict,
+    severe: dict[str, str],
 ) -> tuple[str, str | None]:
-    """Gemini's judgment wins when the worker passed one.
+    """Gemini's judgment wins when the worker passed one — except a confirmed
+    severe disruption on the route always flags "risk" (safety net), so the
+    decision never silently flips just because the LLM wavered.
 
     judgments is None only when Gemini did not run. Then the keyword match
     is a fallback so a missing API key does not leave every shipment stale.
@@ -123,11 +167,17 @@ def _zone_for_shipment(
             if item.get("risk") is True:
                 reason = (item.get("reason") or "gemini").strip()
                 return "risk", reason[:240] or "gemini"
-            return "safe", None
-        return "safe", None
-    reasons = _matching_reasons(shipment, signals, locations)
-    if reasons:
-        return "risk", reasons[0]
+            break  # Gemini said safe — fall through to the deterministic net
+    else:
+        reasons = _matching_reasons(shipment, signals, locations)
+        if reasons:
+            return "risk", reasons[0]
+
+    # Deterministic floor: a confirmed attack / closure / gale on the route wins.
+    for loc_id in _route_location_ids(shipment, lanes):
+        if loc_id in severe:
+            place = (locations.get(loc_id) or {}).get("name", loc_id)
+            return "risk", f"Confirmed disruption on route — {place}: {severe[loc_id]}"[:240]
     return "safe", None
 
 
@@ -136,6 +186,8 @@ def _apply_shipment_risk(
     shipments: list[dict],
     signals: list[dict],
     locations: dict,
+    lanes: dict,
+    severe: dict[str, str],
     judgments: list[dict] | None = None,
 ) -> list[dict]:
     """Write risk_zone on every in-transit shipment. Returns the copies we saved."""
@@ -143,7 +195,9 @@ def _apply_shipment_risk(
     for shipment in shipments:
         if shipment.get("status") not in _ACTIVE:
             continue
-        new_zone, new_reason = _zone_for_shipment(shipment, signals, locations, judgments)
+        new_zone, new_reason = _zone_for_shipment(
+            shipment, signals, locations, judgments, lanes, severe
+        )
         # "assumed_delayed" was seeded demo data. Drop it so a stored
         # shipment cannot keep pretending a delay after this pass.
         seeded_delay = shipment.get("delay_state") == "assumed_delayed"
@@ -192,9 +246,11 @@ def run_triage(store: Any, judgments: list[dict] | None = None) -> list[dict]:
     documents written this pass.
     """
     locations = {loc["location_id"]: loc for loc in store.list("locations")}
+    lanes = {lane["lane_id"]: lane for lane in store.list("lanes")}
     signals = store.list("signals")
+    severe = _severe_locations(signals)
     _apply_shipment_risk(
-        store, store.list("shipments"), signals, locations, judgments=judgments
+        store, store.list("shipments"), signals, locations, lanes, severe, judgments=judgments
     )
     # Re-read so a shipment we just saved is the one exposure math sees.
     shipments = store.list("shipments")
