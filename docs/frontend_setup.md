@@ -1,153 +1,99 @@
-# frontend_setup.md — Run & deploy the dashboard
+# Frontend setup and deployment
 
-The dashboard is a **React app built with Vite**. It compiles to plain static
-files (`frontend/dist/`), so deployment is a single command and needs no server.
+The dashboard uses React 18, Vite 5, React Router's `HashRouter` and Leaflet. It supports light/dark themes; first use defaults to **light**, then saves the selection in local storage.
 
-**Design:** Google Material 3 dark theme (the Gemini palette), a persistent
-sidebar, and a Gemini-branded AI planning experience.
-
-```
-frontend/
-├── package.json        scripts: dev / build / preview
-├── vite.config.js
-├── index.html          app shell + fonts + Leaflet CSS
-├── public/favicon.svg  Gemini spark
-└── src/
-    ├── main.jsx        entry (HashRouter)
-    ├── App.jsx         sidebar + routes
-    ├── api.js          every backend call + money formatting
-    ├── icons.jsx       inline SVG icons + the Gemini spark
-    ├── theme.css       Material 3 design tokens & components
-    ├── components/     Sidebar, Topbar, Kpi, MapView, IncidentCard, AiPlanModal
-    └── pages/          Dashboard, Shipments, Incidents, Recoveries, Signals, Capabilities
-```
-
----
-
-## 1. First-time setup
+## Install and run
 
 ```bash
-cd signalbridge/frontend
-npm install
-```
-
-(Node 18+ required.)
-
----
-
-## 2. Run it locally
-
-You need **two terminals**: the backend serves the data, the frontend serves the UI.
-
-```bash
-# Terminal 1 — backend API (port 8000)
-cd signalbridge
-uv run uvicorn backend.app.main:app --reload --port 8000
-
-# Terminal 2 — frontend dev server (port 5173, hot reload)
-cd signalbridge/frontend
+cd frontend
+npm ci
 npm run dev
 ```
 
-Open **http://localhost:5173**.
-
-### Or preview the real production build
+The development port is **3000**, configured in [vite.config.js](../frontend/vite.config.js). Start FastAPI separately on port 8000 as described in [local setup](start.md).
 
 ```bash
-cd signalbridge/frontend
-npm run build      # outputs to dist/
-npm run preview    # serves dist/ on http://localhost:5173
-```
-
----
-
-## 3. The build command (for deployment)
-
-```bash
-cd signalbridge/frontend
 npm run build
+npm run preview
 ```
 
-Produces `frontend/dist/` (~349 kB JS → **108 kB gzipped**). That folder is the
-entire website.
+Build output is `frontend/dist/`. Preview uses **5173**, configured in [package.json](../frontend/package.json). Bundle sizes depend on the current build; there is no fixed documented size guarantee.
 
-### Pointing the build at your deployed backend
+## API base
 
-By default the app calls `http://localhost:8000`. For a deployed site, set the
-API base at build time:
+[api.js](../frontend/src/api.js) resolves the base in this order:
+
+1. `import.meta.env.VITE_API_BASE`, including an explicit empty string.
+2. `window.SIGNALBRIDGE_API`.
+3. `http://localhost:8000`.
+
+A standalone frontend build needs the API URL:
 
 ```bash
-VITE_API_BASE=https://signalbridge-api-xxxx.a.run.app npm run build
+VITE_API_BASE=https://YOUR-API-URL npm run build
 ```
 
----
+The combined Docker build sets `VITE_API_BASE=""` so API requests are same-origin. A wrong build-time API base requires a rebuild; changing a backend environment variable does not rewrite an already-built frontend bundle.
 
-## 4. Deploy to Firebase Hosting
+## Pages and assistance
 
-`firebase.json` is already configured (`public: frontend/dist` + SPA rewrites).
-
-```bash
-# one-time
-npm install -g firebase-tools
-firebase login
-cd signalbridge
-firebase use --add          # pick your Google Cloud project
-
-# every deploy
-cd frontend && VITE_API_BASE=https://YOUR-CLOUD-RUN-URL npm run build && cd ..
-firebase deploy --only hosting
-```
-
-Firebase prints your live URL (`https://your-project.web.app`).
-
-> Deploy the backend to Cloud Run first — see [manual_work.md](manual_work.md) —
-> so you know the URL to bake in.
-
----
-
-## 5. What's on each screen
-
-| Sidebar item | What it does |
+| Route | View |
 |---|---|
-| **Dashboard** | KPI tiles, the live route map with alerts, and threatened orders |
-| **Shipments** | Map + a table of every shipment (lane, carrier, ETA, progress, health) |
-| **Threatened orders** | Every order with a real shortage, each with an **AI Plan** button |
-| **Recoveries** | What was automated after each approval: timeline, actions, emails |
-| **Live signals** | Pick a port/DC → live weather (Open-Meteo) + disruption news (GDELT) |
-| **Capabilities** | 9 live features and 5 roadmap features |
-| *Coming soon* | VIP allocation, Penalty & claims, Perishables rescue, Settings |
+| `/#/` | Overview, schematic route map, alerts and threatened pairs. |
+| `/#/shipments` | Shipment records, route context, dates and derived progress/health. |
+| `/#/incidents` | Short SKU/location pairs and recovery review. |
+| `/#/recoveries` | Current process's fulfilment descriptions and timeline. |
+| `/#/signals` | Weather/news lookup for a selected location. |
+| `/#/decision-demo` | Isolated active/cancelled notice walkthrough. |
+| `/#/capabilities` | Capability and roadmap labels. |
 
-### The AI Plan experience (the centrepiece)
+The global Gemini panel supports network-wide questions. The recovery modal includes plan-specific questions, a deterministic plan and stored source evidence.
 
-Click the **✨ AI Plan** button on any threatened order:
+Sidebar VIP allocation, penalty/claims, perishables and settings entries are disabled future items. Capability labels such as live map, margin optimization and automated fulfilment do not establish carrier telemetry, actual profit optimization or physical execution. See [calculation](calculation.md) and [approval](after_plan_approval.md).
 
-1. A Gemini-branded modal opens with an animated **"thinking"** sequence.
-2. It then shows the full plan in 5 numbered steps — impact before/after,
-   internal stock used, **supplier options including the rejected ones and why**,
-   the margin verdict, surplus forecast and approval tier.
-3. **Gemini's summary** explains it in plain English.
-4. Press **Approve & execute** → the modal becomes a live fulfilment view:
-   reservation receipt, automation timeline, the PO + transfer created, and the
-   actual **emails** sent (expandable).
+## Recovery modal behavior
 
----
+The modal requests `/brief` and uses its embedded plan. If the brief fails, it attempts the plan endpoint and shows an evidence warning. It requests an explanation separately, so explanation and proposal are not one version-locked transaction.
 
-## 6. Map tiles
+It enables approval only for an awaiting-approval plan with a selected offer and positive benefit. The backend rebuilds/checks the plan again. Caller-role verification remains planned.
 
-The map uses **free OpenStreetMap tiles with a dark filter — no API key**.
-Want a premium dark basemap? See [map_setup.md](map_setup.md).
+Fulfilment UI presents generated actions and email results. Default email is simulated, and the timeline is not proof of delivery or inventory mutation.
 
----
+## Scan and loading behavior
+
+Operational frontend visits request `POST /scan`; direct walkthrough visits skip it. Scan throttling is per API process. Some loading text in conversational panels is timer-driven UI feedback, not a record of actual tool execution. Use returned model/source metadata to distinguish live AI and fallback.
+
+## Hosting choices
+
+### Combined Cloud Run service
+
+The [Dockerfile](../Dockerfile) builds React, copies `dist/` into the Python image and serves it through FastAPI. This is the current deployment shape. See [cloud setup](manual_work.md).
+
+### Optional Firebase Hosting
+
+The existing [firebase.json](../firebase.json) points Hosting to `frontend/dist`, with SPA rewrites and cache headers. This configuration does not prove a deployed Hosting site or enable Firebase Authentication.
+
+After choosing an intended project and deploying an appropriately secured API:
+
+```bash
+cd frontend
+VITE_API_BASE=https://YOUR-API-URL npm run build
+cd ..
+firebase deploy --only hosting --project YOUR_PROJECT_ID
+```
+
+This command changes cloud resources; it is a deployment instruction, not part of local testing. An independently hosted frontend also needs an appropriate API access/CORS design.
+
+## Map and legacy frontend
+
+Map defaults and overrides are described in [map setup](map_setup.md). Movement is calculated from stored dates, not live GPS/AIS.
+
+`frontend-legacy/` is the old no-build application. It is not the current source or build target.
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---|---|
-| Everything shows "—" / "API offline" | Backend isn't running, or `VITE_API_BASE` is wrong. |
-| `npm run dev` fails | Run `npm install` first; needs Node 18+. |
-| Map blank | Offline or a blocker is stopping the tile CDN. |
-| Deployed site shows no data | You built without `VITE_API_BASE`, so it's calling localhost. Rebuild with the Cloud Run URL. |
-| Blank page after deploy | Make sure `firebase.json` has `public: "frontend/dist"`. |
-
-> The previous no-build static dashboard is kept in **`frontend-legacy/`** for
-> reference. It is not used by the build and can be deleted once you're happy.
+- Confirm which port the chosen npm command reports.
+- Check `VITE_API_BASE` in the actual build environment.
+- Inspect health JSON and read errors, not only an HTTP success badge.
+- Distinguish empty, unavailable and stale data.
+- Do not assume fulfilment history survives backend restarts.

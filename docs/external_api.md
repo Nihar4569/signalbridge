@@ -1,159 +1,63 @@
-# external_api.md — The real APIs we use
+# External weather and news sources
 
-SignalBridge reads two **free, no-key** public APIs to detect real-world
-disruptions. Both let us **filter by location**, which is exactly what we need.
+External signals provide context for a shipment assessment, not carrier-confirmed delays. Normal news inputs are headlines/metadata. The application does not crawl complete articles.
 
-| API | What it gives us | Key needed? | Cost |
-|---|---|---|---|
-| **Open-Meteo** | Live weather forecast (rain, wind, storms) at any lat/lon | ❌ No | Free (non-commercial, <10k calls/day) |
-| **GDELT DOC 2.0** | Live world news, searchable by place + keyword | ❌ No | Free |
+## Weather: Open-Meteo
 
-> We deliberately picked key-free APIs so the prototype runs for anyone with no
-> signup. Paid/authenticated options (carrier tracking, Google Weather) are
-> listed at the bottom for later.
+[weather.py](../backend/adapters/weather.py) calls `https://api.open-meteo.com/v1/forecast` with coordinates, UTC and a default three-day forecast. Requested hourly variables are precipitation, wind speed, gusts and weather code.
 
-Everything fails **safe**: if an API is slow, down, or rate-limited, the adapter
-returns a clear error and the app keeps working — it never crashes.
+The adapter summarizes maximum precipitation/gusts and the maximum weather code, then applies configured thresholds:
 
----
-
-## 1. Open-Meteo — weather
-
-**What it is:** a free weather-model aggregator. You give it coordinates and the
-variables you want; it returns an hourly forecast.
-
-- **Endpoint:** `GET https://api.open-meteo.com/v1/forecast`
-- **Docs:** <https://open-meteo.com/en/docs>
-- **Filtering:** by `latitude` / `longitude` (location), chosen `hourly` variables, and `forecast_days` (time).
-
-### The exact call we make
-
-```
-GET https://api.open-meteo.com/v1/forecast
-      ?latitude=18.95
-      &longitude=72.94
-      &hourly=precipitation,wind_speed_10m,wind_gusts_10m,weather_code
-      &forecast_days=3
-      &timezone=UTC
-```
-
-### What we do with the response
-
-We scan the forecast and keep the **worst** values, then map them to one simple
-risk level:
-
-| Condition (worst in the window) | Risk |
+| Condition | Adapter risk |
 |---|---|
-| wind gust ≥ 60 km/h, or rain ≥ 20 mm, or thunderstorm code (95–99) | **high** |
-| wind gust ≥ 40 km/h, or rain ≥ 10 mm | **medium** |
-| otherwise | **low** |
+| Gusts at least 60 km/h, precipitation at least 20 mm, or code in {95, 96, 97, 99} | high |
+| Gusts at least 40 km/h or precipitation at least 10 mm | medium |
+| Otherwise | low |
 
-Thresholds live in `backend/core/config.py` (easy to tune).
+Precipitation here is the maximum returned hourly value, not the whole forecast's accumulated total. Thresholds are application policy, not a prediction of transit delay.
 
-**Code:** `backend/adapters/weather.py` → `get_weather_risk(lat, lon)`
-Returns: `{ ok, risk, max_precip_mm, max_wind_gust_kmh, worst_weather_code }`
+Failures return unknown/error states. The module also supports a multi-location helper, but the current worker uses the single-location helper per place.
 
-### Limits & terms
+Open-Meteo's free endpoint is intended for non-commercial use and currently lists limits of 600 calls/minute, 5,000/hour, 10,000/day and 300,000/month, without an uptime guarantee. Commercial use requires an appropriate plan. Reviewed 18 October 2026: [official pricing/terms](https://open-meteo.com/en/pricing). Installation/reference replay and external-source usage are different things.
 
-Free tier is **non-commercial** and asks you to stay under ~10,000 calls/day.
-Because we only check a handful of locations on a timer, we are far under that.
-Attribution: data by Open-Meteo.com. For commercial/production use, Open-Meteo
-offers a paid plan — see [manual_work.md](manual_work.md).
+## News: GDELT with Google News RSS fallback
 
----
+[news.py](../backend/adapters/news.py) searches a location phrase plus configured disruption keywords.
 
-## 2. GDELT DOC 2.0 — news
+- Primary: `https://api.gdeltproject.org/api/v2/doc/doc`.
+- Parameters include `mode=artlist`, JSON, newest-first sort, configured timespan (default 3d) and record limit (default 10).
+- The adapter spaces GDELT attempts by 5.2 seconds and pauses that provider for 300 seconds after certain failures.
+- On primary failure it tries Google News RSS search.
+- Successful results are cached for 600 seconds within the process.
+- Returned metadata identifies the provider. Error handling does not establish a provider SLA.
 
-**What it is:** a global news index that monitors coverage in 65 languages. You
-search it like a search engine, with powerful filters.
+Discovery keywords include disruption and security-event terms. They are a search filter, not a semantic classifier: a cancelled-strike headline can still match, while some useful paraphrases may not be discovered.
 
-- **Endpoint:** `GET https://api.gdeltproject.org/api/v2/doc/doc`
-- **Docs:** <https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/>
-- **Filtering:** by phrase (a place name), boolean `OR`, `sourcecountry:`, `theme:`, `timespan`, newest-first `sort`.
+Google News RSS is an external source, not a managed Google Cloud AI service or proof of web grounding inside Gemini. Availability and provider terms must be respected.
 
-### The exact call we make
+GDELT discovery time and RSS publication metadata do not prove the underlying event's occurrence time. Freshly fetched historical reporting may still concern an old event.
 
-For a location like *Nhava Sheva*, we build a query that means
-**"this place" AND "something went wrong"**:
+## Where the adapters are used
 
-```
-GET https://api.gdeltproject.org/api/v2/doc/doc
-      ?query="Nhava Sheva" (strike OR closure OR closed OR suspended OR
-              congestion OR blocked OR shutdown OR cyclone OR storm OR flood)
-      &mode=artlist
-      &format=json
-      &timespan=3d
-      &maxrecords=10
-      &sort=datedesc
-```
+| Caller | Behavior |
+|---|---|
+| `GET /signals/{location_id}` | Live lookup for a selected place. Does not itself run full triage. |
+| Scan worker | Reads selected locations, fetches sources, ingests signals and invokes Gemini interpretation. |
+| Optional ADK agent | Registered weather/news tools call the adapters. |
+| Assistant context helpers | Can enrich relevant questions with external context; inspect the actual returned source metadata. |
 
-The keyword list lives in `backend/core/config.py` (`DISRUPTION_KEYWORDS`).
+See [monitoring](scheduler.md) for triggers and persistence. The worker's discovery set includes all active ports/sea waypoints as well as in-transit destinations; it is not limited to exactly one lane.
 
-### What we get back
+## Evidence storage and interpretation
 
-A JSON list of `articles`, each with `title`, `url`, `seendate`, `domain`,
-`sourcecountry`. We keep just those fields.
+Weather readings replace the place's previous weather signal. News is keyed by article URL. Current ingestion leaves `ttl_at` null; it does not activate automatic deletion.
 
-**Code:** `backend/adapters/news.py` → `search_disruptions(location_name)`
-Returns: `{ ok, query, count, articles[...] }`
+Gemini receives bounded current evidence and known route/record IDs. Python validates references and exact excerpts before applying assessments. A structurally valid result is not proof of factual truth or exact remaining-leg applicability. Unknown/unavailable interpretation must remain visible.
 
-### Limits & gotchas (important)
+Real news/weather and synthetic retail records must be labelled separately. The [fixed walkthrough](decision_walkthrough.md) uses owned synthetic notices and a private clock rather than depending on today's headlines.
 
-- **Rate limit:** about **1 request every 5 seconds**. Faster → HTTP 429. Our
-  adapter detects this and returns `{ ok: false, error: "rate_limited" }`.
-- **Short phrases:** GDELT returns an HTTP-200 *text* message ("phrase too short")
-  instead of JSON. We detect non-JSON and return `{ ok: false, error: "no_json" }`.
-- Article timestamps are *discovery* times, not the exact event time.
-- A headline mentioning a port is a **lead, not proof** — the agent treats it as
-  a signal to investigate, never as a confirmed closure.
+## Later integrations
 
----
+Carrier tracking, supplier confirmations, licensed authority notices and production weather sources can improve reliability after their access/terms and contracts are established. Google Weather, Document AI or other Google services are options, not currently used integrations.
 
-## 3. How these flow through the app
-
-```mermaid
-flowchart LR
-    subgraph APIs["Free external APIs"]
-        OM["Open-Meteo<br/>weather"]
-        GD["GDELT<br/>news"]
-    end
-    OM --> WA["adapters/weather.py"]
-    GD --> NA["adapters/news.py"]
-    WA --> TOOLS["agent/tools.py<br/>weather_risk_tool / news_scan_tool"]
-    NA --> TOOLS
-    TOOLS --> AGENT["agent/agent.py<br/>signal_agent (Google ADK)"]
-    WA --> SIG["app/routers/signals.py<br/>GET /signals/{location}"]
-    NA --> SIG
-    WA --> WRK["worker/main.py<br/>scan_route_signals()"]
-    NA --> WRK
-    SIG --> UI["frontend<br/>'Check live signals'"]
-```
-
-Three things use the adapters:
-
-1. **The ADK agent** (`signal_agent`) — its two tools call the adapters so Gemini
-   can reason about live weather + news. *(This is the "using ADK" part.)*
-2. **The API** — `GET /signals/{location_id}` returns both for the dashboard.
-3. **The worker** — `scan_route_signals()` checks every active route on a timer
-   (see [scheduler.md](scheduler.md)).
-
-Try it:
-
-```bash
-# with the backend running on port 8000
-curl "http://localhost:8000/signals/IN-JNPA"
-```
-
----
-
-## 4. Later / paid options (not needed now)
-
-| API | Why you'd add it | Needs |
-|---|---|---|
-| **GDACS** (disaster alerts) | Structured cyclone/flood events with IDs | Free RSS/API; just attribution |
-| **Google Weather API** | Google-native weather for production | GCP key + billing |
-| **Carrier / container tracking** (Maersk, project44, SeaRates) | Real shipment ETAs | Paid + authorized access |
-| **NewsAPI.org** | Simpler news search | Paid for production use |
-
-Add these only after the free prototype is solid. Details in
-[manual_work.md](manual_work.md).
+Do not run a manual scan or live assistant query as an offline benchmark. Use the [network-blocked benchmark](../tests/benchmark/README.md).

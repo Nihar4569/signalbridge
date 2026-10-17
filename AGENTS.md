@@ -19,16 +19,18 @@ wrong. Put the logic in `backend/domain/` and have the agent *call* it.
 ## Project shape (know this before editing)
 
 ```text
-backend/core/      config, data store, logging         (no cloud)
-backend/domain/    the math & decisions — PURE python   (no cloud, tested)
-backend/adapters/  supplier / news (fakes for now)      (no cloud)
-backend/agent/     Google ADK agent + tools             (needs a key to run)
-backend/app/       FastAPI web API                      (reads work offline)
-backend/worker/    background monitor
-fixtures/          synthetic demo data (JSON)
+backend/core/      config, local/snapshot/Firestore stores, logging
+backend/domain/    deterministic calculations and state logic (no model calls)
+backend/adapters/  live weather/news, simulated supplier, optional SMTP
+backend/ai/        main Gemini REST interpretation, explanations and Q&A
+backend/agent/     optional single ADK weather/news agent
+backend/app/       FastAPI routes and built-frontend serving
+backend/worker/    guarded scan worker, optional timer (off by default)
+frontend/          React/Vite dashboard (dev 3000, preview 5173)
+fixtures/          synthetic business records and isolated decision cases
 scripts/           demo.py, seed_firestore.py
 tests/             unit tests (must stay green)
-docs/              start.md, manual_work.md, architecture.md, agents.md, schema.md
+docs/              README.md index, architecture, schema, setup and roadmap
 ```
 
 ---
@@ -41,7 +43,7 @@ docs/              start.md, manual_work.md, architecture.md, agents.md, schema.
 3. **Pure logic goes in `backend/domain/`.** No network, no cloud, no AI there.
    That folder must stay testable with plain numbers.
 4. **Never store a number you can calculate.** `free_to_use = on_hand - reserved`
-   is derived, never saved. (See [docs/schema.md](docs/schema.md) rule 1.)
+   is derived, never saved. (See [docs/schema.md](docs/schema.md) representation rules.)
 5. **Money is integer minor units (paise) + a currency code.** Never a float.
 6. **Quantities are whole integers.** Timestamps are UTC ISO-8601 strings.
 7. **Add a test for any new domain logic.** Tests must pass: `pytest -q`.
@@ -59,10 +61,10 @@ Say you want a new rule, e.g. "prefer the greener supplier".
 1. Write a **pure function** in `backend/domain/` (e.g. `sustainability.py`) that
    takes plain data and returns a plain result. No cloud.
 2. Write a **test** for it in `tests/`.
-3. Expose it to the agent as a **tool** in `backend/agent/tools.py` — a thin
-   wrapper with a clear docstring (the AI reads the docstring).
-4. If an agent should use it, add the tool to that agent in `backend/agent/agent.py`
-   and mention it in the agent's instruction in `backend/agent/prompts.py`.
+3. Expose it through the relevant application route or a thin typed wrapper.
+   If an agent needs the capability, its tool docstring must describe the contract.
+4. Register an ADK tool only if the optional agent should actually use it. The
+   main web workflow uses `backend/ai/gemini.py`, not an ADK multi-agent pipeline.
 5. If the API needs it, add a route in `backend/app/routers/`.
 6. Update the relevant doc in `docs/`.
 
@@ -96,6 +98,8 @@ uvicorn backend.app.main:app --reload --port 8000   # then open http://localhost
 - ❌ Don't hardcode secrets, project IDs, or keys.
 - ❌ Don't delete the fixtures or make the demo need the internet.
 - ❌ Don't break `DATA_BACKEND=local` — it must always work with no cloud.
+- ❌ Don't describe planned authentication, transactions, scheduled jobs or
+  physical supplier execution as already implemented. See [docs/roadmap.md](docs/roadmap.md).
 
 ---
 
@@ -103,8 +107,8 @@ uvicorn backend.app.main:app --reload --port 8000   # then open http://localhost
 
 - Add a new SKU + shipment to `fixtures/` and watch the demo react.
 - Add a test for a tricky deadline edge case in `tests/test_exposure.py`.
-- Implement `FirestoreStore` in `backend/core/store.py` (see [docs/manual_work.md](docs/manual_work.md)).
+- Add a regression for a current execution boundary before changing it; `FirestoreStore` already exists.
 - Add a `/incidents` filter by severity in `backend/app/routers/incidents.py`.
 
-When in doubt, read [docs/architecture.md](docs/architecture.md) and
-[docs/agents.md](docs/agents.md) first.
+When in doubt, read [docs/README.md](docs/README.md), [docs/architecture.md](docs/architecture.md)
+and [docs/roadmap.md](docs/roadmap.md) first. Preserve the golden rule above.

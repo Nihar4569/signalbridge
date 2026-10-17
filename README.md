@@ -35,7 +35,7 @@ The aim is to help operations teams protect customer commitments while avoiding 
 
 ### How a recovery decision is built
 
-1. **Collect route-relevant signals.** Fetch weather and disruption news for locations on active routes, retaining source references and timestamps.
+1. **Collect disruption signals.** Fetch weather/news for in-transit destinations and active ports/sea waypoints, retaining source references and timestamps. Interpret relevance against each supplied shipment's route.
 2. **Interpret the evidence with Gemini.** Distinguish active, planned, cancelled and uncertain events, and assess their relevance to supplied shipment records.
 3. **Calculate the customer impact.** Compare stock and incoming supply with demand due by the order deadline, using the declared arrival scenario.
 4. **Prepare a recovery proposal.** Inspect available internal stock first, then select the lowest-cost external offer that can cover the remainder within the modeled constraints.
@@ -165,7 +165,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local walkthrough](http://localhost:5173/#/decision-demo). **Reference replay needs no Gemini key.** Live Gemini interpretation and the assistants require a valid key and available model quota. Configure `GOOGLE_API_KEY` in a local `.env`; never commit it. See [setup instructions](docs/start.md) for the pip alternative and Firestore configuration.
+Open [the local walkthrough](http://localhost:3000/#/decision-demo). Vite development uses port 3000; production preview uses 5173. **Reference replay needs no Gemini key.** Live Gemini interpretation and the assistants require a valid key and available model quota. Configure `GOOGLE_API_KEY` in a local `.env`; never commit it. See [setup instructions](docs/start.md) for the pip alternative and Firestore configuration.
 
 ### Build and test
 
@@ -206,13 +206,16 @@ The repository also contains a multi-stage `Dockerfile` for the combined Cloud R
 - **Internal stock needs review:** availability currently means on-hand minus reserved stock. Donor demand, internal transfer time/cost and network-wide optimization are not fully modeled.
 - **Controlled execution:** supplier holds are simulated. Email delivery is simulated by default, with optional SMTP configuration. A generated transfer or purchase order is not proof that goods were bought or delivered.
 - **Persistence and access:** operational records and reservation operations can use Firestore; the current fulfilment timeline is process-local. Production authentication, authorization and execution controls require further hardening.
+- **Execution limits:** approval saves plan/operation records but does not transactionally allocate donor stock, update order coverage or append a stock ledger. Sequential reservation retries can reuse an operation, but email attempts can repeat. Internal-only recovery execution remains planned.
 
 ## Roadmap
 
-1. Enable authenticated Cloud Scheduler-driven monitoring and validate unattended alert delivery.
-2. Measure live Gemini interpretation on a labelled evaluation set, including false alerts, missed disruptions, abstentions and evidence validity.
-3. Add read-only what-if comparisons for waiting, supplier exclusion and alternative recovery proposals.
-4. Model donor demand and internal transfer feasibility; integrate real carrier/supplier confirmations only behind appropriate approval and idempotency controls.
+1. Enable authenticated scheduled monitoring, role-enforced approvals and deduplicated notifications.
+2. Add transactional inventory allocation, durable fulfilment and donor-safe/internal-only recovery.
+3. Measure live Gemini interpretation on a labelled evaluation set, including false alerts, missed disruptions, abstentions and evidence validity.
+4. Add read-only what-if comparisons and authorized carrier/supplier confirmations within the existing architecture.
+
+See the [roadmap and completion criteria](docs/roadmap.md). VIP/SLA allocation, claims support, perishables rescue and mobile alerts remain later business extensions, not active workflows.
 
 ## Explore the implementation
 
@@ -231,6 +234,8 @@ docs/                Setup, calculations and implementation notes
 
 | Read next | Purpose |
 |---|---|
+| [Documentation index](docs/README.md) | Current architecture, implementation status and operating guidance. |
+| [Roadmap](docs/roadmap.md) | Separate current foundations, remaining safeguards and future extensions. |
 | [Decision walkthrough](docs/decision_walkthrough.md) | Reproduce the two cases and understand the evidence contract. |
 | [Local setup](docs/start.md) | Install and run the API, frontend and optional ADK agent. |
 | [Calculations](docs/calculation.md) | Inspect the deterministic recovery calculations. |

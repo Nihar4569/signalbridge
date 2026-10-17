@@ -1,217 +1,126 @@
-# start.md — Set up SignalBridge
+# Run SignalBridge locally
 
-This gets the project running on your machine. The **core demo and tests need no
-cloud, no API key, and no internet** — so you can see it work in two minutes.
+The application has a Python API and a React/Vite frontend. Local records and reference replay need no cloud credentials or model calls. Dependency installation, map tiles/fonts, live weather/news and live Gemini require network access.
 
-There are two ways to set up. Pick one. **`uv` is recommended** (faster, simpler);
-`pip` is the familiar fallback.
+## Requirements
 
-> You need **Python 3.10 or newer**. Check with `python3 --version`.
-> If yours is older, `uv` can install a newer Python for you automatically (see below).
+- Python 3.10 or newer.
+- Node.js 18 or newer and npm.
+- [uv](https://docs.astral.sh/uv/) or a Python virtual environment.
 
----
+Run commands from the repository root unless a frontend directory is specified.
 
-## Option A — with `uv` (recommended)
+## 1. Install Python dependencies
 
-[`uv`](https://docs.astral.sh/uv/) is a fast Python package manager.
+### With uv
 
 ```bash
-# 0. Install uv once (skip if you already have it)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 1. Go into the project
-cd signalbridge
-
-# 2. Install everything (uv reads pyproject.toml and even fetches Python 3.11)
 uv sync --extra dev
-
-# 3. See it work — the core recovery demo (no cloud needed)
-uv run python -m scripts.demo
-
-# 4. Run the tests
-uv run python -m pytest -q
 ```
 
-Everyday commands with uv:
-
-| What | Command |
-|---|---|
-| Run the demo | `uv run python -m scripts.demo` |
-| Run tests | `uv run python -m pytest -q` |
-| Start the API | `uv run uvicorn backend.app.main:app --reload --port 8000` |
-| Run the monitor once | `uv run python -m backend.worker.main` |
-| Run the ADK agent | `uv run adk run backend/agent` *(needs a key — see below)* |
-
----
-
-## Option B — with `pip` + venv
+### With pip
 
 ```bash
-# 1. Go into the project
-cd signalbridge
-
-# 2. Create and activate a virtual environment (use a 3.10+ python)
 python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-
-# 3. Install runtime + dev tools
+source .venv/bin/activate
 pip install -r requirements-dev.txt
-
-# 4. See it work
-python -m scripts.demo
-
-# 5. Run the tests
-python -m pytest -q
 ```
 
-Everyday commands with pip (venv activated):
+Windows activation uses `.venv\Scripts\activate`. Pip users can omit `uv run` from subsequent commands while the environment is active.
 
-| What | Command |
-|---|---|
-| Run the demo | `python -m scripts.demo` |
-| Run tests | `python -m pytest -q` |
-| Start the API | `uvicorn backend.app.main:app --reload --port 8000` |
-| Run the monitor once | `python -m backend.worker.main` |
-| Run the ADK agent | `adk run backend/agent` *(needs a key — see below)* |
+Copy `.env.example` to an untracked local `.env` if needed. Do not overwrite an existing file containing your configuration. Leave `DATA_BACKEND=local` and `SIGNAL_SCAN_INTERVAL_SECONDS=0` for local development. See [config.py](../backend/core/config.py) for authoritative defaults.
 
-> Prefer shortcuts? There's a `Makefile`: `make setup-uv`, `make demo`, `make test`, `make api`.
+## 2. Start the API and frontend
 
----
-
-## Run the full app (backend + frontend)
-
-This is the end-to-end prototype: a dashboard that talks to the API. Use **two
-terminals**.
+Terminal 1, repository root:
 
 ```bash
-# Terminal 1 — the backend API (port 8000)
-cd signalbridge
-uv run uvicorn backend.app.main:app --reload --port 8000
-#   (pip users, venv active:  uvicorn backend.app.main:app --reload --port 8000)
-
-# Terminal 2 — the frontend (port 5173)
-cd signalbridge/frontend
-python3 -m http.server 5173
+DATA_BACKEND=local GOOGLE_API_KEY='' GOOGLE_API_KEY_2='' \
+  SIGNAL_SCAN_INTERVAL_SECONDS=0 \
+  uv run uvicorn backend.app.main:app --reload --port 8000
 ```
 
-Then open **http://localhost:5173** and click **Scan for risk**.
-You'll see the incident → open it → review the plan → **Explain with AI** →
-**Approve & reserve**.
+This command intentionally disables live Gemini keys for the session. To use live Gemini later, configure a valid key and omit those empty overrides.
 
-The frontend is plain HTML/JS (no npm, no build). How it's wired is explained in
-[simple.md](simple.md).
-
----
-
-## What you should see
-
-`python -m scripts.demo` prints the jacket scenario: a port delay turns a healthy
-order into an **80-unit shortage**, then SignalBridge uses 20 units of internal
-stock, buys 60 from a supplier, confirms it's worth it, and routes it for
-approval. That is the whole product in one screen.
-
-`pytest` should say **11 passed** (domain + models/store).
-
----
-
-## Set up the config file
+Terminal 2:
 
 ```bash
-cp .env.example .env
+cd frontend
+npm ci
+npm run dev
 ```
 
-For the **core demo and the API read-paths you don't need to change anything** —
-`DATA_BACKEND=local` reads the JSON files in `fixtures/`.
+Vite development uses **http://localhost:3000**, unless that port is occupied and Vite selects another. Read its terminal output. API documentation is **http://localhost:8000/docs**.
 
-You only edit `.env` when you want to:
-- run the **AI agent** → add `GOOGLE_API_KEY` (free key from <https://aistudio.google.com/apikey>)
-- use **Firestore** or **deploy** → see below and [manual_work.md](manual_work.md)
+For an isolated first run, open **http://localhost:3000/#/decision-demo** directly and select **Reference replay**. This avoids the operational frontend scan trigger and makes no model call.
 
----
+Opening operational pages can request weather/news through `POST /scan`, even without a Gemini key. The optional timer being disabled does not disable that page-load trigger.
 
-## Use Firestore instead of fixtures (optional)
+## 3. Understand the walkthrough
 
-The app already has a real `FirestoreStore` (`backend/core/store.py`). Fixtures stay
-the seed source; runtime reads go to Cloud Firestore when you flip the switch.
+The fixed coffee example has two notices:
+
+- Active closure: 80 units short, 20 internal units, 60 supplier units, ₹3,700 external recovery cost.
+- Cancelled strike: no shortage and no new purchase proposal.
+
+All records/notices are synthetic and use a fixed scenario clock. See [decision walkthrough](decision_walkthrough.md). Reference replay is not a successful live-model response.
+
+For **Assess with Gemini**, configure `GOOGLE_API_KEY` in local/deployment secrets and restart the backend without the empty key overrides. `GOOGLE_API_KEY_2` is an optional alternate key. Available quota and model access are required. Both assistants also use this REST integration.
+
+## 4. Demo, regression and build
+
+Run from the repository root:
 
 ```bash
-# 1. Copy env and point at your Firebase/GCP project (see .firebaserc)
-cp .env.example .env
-#    DATA_BACKEND=firestore
-#    GOOGLE_CLOUD_PROJECT=signalbridge-8b80a   # or your project id
-#    TENANT_ID=buildx-demo
+DATA_BACKEND=local GOOGLE_API_KEY='' GOOGLE_API_KEY_2='' \
+  uv run python -m scripts.demo
 
-# 2. Login (once)
-gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
+DATA_BACKEND=local GOOGLE_API_KEY=offline-test-key GOOGLE_API_KEY_2='' \
+  SIGNAL_SCAN_INTERVAL_SECONDS=0 uv run python -m pytest -q
 
-# 3. Create Firestore Native DB in console if needed (asia-south1 matches firebase.json)
-
-# 4. Validate mapping, then seed
-python -m scripts.seed_firestore --dry-run
-python -m scripts.seed_firestore
-
-# 5. Deploy rules + indexes
-firebase deploy --only firestore
-
-# 6. Run API — GET /health should show data_backend: firestore
-uvicorn backend.app.main:app --reload --port 8000
+uv run ruff check .
 ```
 
-Data path: `tenants/{TENANT_ID}/{collection}/{doc_id}`  
-Models: `backend/models/` · IDs: `backend/models/ids.py`
+The dummy key is non-secret and enables mocked model paths in legacy tests. The current suite was checked on 18 October 2026 with outbound connections blocked: **132 passed**, one deprecation warning. This is a dated local regression result, not live AI accuracy. Use the [benchmark guide](../tests/benchmark/README.md) for its default network-blocked harness.
 
----
+The terminal jacket demo reads changing operational fixtures. It can correctly print no action needed. It is not guaranteed to reproduce an older 80-jacket recovery example.
 
-## Run the AI agent (optional)
+Ruff currently has existing findings outside this documentation change; a successful test run does not imply a clean lint run.
 
-The agent uses Gemini, so it needs a key.
+Build/preview the frontend:
 
 ```bash
-# 1. Put your key in .env
-echo "GOOGLE_API_KEY=your_key_here" >> .env
-
-# 2. Run the agent in your terminal
-uv run adk run backend/agent      # or: adk run backend/agent
-
-# Or open the ADK web UI to chat with it
-uv run adk web
+cd frontend
+npm run build
+npm run preview
 ```
 
-Try asking it: *"Is JACKET-BLUE-M at WH-MUM at risk, and what should we do?"*
+Production preview uses **http://localhost:5173**. The preview is not the Vite development server. Do not serve the React source directory with `python -m http.server`.
 
----
+## 5. Optional ADK agent
 
-## Project layout (where things live)
-
-```text
-signalbridge/
-├── backend/
-│   ├── core/       config, data store, logging
-│   ├── domain/     the math & decisions (pure python, tested)  <- start here
-│   ├── adapters/   supplier simulator, news
-│   ├── agent/      the Google ADK agent (optional chat: checks live weather and news)
-│   ├── app/        the FastAPI web API
-│   └── worker/     the background monitor
-├── fixtures/       synthetic demo data (JSON)
-├── scripts/        demo.py and the Firestore seeder
-├── tests/          unit tests (no cloud needed)
-└── docs/           you are here
+```bash
+uv run adk run backend/agent
 ```
 
-New to the codebase? Read the files in this order:
-1. [architecture.md](architecture.md) — the big picture
-2. [agents.md](agents.md) — what each agent does, in plain words
-3. [schema.md](schema.md) — the data model
-4. `backend/domain/exposure.py` — the one function everything depends on
+This runs one weather/news tool-using agent, separately from the web application. It needs a valid Gemini key and network quota. See [agents.md](agents.md).
 
----
+## 6. Optional Firestore
+
+Set up credentials, database and tenant deliberately using [cloud setup](manual_work.md). `DATA_BACKEND=firestore` switches stores; it does not seed data automatically.
+
+`uv run python -m scripts.seed_firestore --dry-run` validates fixtures and prints intended paths without cloud writes. Running the seeder without `--dry-run` writes/overwrites seed documents, so do it only against the intended project/tenant.
 
 ## Troubleshooting
 
-| Problem | Fix |
+| Symptom | Check |
 |---|---|
-| `No module named backend` | Run commands from the `signalbridge/` folder, not inside `backend/`. |
-| `python: command not found` | Use `python3`, or let `uv` manage Python via `uv run`. |
-| ADK agent errors about a key | Add `GOOGLE_API_KEY` to `.env` (see above). |
-| `NotImplementedError: FirestoreStore` | You set `DATA_BACKEND=firestore` before setting it up. Set it back to `local`. |
+| `No module named backend` | Run from the repository root with the selected Python environment. |
+| Frontend missing at 5173 during development | Development uses port 3000; 5173 is preview. |
+| API offline / empty views | Verify backend startup, API base, health response body and successful data reads. Empty results are not proof of safety. |
+| Live Gemini unavailable | Key configuration, model access and quota. Reference replay remains separate. |
+| Firestore initialization failure | Project ID, application credentials/emulator and intended tenant. |
+| No recovery in terminal demo | Current fixture state may be covered; use the fixed walkthrough to reproduce recovery. |
+| Map unavailable | Tile-provider/network policy. The map is not required for the reference calculations. |
+
+Continue with [architecture](architecture.md), [data contract](schema.md) and [roadmap](roadmap.md).

@@ -1,102 +1,38 @@
-# todo.md — our shared plan
+# SignalBridge work plan
 
-This is where we (you + the AI assistant) stay in sync. Two lists:
-**Vibe_work** = things the AI can build in code. **Manual_work** = things only
-you can do (accounts, consoles, secrets).
+Updated **18 October 2026**. The detailed priorities and acceptance criteria are in [docs/roadmap.md](docs/roadmap.md). This checklist separates working code from remaining operational safeguards.
 
-Last updated: 2026-10-10 · Status: **prototype runs end-to-end on dummy data**.
+## Implemented foundation
 
----
+- [x] React/Vite control tower, seven routable pages, Leaflet schematic map and light/dark themes.
+- [x] FastAPI views, planning, evidence brief, scan/status, chat, approval and fulfilment endpoints.
+- [x] Gemini REST interpretation, strict evidence/ID validation and actual model/fallback attribution.
+- [x] Global and per-plan Gemini assistants.
+- [x] Weather/news collection with Google News RSS fallback and process-local caching/throttling.
+- [x] Deterministic shortage, internal availability, offer constraints, cost, estimated benefit, surplus and approval-tier calculations.
+- [x] Local, Firestore and private snapshot stores.
+- [x] Fixed-clock active/cancelled decision walkthrough with reference and live-model modes.
+- [x] Combined frontend/API Docker packaging for Cloud Run.
+- [x] Independent offline benchmark with negative controls and mocked resilience checks.
+- [x] Supplier simulation, approved plan/operation persistence and default simulated email.
+- [x] Optional single ADK weather/news agent and alternative Firebase Hosting configuration.
 
-## ✅ Done
+Implemented does not mean complete production guarantees. The map is not carrier telemetry; economic estimates are not realized profit; approval does not implement transactional inventory allocation.
 
-- [x] Core recovery engine (`backend/domain/`) — exposure, internal balancing,
-      margin, surplus, governance, reservations. Pure Python, unit-tested.
-- [x] FastAPI backend with 4 endpoints (`/incidents`, `/plans`, `/explain`, `/approve`).
-- [x] Gemini wired via REST for the "Explain with AI" button (key in `.env`). **Tested, working.**
-- [x] Frontend dashboard (`frontend/`) — scan → plan → explain → approve. No build step.
-- [x] **Live external APIs (free, no key): Open-Meteo weather + GDELT news**, with location
-      filtering. Exposed via `GET /signals/{location}`, the `signal_agent` (ADK), and the worker.
-- [x] **Impressive control-tower UI**: live Leaflet map with colored routes, pulsing moving
-      shipment markers, weather/disruption pins, alerts ticker, KPI row, features grid.
-      Endpoints `/overview` + `/map`. Rich multi-route dummy data. Deploys to Firebase Hosting.
-- [x] **Professional React dashboard** (Vite + React, Material 3 dark / Gemini palette):
-      collapsible sidebar with all features, 6 pages, animated KPIs, live map, and a
-      Gemini-branded **AI Plan modal** (thinking animation → full plan → approve → fulfilment).
-      One-command build: `npm run build` → `frontend/dist/` → Firebase Hosting.
-- [x] **Post-approval automation**: approve → reserve → internal transfer + supplier purchase
-      order → emails (simulated by default, real SMTP optional) → order covered. `GET /fulfillments`
-      tracking. Recovered route turns green on the map. See docs/after_plan_approval.md.
-- [x] Dummy data in `fixtures/`. 7 unit tests pass.
-- [x] Docs: start, frontend_setup, simple, calculation, architecture, agents, schema, external_api, scheduler, manual_work.
+## Next safeguards
 
----
+- [ ] Authenticated scheduled monitoring without a dashboard visit.
+- [ ] User/tenant identity and role enforcement for approval/write endpoints.
+- [ ] Transactional allocation, stock ledger and current-quote/version revalidation.
+- [ ] Durable fulfilment state across restarts/instances.
+- [ ] Deduplicated notification delivery/outbox and real-channel verification.
+- [ ] Internal-only recovery execution and donor-safe transfer constraints.
+- [ ] Labelled live Gemini evaluation, with failures/abstentions reported separately.
+- [ ] Read-only what-if alternatives from isolated snapshots.
+- [ ] Versioned decision/evidence records and changed-source review.
 
-## 🟦 Vibe_work (the AI can do these in code, no accounts needed)
+## Later business extensions
 
-Pick any; they don't need cloud access.
+VIP/SLA allocation, penalty/insurance drafts, perishables rescue, mobile alerts and authorized carrier/ERP/supplier integrations remain future work. Optional ADK assistant-tool integration should be added only if useful; a multi-agent rewrite is not an agreed requirement.
 
-- [ ] **More demo data** — add 2–3 more SKUs / shipments / an order that is fine
-      (shows triage filtering out noise). Pure fixtures + a test.
-- [ ] **Customer priority (VIP first)** — when stock is scarce, allocate to VIP
-      orders first. New `domain/allocation.py` + a tool + a column in the UI.
-- [ ] **"What-if" slider** — let the UI change the assumed delay date and re-run
-      exposure live. Frontend + a query param on `/plans`.
-- [ ] **Severity sorting** — rank incidents by revenue-at-risk on the dashboard.
-- [ ] **Rejected-options clarity** — show *why* each supplier was rejected (already
-      in the data; just surface it nicer in the UI).
-- [x] **`FirestoreStore` class** — `backend/core/store.py` + models + seed script
-      ready. Still needs you to create the DB / auth — see manual_work.
-- [ ] **Full ADK agent run endpoint** — expose the 3-agent pipeline
-      (`backend/agent/`) over an endpoint instead of the single REST call.
-- [ ] **Tests for the API** — add endpoint tests with FastAPI's TestClient.
-- [ ] **Dockerfile** — containerize the backend so it's ready for Cloud Run.
-- [ ] **Perishables rescue (future scope)** — reroute near-expiry stock. New
-      `domain/perishable.py`; fields already reserved in the schema.
-
-> Tell me which ones you want and I'll build them.
-
----
-
-## 🟥 Manual_work (only you can do these)
-
-Full steps are in [docs/manual_work.md](docs/manual_work.md). Short list:
-
-- [ ] Nothing is required to keep testing the prototype — it already runs on dummy data.
-- [ ] **When ready for a real DB:** create a Google Cloud project + enable billing,
-      create a **Firestore** database (Native mode), run `scripts/seed_firestore.py`.
-- [ ] **For login/roles:** set up **Firebase Authentication**.
-- [ ] **For a live URL:** deploy the backend to **Cloud Run**, host the frontend on
-      **Firebase Hosting**.
-- [ ] **Before the repo is public:** confirm `.env` is not committed, add Firestore
-      security rules, set a billing budget alert.
-
----
-
-## 🔑 What I can unlock if you give me a credential / access
-
-If you set up one of these and give me the key (or connect its MCP), here's the
-**extra** work I could then do for you:
-
-| You give me… | …and I can then build |
-|---|---|
-| **Gemini API key** *(already done ✅)* | AI explanations, and the optional ADK chat agent |
-| **Google Cloud project + billing** | Real Firestore storage, Cloud Run deploy configs, Secret Manager for keys |
-| **Firebase project** | Login (Auth), hosting the dashboard on a public URL, push notifications (FCM) |
-| **Google Maps Platform key** | A live map of ports / warehouses / suppliers, and road-route ETAs for inland transfers |
-| **Google Weather API access** | Weather risk on a shipment's route (storm near a port = early warning) |
-| **Document AI processor** | Read a scanned shipment manifest/PDF and pull out SKUs + quantities automatically |
-| **BigQuery access** | Match storm/flood map areas to warehouse locations (geographic risk) |
-| **A Firestore / GCP MCP server** | Let me inspect and seed your cloud data directly, and verify deploys |
-
-> **For the hackathon prototype you only need the Gemini key** (which is already
-> working). Everything else is for scaling up *after* the demo — exactly the plan
-> you set: test first, add Firebase/cloud later.
-
----
-
-## Notes between us
-
-- Keep `DATA_BACKEND=local` until Firestore is set up. Everything runs offline.
-- The `.env` holds the Gemini key and is **gitignored** — never commit it.
-- Design rule we follow: **AI explains, Python calculates, a human approves.**
+See [roadmap](docs/roadmap.md) for scope and completion criteria, [cloud setup](docs/manual_work.md) for environment prerequisites and [documentation index](docs/README.md) for current references.
