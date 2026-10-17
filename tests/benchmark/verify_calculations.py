@@ -69,9 +69,10 @@ for sku, loc in pairs:
     # --- demand: open units due on or before the deadline
     demand = sum(int(o["quantity"]) for o in open_lines if ts(o["due_at"]) <= deadline)
 
-    # --- is this pair disrupted? (any at-risk shipment carrying this sku here)
+    # --- is this pair disrupted? (an at-risk or confirmed-delayed shipment here)
     at_risk = any(
-        sh.get("destination_location_id") == loc and sh.get("risk_zone") == "risk"
+        sh.get("destination_location_id") == loc
+        and (sh.get("risk_zone") == "risk" or sh.get("delay_state") == "confirmed_delayed")
         and any(i.get("sku") == sku for i in sh.get("items", []))
         for sh in shipments
     )

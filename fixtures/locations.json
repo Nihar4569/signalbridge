@@ -376,5 +376,47 @@
     "name": "Manzanillo distribution centre",
     "type": "dc",
     "unlocode": null
+  },
+  {
+    "location_id": "LOC-BLR-HUB",
+    "name": "Bengaluru supplier hub",
+    "type": "supplier_site",
+    "country": "IN",
+    "lat": 12.97,
+    "lon": 77.59,
+    "unlocode": null,
+    "news_query": null,
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "LOC-NAG-HUB",
+    "name": "Nagpur supplier hub",
+    "type": "supplier_site",
+    "country": "IN",
+    "lat": 21.15,
+    "lon": 79.09,
+    "unlocode": null,
+    "news_query": null,
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
+  },
+  {
+    "location_id": "LOC-KOL-HUB",
+    "name": "Kolkata supplier hub",
+    "type": "supplier_site",
+    "country": "IN",
+    "lat": 22.57,
+    "lon": 88.36,
+    "unlocode": null,
+    "news_query": null,
+    "aliases": [],
+    "active": true,
+    "gln": null,
+    "can_transfer_to": []
   }
 ]

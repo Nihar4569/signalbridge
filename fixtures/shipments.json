@@ -59,7 +59,7 @@
     "expected_arrival_at": "2026-10-29T12:00:00Z",
     "assumed_arrival_at": "2026-11-14T12:00:00Z",
     "confirmed_arrival_at": null,
-    "delay_state": null,
+    "delay_state": "confirmed_delayed",
     "risk_zone": "safe",
     "risk_reason": null,
     "updated_at": "2026-10-16T06:00:00Z",
@@ -81,7 +81,7 @@
     "expected_arrival_at": "2026-10-20T12:00:00Z",
     "assumed_arrival_at": "2026-10-31T12:00:00Z",
     "confirmed_arrival_at": null,
-    "delay_state": null,
+    "delay_state": "confirmed_delayed",
     "risk_zone": "safe",
     "risk_reason": null,
     "updated_at": "2026-10-16T06:00:00Z",
@@ -125,7 +125,7 @@
     "expected_arrival_at": "2026-10-27T12:00:00Z",
     "assumed_arrival_at": "2026-11-11T12:00:00Z",
     "confirmed_arrival_at": null,
-    "delay_state": null,
+    "delay_state": "confirmed_delayed",
     "risk_zone": "safe",
     "risk_reason": null,
     "updated_at": "2026-10-16T06:00:00Z",
@@ -256,6 +256,72 @@
     "departed_at": "2026-10-12T06:00:00Z",
     "expected_arrival_at": "2026-10-23T12:00:00Z",
     "assumed_arrival_at": "2026-11-01T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-DOM-701",
+    "lane_id": "LANE-DOM-BLR-MUM",
+    "destination_location_id": "WH-MUM",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "SUNOIL-15L",
+        "quantity": 1200
+      }
+    ],
+    "carrier_id": "CARR-DOM-ROAD",
+    "departed_at": "2026-10-14T06:00:00Z",
+    "expected_arrival_at": "2026-10-20T12:00:00Z",
+    "assumed_arrival_at": "2026-10-20T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-DOM-702",
+    "lane_id": "LANE-DOM-NAG-DEL",
+    "destination_location_id": "WH-DEL",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "TV-55-UHD",
+        "quantity": 200
+      }
+    ],
+    "carrier_id": "CARR-DOM-RAIL",
+    "departed_at": "2026-10-14T06:00:00Z",
+    "expected_arrival_at": "2026-10-20T12:00:00Z",
+    "assumed_arrival_at": "2026-10-20T12:00:00Z",
+    "confirmed_arrival_at": null,
+    "delay_state": null,
+    "risk_zone": "safe",
+    "risk_reason": null,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "shipment_id": "SHP-DOM-703",
+    "lane_id": "LANE-DOM-KOL-DEL",
+    "destination_location_id": "WH-DEL",
+    "status": "in_transit",
+    "items": [
+      {
+        "sku": "LAPTOP-14-I5",
+        "quantity": 150
+      }
+    ],
+    "carrier_id": "CARR-DOM-ROAD",
+    "departed_at": "2026-10-14T06:00:00Z",
+    "expected_arrival_at": "2026-10-21T12:00:00Z",
+    "assumed_arrival_at": "2026-10-21T12:00:00Z",
     "confirmed_arrival_at": null,
     "delay_state": null,
     "risk_zone": "safe",

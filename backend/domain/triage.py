@@ -103,11 +103,21 @@ def _matching_reasons(
     shipment: dict,
     signals: list[dict],
     locations: dict[str, dict],
+    lanes: dict,
 ) -> list[str]:
+    """Deterministic fallback used only when Gemini is silent.
+
+    Flag a shipment only when a disruptive signal sits on a place this
+    shipment's own route actually touches — never country-wide, so a Gulf
+    disruption never marks an unrelated domestic road move.
+    """
+    route = _route_location_ids(shipment, lanes)
     reasons: list[str] = []
     for signal in signals:
         loc_id = (signal.get("payload") or {}).get("location_id")
-        location = locations.get(loc_id) if loc_id else None
+        if not loc_id or loc_id not in route:
+            continue
+        location = locations.get(loc_id)
         dest = locations.get(shipment.get("destination_location_id"))
         if location and match_signal_to_shipment(signal, shipment, location, dest):
             reasons.append(_reason(signal, location))
@@ -181,7 +191,7 @@ def _zone_for_shipment(
                 return "risk", reason[:240] or "gemini"
             break  # Gemini said safe — fall through to the deterministic net
     else:
-        reasons = _matching_reasons(shipment, signals, locations)
+        reasons = _matching_reasons(shipment, signals, locations, lanes)
         if reasons:
             return "risk", reasons[0]
 

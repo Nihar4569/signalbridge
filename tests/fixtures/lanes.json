@@ -1,0 +1,23 @@
+[
+  {
+    "lane_id": "ROUTE-ET-MUM",
+    "name": "Djibouti → Gulf of Aden → Nhava Sheva",
+    "origin_location_id": "DJ-JIB",
+    "destination_location_id": "WH-MUM",
+    "legs": [],
+    "points": [
+      {
+        "name": "Gulf of Aden",
+        "lat": 12.5,
+        "lon": 47.5,
+        "location_id": "SEA-ADEN"
+      },
+      {
+        "name": "Nhava Sheva",
+        "lat": 18.95,
+        "lon": 72.94,
+        "location_id": "IN-JNPA"
+      }
+    ]
+  }
+]
