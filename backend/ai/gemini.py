@@ -28,21 +28,25 @@ log = get_logger("gemini")
 
 _ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
-# model name -> unix time until which we skip it (set when it reports quota).
+# model name -> unix time until which we skip it (set when a model is retired).
 _cooldown: dict[str, float] = {}
+# api key -> unix time until which we skip it (set on 402 no-credit / 429 quota),
+# so a depleted key fails over to the other key for the whole app.
+_key_cooldown: dict[str, float] = {}
 
 
 def _call(
     prompt: str, fallback: str, timeout: int = 30, json_mode: bool = False,
     response_schema: dict | None = None,
 ) -> dict:
-    """Ask Gemini, trying each configured model until one answers.
+    """Ask Gemini, trying each configured model and API key until one answers.
 
-    A model that is rate-limited (429) or missing (404) is skipped and put on a
-    short cooldown, so the next request goes straight to a working model.
-    Always returns {'text', 'source'}.
+    A model that is retired (404) is cooled down for the day. A key that is out
+    of credits (402/403) or quota (429) is cooled down so the next request fails
+    over to the other key. Always returns {'text', 'source'}.
     """
-    if not config.GOOGLE_API_KEY:
+    keys = config.GEMINI_API_KEYS
+    if not keys:
         return {"text": fallback, "source": "fallback (no API key)"}
 
     body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
@@ -59,70 +63,88 @@ def _call(
     now = time.time()
     started = time.monotonic()
     deadline = started + timeout
-    tried: list[str] = []
+    tried = 0
     quota_hit = False
+    no_credit = False
 
-    # Resilience: walk the model chain (config.GEMINI_MODELS). If one is rate-
-    # limited (429) or retired (404) we cool it down and fall through to the
-    # next, so a single over-quota model never takes the whole app down.
+    # Resilience: walk the model chain (config.GEMINI_MODELS); for each model try
+    # every configured key. A retired model (404) is skipped for the day; a key
+    # that is rate-limited (429) or out of credits (402/403) is cooled down and
+    # we fail over to the next key, so one bad model or dead key never takes the
+    # whole app down.
     for model in config.GEMINI_MODELS:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
+        if time.monotonic() >= deadline:
             break
         if _cooldown.get(model, 0) > now:
             continue
-        tried.append(model)
-        try:
-            response = requests.post(
-                _ENDPOINT.format(model=model),
-                headers={
-                    "Content-Type": "application/json",
-                    "X-goog-api-key": config.GOOGLE_API_KEY,
-                },
-                json=body,
-                timeout=remaining,
-            )
-        except requests.Timeout:
-            continue  # too slow — try the next model
-        except requests.RequestException:
-            continue
-
-        if response.status_code == 429:
-            quota_hit = True
-            _cooldown[model] = now + config.GEMINI_COOLDOWN_SECONDS
-            continue
-        if response.status_code == 404:
-            _cooldown[model] = now + 86400  # model retired; stop asking today
-            continue
-        if response.status_code != 200:
-            continue
-
-        try:
-            payload = response.json()
-            candidate = payload["candidates"][0]
-            if candidate.get("finishReason", "STOP") != "STOP":
+        for key in keys:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            if _key_cooldown.get(key, 0) > now:
                 continue
-            text = "".join(
-                part["text"] for part in candidate["content"]["parts"]
-                if isinstance(part.get("text"), str) and not part.get("thought")
-            )
-        except (ValueError, KeyError, IndexError, TypeError):
-            continue
-        if not text.strip():
-            continue
-        return {
-            "text": text.strip(), "source": f"gemini · {model}",
-            "duration_ms": round((time.monotonic() - started) * 1000),
-        }
+            tried += 1
+            try:
+                response = requests.post(
+                    _ENDPOINT.format(model=model),
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-goog-api-key": key,
+                    },
+                    json=body,
+                    timeout=remaining,
+                )
+            except requests.Timeout:
+                continue  # too slow — try the next key/model
+            except requests.RequestException:
+                continue
 
-    if quota_hit:
+            code = response.status_code
+            if code == 404:
+                _cooldown[model] = now + 86400  # model retired; stop asking today
+                break  # no key will revive this model — move to the next model
+            if code in (402, 403):
+                no_credit = True
+                _key_cooldown[key] = now + config.GEMINI_COOLDOWN_SECONDS
+                continue  # this key is out of credits — try the next key
+            if code == 429:
+                quota_hit = True
+                _key_cooldown[key] = now + config.GEMINI_COOLDOWN_SECONDS
+                continue  # this key is rate-limited — try the next key
+            if code != 200:
+                continue
+
+            try:
+                payload = response.json()
+                candidate = payload["candidates"][0]
+                if candidate.get("finishReason", "STOP") != "STOP":
+                    continue
+                text = "".join(
+                    part["text"] for part in candidate["content"]["parts"]
+                    if isinstance(part.get("text"), str) and not part.get("thought")
+                )
+            except (ValueError, KeyError, IndexError, TypeError):
+                continue
+            if not text.strip():
+                continue
+            return {
+                "text": text.strip(), "source": f"gemini · {model}",
+                "duration_ms": round((time.monotonic() - started) * 1000),
+            }
+
+    if no_credit and not quota_hit:
         note = (
-            "Every available Gemini model is over its free quota right now. "
+            "Gemini is out of credits on every configured key right now. "
+            "Top up credits to make the AI commentary live again.\n\n"
+        )
+    elif quota_hit:
+        note = (
+            "Every available Gemini model is over its quota right now. "
             "It resets automatically.\n\n"
         )
     else:
         note = "Gemini could not be reached right now.\n\n"
-    return {"text": note + fallback, "source": f"fallback (tried {len(tried)} models)"}
+    return {"text": note + fallback, "source": f"fallback (tried {tried} attempts)"}
 
 
 def answer_question(plan: dict, question: str, store=None) -> dict:
@@ -182,7 +204,7 @@ def judge_shipment_risk(
     # news and decides what is risky). It never computes quantities or money —
     # that is deterministic Python in domain/. This is what keeps the AI safe.
     active = [s for s in shipments if s.get("status") in ("in_transit", "planned")]
-    if not active or not config.GOOGLE_API_KEY:
+    if not active or not config.GEMINI_API_KEYS:
         return None
 
     assessed_at = as_of or decision_mod.utc_now()
@@ -436,9 +458,11 @@ def _parse_judgments(
         references = row["evidence"]
         if row["status"] != "unknown" and not references:
             route = (shipment_locations or {}).get(row["shipment_id"], set())
+            # Nothing to cite is legitimate when no current source touches this
+            # route — including when no source is current at all.
             excluded_by_route = (
                 row["status"] == "unaffected" and row["event_status"] != "cancelled"
-                and bool(route) and bool(by_id)
+                and bool(route)
                 and not any(source["location_id"] in route for source in by_id.values())
             )
             if not excluded_by_route:

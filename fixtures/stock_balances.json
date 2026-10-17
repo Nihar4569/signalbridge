@@ -168,5 +168,125 @@
     "sku": "JACKET-NAVY-M",
     "updated_at": "2026-10-15T20:00:00Z",
     "version": 1
+  },
+  {
+    "sku": "TV-55-UHD",
+    "location_id": "WH-CHN",
+    "on_hand_qty": 120,
+    "reserved_qty": 0,
+    "incoming_qty": 800,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "TV-55-UHD",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 150,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "TV-55-UHD",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 40,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "PHONE-5G-128",
+    "location_id": "WH-CHN",
+    "on_hand_qty": 400,
+    "reserved_qty": 0,
+    "incoming_qty": 5000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "PHONE-5G-128",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 350,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "PHONE-5G-128",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 600,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "RICE-BASMATI-5KG",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 2500,
+    "reserved_qty": 0,
+    "incoming_qty": 12000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "RICE-BASMATI-5KG",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 1200,
+    "reserved_qty": 0,
+    "incoming_qty": 6000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "RICE-BASMATI-5KG",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 300,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "COFFEE-ARAB-1KG",
+    "location_id": "WH-MUM",
+    "on_hand_qty": 600,
+    "reserved_qty": 0,
+    "incoming_qty": 7000,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "COFFEE-ARAB-1KG",
+    "location_id": "WH-DEL",
+    "on_hand_qty": 250,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
+  },
+  {
+    "sku": "COFFEE-ARAB-1KG",
+    "location_id": "DS-PUN-01",
+    "on_hand_qty": 120,
+    "reserved_qty": 0,
+    "incoming_qty": 0,
+    "outgoing_qty": 0,
+    "updated_at": "2026-10-16T06:00:00Z",
+    "version": 1
   }
 ]

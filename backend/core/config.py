@@ -23,7 +23,12 @@ DATA_BACKEND = os.getenv("DATA_BACKEND", "local")  # "local" | "firestore"
 TENANT_ID = os.getenv("TENANT_ID", "buildx-demo")
 
 # --- gemini / agent ---
+# Primary key plus an optional fallback. Each Gemini request tries the keys in
+# order, so a key that runs out of credits (402) or quota (429) automatically
+# fails over to the next one.
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_API_KEY_2 = os.getenv("GOOGLE_API_KEY_2", "")
+GEMINI_API_KEYS = [k for k in (GOOGLE_API_KEY.strip(), GOOGLE_API_KEY_2.strip()) if k]
 
 # We try these models in order. If one is rate-limited (429), overloaded (503) or
 # retired (404) we fall through to the next, so one bad model never breaks the app.

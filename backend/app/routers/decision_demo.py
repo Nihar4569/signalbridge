@@ -34,7 +34,7 @@ def cases() -> dict:
     return {
         "assessment_at": data["assessment_at"],
         "synthetic": True,
-        "gemini_configured": bool(config.GOOGLE_API_KEY),
+        "gemini_configured": bool(config.GEMINI_API_KEYS),
         "cases": [
             {key: case[key] for key in ("case_id", "title", "description")}
             for case in data["cases"]

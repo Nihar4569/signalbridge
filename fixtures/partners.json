@@ -326,5 +326,124 @@
     "service_level": null,
     "email": "sup-vashi@partners.signalbridge.demo",
     "active": true
+  },
+  {
+    "partner_id": "SUP-CHN-ELEC",
+    "name": "Chennai electronics distributor",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Chennai",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-chn-elec@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-BLR-ELEC",
+    "name": "Bengaluru consumer electronics wholesaler",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Bengaluru",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-blr-elec@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-DEL-GRAIN",
+    "name": "Delhi grain and staples wholesaler",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "New Delhi",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-del-grain@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-MUM-GRAIN",
+    "name": "Mumbai rice millers cooperative",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Mumbai",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-mum-grain@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "SUP-MUM-COFFEE",
+    "name": "Mumbai specialty coffee importer",
+    "roles": [
+      "supplier"
+    ],
+    "country": "IN",
+    "city": "Mumbai",
+    "gln": null,
+    "service_level": null,
+    "email": "sup-mum-coffee@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-ELECTROMART",
+    "name": "ElectroMart Retail Ltd",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Chennai",
+    "gln": null,
+    "service_level": {
+      "tier": "vip",
+      "sla_hours": 48,
+      "penalty_per_late_order_minor": 7500000,
+      "otif_target_pct": 98.0
+    },
+    "email": "cust-electromart@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-GROCERPLUS",
+    "name": "GrocerPlus Supermarkets",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "New Delhi",
+    "gln": null,
+    "service_level": {
+      "tier": "standard",
+      "sla_hours": 72,
+      "penalty_per_late_order_minor": 2500000,
+      "otif_target_pct": 95.0
+    },
+    "email": "cust-grocerplus@partners.signalbridge.demo",
+    "active": true
+  },
+  {
+    "partner_id": "CUST-VIVID",
+    "name": "Vivid Lifestyle Stores",
+    "roles": [
+      "customer"
+    ],
+    "country": "IN",
+    "city": "Mumbai",
+    "gln": null,
+    "service_level": {
+      "tier": "standard",
+      "sla_hours": 72,
+      "penalty_per_late_order_minor": 3000000,
+      "otif_target_pct": 96.0
+    },
+    "email": "cust-vivid@partners.signalbridge.demo",
+    "active": true
   }
 ]
