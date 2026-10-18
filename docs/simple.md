@@ -42,6 +42,6 @@ The frontend's `/#/decision-demo` is a browser route. The backend's `/decision-d
 
 ## What to run
 
-Use [local setup](start.md): backend port **8000**, Vite development port **3000**, production preview port **5173**. The old no-build frontend is retained in `frontend-legacy/`, not used by the current application.
+Use [local setup](start.md): backend port **8000**, Vite development port **3000**, production preview port **5173**.
 
 Gemini also interprets shipment risk and supports both assistants; it is not limited to an explanation button. See [AI responsibilities](agents.md).

@@ -88,8 +88,6 @@ This command changes cloud resources; it is a deployment instruction, not part o
 
 Map defaults and overrides are described in [map setup](map_setup.md). Movement is calculated from stored dates, not live GPS/AIS.
 
-`frontend-legacy/` is the old no-build application. It is not the current source or build target.
-
 ## Troubleshooting
 
 - Confirm which port the chosen npm command reports.

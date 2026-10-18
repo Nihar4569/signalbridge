@@ -24,7 +24,7 @@ This documents the checked-in URL, not a recommendation that its subdomain patte
 
 ## Overriding tiles
 
-There is no current `frontend/config.js`. That file belongs to `frontend-legacy/`.
+There is no `frontend/config.js`.
 
 To intentionally configure another provider, define the global before the module script in `frontend/index.html`, or implement a deliberate configuration mechanism. Example shape:
 
